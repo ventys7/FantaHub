@@ -34,10 +34,11 @@ function renderRoutePage(id, identity) {
     `  <link rel="apple-touch-icon" sizes="180x180" href="${identity.appleTouchIcon}" data-lineup-static-identity>`
   ].join("\n");
 
+  // replaceAll ensures every occurrence is replaced, not just the first
   return template
-    .replace('<html lang="it">', `<html lang="it" data-static-league-identity="${id}">`)
-    .replace('<title>Lineup Fanta</title>', `<title>${identity.name} · Lineup Fanta</title>`)
-    .replace('<script src="js/config.js"></script>', `${staticHead}\n<script src="js/config.js"></script>`);
+    .replaceAll('<html lang="it">', `<html lang="it" data-static-league-identity="${id}">`)
+    .replaceAll('<title>Lineup Fanta</title>', `<title>${identity.name} · Lineup Fanta</title>`)
+    .replaceAll('<script src="js/config.js"></script>', `${staticHead}\n<script src="js/config.js"></script>`);
 }
 
 const outOfSync = [];

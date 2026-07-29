@@ -66,8 +66,8 @@ async function handlePost(req, res) {
 
 module.exports = async function handler(req, res) {
   try {
-    if (req.method === "GET") return handleGet(req, res);
-    if (req.method === "POST") return handlePost(req, res);
+    if (req.method === "GET") return await handleGet(req, res);
+    if (req.method === "POST") return await handlePost(req, res);
     return methodNotAllowed(res, ["GET", "POST"]);
   } catch (error) {
     return res.status(400).json({ error: error.message || "Operazione stemma non riuscita" });

@@ -8,4 +8,5 @@ node_modules/
 .env.*.local
 bsd-matching-*/
 bsd-team-selection-*/
+.claude-flow/
 .env*

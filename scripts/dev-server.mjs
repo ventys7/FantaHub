@@ -50,7 +50,7 @@ async function handleApi(req, res, url) {
   const handler = apiHandlers.get(url.pathname);
   if (!handler) return false;
   req.query = Object.fromEntries(url.searchParams.entries());
-  req.body = await readBody(req);
+  req.body = req.method !== "GET" ? await readBody(req) : undefined;
   try { await handler(req, createApiResponse(res)); }
   catch (error) {
     console.error(`Errore API locale ${url.pathname}:`, error);

@@ -25,10 +25,14 @@ module.exports = async function handler(req, res) {
   if (!hash) return res.status(503).json({ error: "ADMIN_LINKS_PASSWORD_HASH non configurato" });
 
   if (req.method === "GET") {
-    const id = leagueId(req.query?.league);
-    const authenticated = isAuthenticated(req);
-    if (!authenticated) return res.status(200).json({ authenticated: false, leagueId: id });
-    return res.status(200).json({ authenticated: true, ...(await adminState(id)) });
+    try {
+      const id = leagueId(req.query?.league);
+      const authenticated = isAuthenticated(req);
+      if (!authenticated) return res.status(200).json({ authenticated: false, leagueId: id });
+      return res.status(200).json({ authenticated: true, ...(await adminState(id)) });
+    } catch (error) {
+      return res.status(400).json({ error: error.message || "Operazione admin non riuscita" });
+    }
   }
 
   if (req.method !== "POST") return methodNotAllowed(res, ["GET", "POST"]);
