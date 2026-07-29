@@ -146,6 +146,24 @@ test("docsName resolves a short Listone label while true surname collisions stay
   assert.equal(chooseCandidate({ displayName: "Murphy", realTeam: "Newcastle" }, newcastle).selected, null);
 });
 
+test("goalkeeper block split must not share docsName to prevent cross-matching", () => {
+  const liverpool = [
+    { id: "1", name: "Alisson", names: ["Alisson"], teamName: "Liverpool", teamKey: "liverpool" },
+    { id: "2", name: "Caoimhin Kelleher", names: ["Kelleher", "Caoimhin Kelleher"], teamName: "Liverpool", teamKey: "liverpool" }
+  ];
+  // Kelleher con docsName composito (vecchio comportamento) matcha Alisson se Kelleher non è nel catalogo
+  const composito = chooseCandidate({ displayName: "Kelleher", docsName: "Alisson - Kelleher", realTeam: "Liverpool" }, liverpool);
+  assert.equal(composito.selected?.id, "2", "con docsName composito deve matchare Kelleher quando presente");
+
+  // Kelleher con docsName composito, solo Alisson disponibile — FALSO POSITIVO (bug)
+  const soloAlisson = chooseCandidate({ displayName: "Kelleher", docsName: "Alisson - Kelleher", realTeam: "Liverpool" }, [liverpool[0]]);
+  assert.equal(soloAlisson.selected?.id, "1", "docsName composito causa falso match con Alisson (bug)");
+
+  // Kelleher con docsName individuale (fix), solo Alisson disponibile — nessun match
+  const fissato = chooseCandidate({ displayName: "Kelleher", docsName: "Kelleher", realTeam: "Liverpool" }, [liverpool[0]]);
+  assert.equal(fissato.selected, null, "docsName individuale non deve matchare Alisson");
+});
+
 test("a failed refresh preserves the previous verified Blob entry", () => {
   const existing = {
     key: "bukayo saka|arsenal",
