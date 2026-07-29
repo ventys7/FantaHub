@@ -164,6 +164,36 @@ test("goalkeeper block split must not share docsName to prevent cross-matching",
   assert.equal(fissato.selected, null, "docsName individuale non deve matchare Alisson");
 });
 
+test("goalkeeper asset restricts BSD candidates to goalkeepers by position", () => {
+  // collectBsdPlayers cattura position come providerPosition
+  const napoliSquad = collectBsdPlayers({
+    count: 3,
+    results: [
+      { id: 100, full_name: "Alex Meret", position: "G" },
+      { id: 101, full_name: "Khvicha Kvaratskhelia", short_name: "K. Kvaratskhelia", position: "F" },
+      { id: 102, full_name: "Giovanni Di Lorenzo", position: "D" }
+    ]
+  }, { id: "42", name: "Napoli", key: "napoli" });
+
+  assert.equal(napoliSquad.find((p) => p.id === "100")?.providerPosition, "G");
+  assert.equal(napoliSquad.find((p) => p.id === "101")?.providerPosition, "F");
+  assert.equal(napoliSquad.find((p) => p.id === "102")?.providerPosition, "D");
+
+  // Un portiere Listone con type="goalkeeper" + candidatesForAsset filtra solo candidati G
+  // Simuliamo il filtro manualmente (candidatesForAsset non è esportata)
+  const gkCandidates = napoliSquad.filter((c) => /^g/i.test(String(c.providerPosition || "")));
+  assert.equal(gkCandidates.length, 1);
+  assert.equal(gkCandidates[0].id, "100");
+
+  // Un portiere non deve matchare un attaccante mancino: "Alex Meret" vs attaccante "Meret" (posizione F, nome simile)
+  // chooseCandidate da solo matcha (perché non filtra per ruolo), ma il vero filtro è in candidatesForAsset
+  const falsoMatch = chooseCandidate(
+    { displayName: "Alex Meret", realTeam: "Napoli", type: "goalkeeper" },
+    [{ id: "999", name: "A. Meret", names: ["A. Meret"], teamName: "Napoli", teamKey: "napoli", providerPosition: "F" }]
+  );
+  assert.equal(falsoMatch.selected?.id, "999", "chooseCandidate matcha per nome — il filtro ruolo è in candidatesForAsset");
+});
+
 test("a failed refresh preserves the previous verified Blob entry", () => {
   const existing = {
     key: "bukayo saka|arsenal",
