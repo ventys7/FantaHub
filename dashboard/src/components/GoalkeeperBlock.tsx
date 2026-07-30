@@ -48,8 +48,8 @@ export function GoalkeeperBlock({ asset, expanded, onToggle, crestUrl, media }: 
             <span><span className="tw-text-slate-400">Quot:</span> <strong>{asset.quotation || "—"}</strong></span>
             <span><span className="tw-text-slate-400">Acq:</span> <strong className="tw-text-[var(--primary)]">{asset.purchasePrice || "—"}</strong></span>
           </div>
-          <div className="tw-mt-1 tw-text-xs">
-            <span className="tw-truncate tw-text-slate-500">👤 {asset.ownerTag || "Svincolato"}</span>
+          <div className="tw-mt-1 tw-text-sm">
+            <span className={`tw-truncate ${asset.ownerTag ? "tw-text-slate-500" : "tw-italic tw-text-slate-400"}`}>👤 {asset.ownerTag || "Svincolato"}</span>
           </div>
         </div>
       </button>

@@ -24,7 +24,7 @@ export function PlayerMobileCard({ player, media, crestUrl }: { player: Dashboar
             <span><span className="tw-text-slate-400">Quot:</span> <strong className="tw-text-slate-900">{player.quotation || "—"}</strong></span>
             <span><span className="tw-text-slate-400">Acq:</span> <strong className="tw-text-[var(--primary)]">{player.purchasePrice || "—"}</strong></span>
           </div>
-          <div className="tw-mt-1 tw-text-xs">
+          <div className="tw-mt-1 tw-text-sm">
             <span className={`tw-max-w-full tw-truncate ${player.ownerTag ? "tw-text-slate-500" : "tw-italic tw-text-slate-400"}`}>👤 {player.ownerTag || "Svincolato"}</span>
           </div>
         </div>
