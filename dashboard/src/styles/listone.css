@@ -73,6 +73,7 @@
 .lf-action-button:hover,
 .lf-reset-button:hover { transform: translateY(-1px); background: #f6f8f7; }
 .lf-action-button--active { border-color: var(--primary); background: var(--primary); color: #ffffff; }
+.lf-action-button--active:hover { border-color: var(--primary-light); background: var(--primary-light); color: #ffffff; transform: translateY(-1px); }
 .lf-action-button--danger-active { border-color: #ef4444; background: #ef4444; color: #ffffff; }
 .lf-reset-button { width: 48px; padding: 0; border-color: rgba(239, 68, 68, 0.24); background: rgba(239, 68, 68, 0.08); color: #dc2626; }
 

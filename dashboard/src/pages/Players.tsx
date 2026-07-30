@@ -98,8 +98,8 @@ export function Players({ assets }: { assets: DashboardAsset[] }) {
   return (
     <div className="tw-px-2 tw-py-3 sm:tw-px-5 sm:tw-py-7 lg:tw-px-7">
       <section className="lf-dashboard-card tw-mx-auto tw-max-w-7xl">
-        <div className="tw-flex tw-justify-end tw-p-4 sm:tw-p-6 lg:tw-p-8">
-          <div className="tw-flex tw-w-full tw-flex-wrap tw-items-stretch tw-gap-2 lg:tw-ml-auto lg:tw-w-auto lg:tw-justify-end">
+        <div className="tw-flex tw-justify-center tw-p-4 sm:tw-p-6 lg:tw-p-8">
+          <div className="tw-flex tw-w-full tw-flex-wrap tw-items-stretch tw-gap-2 lg:tw-w-auto lg:tw-justify-center">
             <label className="lf-search tw-min-w-0 tw-flex-1 lg:tw-w-80 lg:tw-flex-none">
               <SearchIcon size={20} />
               <input type="search" placeholder="Cerca giocatore..." value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} />
