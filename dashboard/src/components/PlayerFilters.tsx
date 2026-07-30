@@ -64,37 +64,36 @@ export function PlayerFilters({
       </div>
 
       <div className="lf-mobile-filters md:tw-hidden">
-        <div className="tw-flex tw-gap-1.5 tw-overflow-x-auto tw-pb-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-          {ROLE_OPTIONS.map((role) => (
-            <button
-              key={role}
-              type="button"
-              onClick={() => onRoleChange(role)}
-              className={`lf-role-pill lf-role-pill--sm ${currentRole === role ? "lf-role-pill--active" : ""}`}
-            >
-              {role === "Tutti" ? "Tutti" : ROLE_LABELS[role]}
-            </button>
-          ))}
-        </div>
-
-        <div className="tw-mt-2 tw-flex tw-gap-2">
-          <label className="lf-select-wrap lf-select-wrap--mobile">
-            <span aria-hidden="true">🏟️</span>
-            <select value={currentTeam} onChange={(event) => onTeamChange(event.target.value)} aria-label="Filtra per squadra reale">
-              <option value="Tutti">Squadra</option>
-              {teams.map((team) => <option key={team} value={team}>{team}</option>)}
+        <div className="tw-flex tw-flex-col tw-gap-2">
+          <label className="lf-select-wrap lf-select-wrap--mobile lf-select-wrap--full">
+            <span aria-hidden="true">🎯</span>
+            <select value={currentRole} onChange={(event) => onRoleChange(event.target.value)} aria-label="Filtra per ruolo">
+              {ROLE_OPTIONS.map((role) => (
+                <option key={role} value={role}>{role === "Tutti" ? "Tutti" : ROLE_LABELS[role]}</option>
+              ))}
             </select>
             <ChevronDownIcon size={14} />
           </label>
 
-          <label className="lf-select-wrap lf-select-wrap--mobile">
-            <span aria-hidden="true">👤</span>
-            <select value={currentOwner} onChange={(event) => onOwnerChange(event.target.value)} aria-label="Filtra per proprietario">
-              <option value="Tutti">Proprietario</option>
-              {owners.map((owner) => <option key={owner} value={owner}>{owner}</option>)}
-            </select>
-            <ChevronDownIcon size={14} />
-          </label>
+          <div className="tw-flex tw-gap-2">
+            <label className="lf-select-wrap lf-select-wrap--mobile">
+              <span aria-hidden="true">🏟️</span>
+              <select value={currentTeam} onChange={(event) => onTeamChange(event.target.value)} aria-label="Filtra per squadra reale">
+                <option value="Tutti">Squadra</option>
+                {teams.map((team) => <option key={team} value={team}>{team}</option>)}
+              </select>
+              <ChevronDownIcon size={14} />
+            </label>
+
+            <label className="lf-select-wrap lf-select-wrap--mobile">
+              <span aria-hidden="true">👤</span>
+              <select value={currentOwner} onChange={(event) => onOwnerChange(event.target.value)} aria-label="Filtra per proprietario">
+                <option value="Tutti">Proprietario</option>
+                {owners.map((owner) => <option key={owner} value={owner}>{owner}</option>)}
+              </select>
+              <ChevronDownIcon size={14} />
+            </label>
+          </div>
         </div>
       </div>
 

@@ -91,7 +91,8 @@
 
 .lf-role-pill:hover { border-color: var(--primary-border); background: var(--primary-bg); }
 .lf-role-pill--active { border-color: var(--primary); background: var(--primary); color: #ffffff; }
-.lf-role-pill--sm { min-height: 34px; padding: 0 14px; font-size: 12px; white-space: nowrap; flex-shrink: 0; }
+.lf-select-wrap--full { width: 100%; }
+.lf-select-wrap--full select { max-width: none; width: 100%; }
 
 .lf-select-wrap {
   position: relative;
