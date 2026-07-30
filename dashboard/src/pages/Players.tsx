@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { ROLE_ORDER } from "../constants";
 import { SearchIcon, UserXIcon, XIcon } from "../icons";
 import type { DashboardAsset, SortDirection, SortKey } from "../types";
@@ -76,7 +76,7 @@ export function Players({ assets }: { assets: DashboardAsset[] }) {
     setSortDirection("asc");
   };
 
-  const handleSort = (key: SortKey) => {
+  const handleSort = useCallback((key: SortKey) => {
     if (sortKey === key) {
       if (sortDirection === "desc") setSortDirection("asc");
       else { setSortKey("position"); setSortDirection("asc"); }
@@ -84,16 +84,16 @@ export function Players({ assets }: { assets: DashboardAsset[] }) {
     }
     setSortKey(key);
     setSortDirection("desc");
-  };
+  }, [sortKey, sortDirection]);
 
-  const toggleBlock = (assetCode: string) => {
+  const toggleBlock = useCallback((assetCode: string) => {
     setExpandedBlocks((current) => {
       const next = new Set(current);
       if (next.has(assetCode)) next.delete(assetCode);
       else next.add(assetCode);
       return next;
     });
-  };
+  }, []);
 
   return (
     <div className="tw-px-2 tw-py-3 sm:tw-px-5 sm:tw-py-7 lg:tw-px-7">

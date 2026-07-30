@@ -5,7 +5,8 @@
 }
 
 .lf-mobile-filters .lf-select-wrap { flex: 1; min-width: 0; }
-.lf-mobile-filters .lf-select-wrap--mobile { border-radius: 999px; }
+.lf-mobile-filters .lf-select-wrap--mobile { justify-content: center; border-radius: 999px; }
+.lf-mobile-filters .lf-select-wrap--mobile select { text-align: center; }
 
 .lf-teams-heading {
   padding: 24px 24px 18px;

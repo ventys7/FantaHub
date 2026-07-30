@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { ChevronDownIcon, XIcon } from "../icons";
 import { ROLE_LABELS, ROLE_OPTIONS } from "../constants";
 
@@ -26,6 +27,8 @@ export function PlayerFilters({
   onOwnerChange,
   onResetFilters
 }: Props) {
+  const teamOptions = useMemo(() => teams.map((team) => <option key={team} value={team}>{team}</option>), [teams]);
+  const ownerOptions = useMemo(() => owners.map((owner) => <option key={owner} value={owner}>{owner}</option>), [owners]);
   return (
     <div className="tw-mb-5 sm:tw-mb-6">
       <div className="tw-hidden tw-items-center tw-justify-between tw-gap-4 md:tw-flex">
@@ -47,7 +50,7 @@ export function PlayerFilters({
             <span aria-hidden="true">🏟️</span>
             <select value={currentTeam} onChange={(event) => onTeamChange(event.target.value)} aria-label="Filtra per squadra reale">
               <option value="Tutti">Squadra</option>
-              {teams.map((team) => <option key={team} value={team}>{team}</option>)}
+              {teamOptions}
             </select>
             <ChevronDownIcon size={14} />
           </label>
@@ -56,7 +59,7 @@ export function PlayerFilters({
             <span aria-hidden="true">👤</span>
             <select value={currentOwner} onChange={(event) => onOwnerChange(event.target.value)} aria-label="Filtra per proprietario">
               <option value="Tutti">Proprietario</option>
-              {owners.map((owner) => <option key={owner} value={owner}>{owner}</option>)}
+              {ownerOptions}
             </select>
             <ChevronDownIcon size={14} />
           </label>
@@ -89,7 +92,7 @@ export function PlayerFilters({
               <span aria-hidden="true">👤</span>
               <select value={currentOwner} onChange={(event) => onOwnerChange(event.target.value)} aria-label="Filtra per proprietario">
                 <option value="Tutti">Proprietario</option>
-                {owners.map((owner) => <option key={owner} value={owner}>{owner}</option>)}
+                {ownerOptions}
               </select>
               <ChevronDownIcon size={14} />
             </label>

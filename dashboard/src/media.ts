@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { DashboardAsset } from "./types";
 
 export type PlayerMediaEntry = {
@@ -43,22 +43,36 @@ export function usePlayerMedia(assets: DashboardAsset[], leagueId: string) {
       const detail = (event as CustomEvent<{ leagueId: string; payload: MediaPayload }>).detail;
       if (detail?.leagueId === leagueId) setPayload(detail.payload || emptyPayload());
     };
-    const onClubs = () => setCrestVersion((value) => value + 1);
+    const clubsTimer = { current: 0 };
+    const onClubs = () => {
+      if (clubsTimer.current) return;
+      clubsTimer.current = window.setTimeout(() => {
+        clubsTimer.current = 0;
+        setCrestVersion((value) => value + 1);
+      }, 120);
+    };
     window.addEventListener("lineup:player-media-ready", onMedia as EventListener);
     window.addEventListener("lineup:kickoff-clubs-ready", onClubs as EventListener);
     return () => {
       window.removeEventListener("lineup:player-media-ready", onMedia as EventListener);
       window.removeEventListener("lineup:kickoff-clubs-ready", onClubs as EventListener);
+      window.clearTimeout(clubsTimer.current);
     };
   }, [leagueId]);
 
-  return useMemo(() => ({
-    player(name: string, team: string) {
-      return payload.players[playerMediaKey(name, team)] || window.LineupPlayerMedia?.player(name, team, leagueId) || null;
-    },
-    crest(team: string) {
+  const player = useMemo(() =>
+    (name: string, team: string) =>
+      payload.players[playerMediaKey(name, team)] || window.LineupPlayerMedia?.player(name, team, leagueId) || null,
+    [payload, leagueId]
+  );
+
+  const crest = useMemo(() =>
+    (team: string) => {
       void crestVersion;
       return window.LineupPlayerMedia?.crest(team) || "";
-    }
-  }), [crestVersion, leagueId, payload]);
+    },
+    [crestVersion]
+  );
+
+  return useMemo(() => ({ player, crest }), [player, crest]);
 }

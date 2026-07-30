@@ -1,10 +1,11 @@
+import { memo } from "react";
 import { ROLE_BADGE_CLASSES, ROLE_LABELS } from "../constants";
 import type { PlayerMediaEntry } from "../media";
 import type { DashboardAsset } from "../types";
 
 function initials(name: string) { return name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("") || "?"; }
 
-export function PlayerMobileCard({ player, media, crestUrl }: { player: DashboardAsset; media?: PlayerMediaEntry | null; crestUrl?: string }) {
+export const PlayerMobileCard = memo(function PlayerMobileCard({ player, media, crestUrl }: { player: DashboardAsset; media?: PlayerMediaEntry | null; crestUrl?: string }) {
   return (
     <article className="tw-p-3 tw-transition hover:tw-bg-slate-50">
       <div className="tw-flex tw-items-start tw-gap-3">
@@ -31,4 +32,4 @@ export function PlayerMobileCard({ player, media, crestUrl }: { player: Dashboar
       </div>
     </article>
   );
-}
+});

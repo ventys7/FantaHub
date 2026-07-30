@@ -1,10 +1,11 @@
+import { memo } from "react";
 import { ROLE_BADGE_CLASSES, ROLE_LABELS } from "../constants";
 import type { PlayerMediaEntry } from "../media";
 import type { DashboardAsset } from "../types";
 
 function initials(name: string) { return name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("") || "?"; }
 
-export function PlayerDesktopRow({ player, media, crestUrl }: { player: DashboardAsset; media?: PlayerMediaEntry | null; crestUrl?: string }) {
+export const PlayerDesktopRow = memo(function PlayerDesktopRow({ player, media, crestUrl }: { player: DashboardAsset; media?: PlayerMediaEntry | null; crestUrl?: string }) {
   return (
     <div className="tw-group tw-grid tw-grid-cols-12 tw-gap-4 tw-px-6 tw-py-4 tw-transition hover:tw-bg-slate-50">
       <div className="tw-col-span-4 tw-flex tw-min-w-0 tw-items-center tw-gap-3">
@@ -22,4 +23,4 @@ export function PlayerDesktopRow({ player, media, crestUrl }: { player: Dashboar
       <div className="tw-col-span-2 tw-flex tw-items-center tw-min-w-0"><span className={`tw-truncate tw-text-sm ${player.ownerTag ? "tw-text-slate-600" : "tw-italic tw-text-slate-400"}`}>{player.ownerTag || "Svincolato"}</span></div>
     </div>
   );
-}
+});

@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { ChevronDownIcon, ShieldIcon } from "../icons";
 import type { PlayerMediaEntry } from "../media";
 import type { DashboardAsset } from "../types";
@@ -14,7 +15,7 @@ type Props = {
   media: { player: (name: string, team: string) => PlayerMediaEntry | null };
 };
 
-export function GoalkeeperBlock({ asset, expanded, onToggle, crestUrl, media }: Props) {
+export const GoalkeeperBlock = memo(function GoalkeeperBlock({ asset, expanded, onToggle, crestUrl, media }: Props) {
   const players = splitGoalkeepers(asset.displayName);
 
   return (
@@ -71,4 +72,4 @@ export function GoalkeeperBlock({ asset, expanded, onToggle, crestUrl, media }: 
       )}
     </div>
   );
-}
+});

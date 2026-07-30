@@ -19,7 +19,7 @@ export function useLeagueAssets() {
       setAssets(snapshot.assets);
       attempts += 1;
       if (snapshot.state.status !== "ready" && attempts < 20) {
-        window.setTimeout(sync, 150);
+        window.setTimeout(sync, 300);
       }
     };
 
