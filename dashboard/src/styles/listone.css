@@ -168,11 +168,11 @@
   min-width: 0;
   /* text-align: left perché su iOS i <select> ignorano text-align:center (testo
      attaccato a sinistra dopo l'emoji): il label deve stare "in linea" con i filtri.
-     padding-left: 12px replica l'indent nativo del <select> iOS (nessun padding
-     dichiarato nel CSS; con appearance:none l'indent iOS è ~12px, misurato a
-     occhio dall'utente: il testo risultava ~4px più a sinistra di 'Proprietario'). */
+     padding-left: 14px replica l'indent nativo del <select> iOS (nessun padding
+     dichiarato nel CSS; con appearance:none l'indent iOS è ~12-14px: a 12px il testo
+     risultava ancora un filo (~2px) più a sinistra di 'Proprietario'). */
   text-align: left;
-  padding-left: 12px;
+  padding-left: 14px;
   font-family: inherit;
   font-size: inherit;
   font-weight: inherit;
@@ -220,15 +220,15 @@
 
 /* Mobile: niente evidenziatore grigio di default al tap.
    Il feedback di pressione è gestito via Pointer Events (pressFeedback.ts): l'attributo
-   data-lf-pressed viene aggiunto al pointerdown e rimosso al rilascio. Lo stato CSS
-   :active su iOS Safari scatta in ritardo e resta "appeso" finché non tocchi altrove,
-   quindi qui non lo usiamo: data-lf-pressed dà subito il colore pattern e si rilascia
-   pulito. Per gli stati già sul colore del pattern (--active / --primary) il feedback
-   è uno scurimento (brightness) invece di uno stesso-colore invisibile.
+   data-lf-pressed viene aggiunto al pointerdown e SU TOUCH RESTA (latch): il bottone
+   diventa del colore pattern e rimane tale finché non se ne preme un altro (scroll e
+   cancel rilasciano). Su desktop il rilascio pulisce subito: ci pensa lo :hover.
    ATTRIBUTO E NON CLASSE: React re-renderizza i controlli al click (setState) e
    riscrive className, cancellando qualsiasi classe aggiunta via JS prima che il
    browser la disegni. Un data-attribute impostato fuori da React non viene toccato
-   dal re-render e il feedback resta visibile. */
+   dal re-render e il feedback resta visibile.
+   I controlli già del colore pattern (--active / --primary / --danger-active) NON
+   ricevono l'attributo (pressFeedback.ts): sono già pattern, il tap non li scurisce. */
 .lf-role-pill,
 .lf-mobile-toggle,
 .lf-mobile-sort-btn,
@@ -247,15 +247,6 @@
 .lf-reset-button[data-lf-pressed="true"] {
   background: var(--primary);
   color: #ffffff;
-}
-
-.lf-role-pill--active[data-lf-pressed="true"],
-.lf-mobile-toggle--active[data-lf-pressed="true"],
-.lf-mobile-sort-btn--primary[data-lf-pressed="true"],
-.lf-action-button--active[data-lf-pressed="true"],
-.lf-action-button--danger-active[data-lf-pressed="true"],
-.lf-reset-button[data-lf-pressed="true"] {
-  filter: brightness(0.88);
 }
 
 .lf-list-table {

@@ -5,7 +5,18 @@
  * "appeso" finché non tocchi altrove. Inoltre lo `:hover` su touch è sticky
  * (si attacca al primo tap e resta finché non tocchi altrove). Quindi su touch
  * il feedback è guidato via Pointer Events (con fallback touch/mouse): l'attributo
- * `data-lf-pressed` viene aggiunto al pointerdown e rimosso al rilascio.
+ * `data-lf-pressed` viene aggiunto al pointerdown.
+ *
+ * COMPORTAMENTO (richiesto dall'utente): al tap il bottone DIVENTA del colore
+ * pattern e RESTA così ("voglio che rimanga il colore pattern, stop" — niente
+ * lampeggio che torna grigio). Su touch lo stato è quindi un LATCH:
+ * - il bottone resta data-lf-pressed finché non ne premi un altro (il nuovo
+ *   press rilascia il precedente) o il gesto viene rubato (scroll/cancel);
+ * - il pointerup NON rimuove lo stato (rimuoverlo al rilascio rendeva il
+ *   feedback un lampo impercettibile: su iOS il rendering è sospeso durante
+ *   il tocco, quindi l'unica parte visibile era il post-rilascio).
+ * Su desktop (hover: hover) il rilascio rimuove subito lo stato: ci pensa lo
+ * :hover a dare continuità visiva.
  *
  * ATTRIBUTO E NON CLASSE: i controlli del listone sono componenti React che al
  * click (setState) vengono re-renderizzati: React riscrive `className` e cancella
@@ -13,19 +24,12 @@
  * diventava invisibile proprio su iPhone. Un data-attribute impostato fuori da
  * React non viene toccato dal re-render.
  *
- * RILASCIO RITARDATO: iOS Safari sospende il rendering mentre il dito è sul
- * display — l'attributo aggiunto al pointerdown di un tap rapido verrebbe rimosso
- * al pointerup PRIMA che il browser disegni un frame, rendendo il feedback
- * invisibile. Il rilascio viene quindi ritardato di MIN_FEEDBACK_MS: il feedback
- * resta visibile almeno un frame anche per i tap più veloci.
+ * CONTROLLI GIÀ DEL COLORE PATTERN (--active / --primary / --danger-active):
+ * non ricevono data-lf-pressed: sono già "pattern", il tap non deve scurirli o
+ * cambiarli — restano semplicemente del loro colore.
  */
 
 const PRESSED_ATTR = "data-lf-pressed";
-/** Durata minima del feedback dopo il rilascio: su iOS il rendering è sospeso
- * durante il tocco, quindi il feedback si vede solo post-rilascio — deve durare
- * abbastanza da essere percepito come una risposta al tap (120ms risultava un
- * lampo: "appare e dura poco"). 250ms è il minimo percepibile come feedback. */
-export const MIN_FEEDBACK_MS = 250;
 const PRESSABLE = [
   ".lf-role-pill",
   ".lf-mobile-toggle",
@@ -33,67 +37,83 @@ const PRESSABLE = [
   ".lf-action-button",
   ".lf-reset-button"
 ].join(", ");
+/** Stati che mostrano GIÀ il colore pattern: nessun feedback necessario. */
+const PATTERN_STATES = [
+  ".lf-role-pill--active",
+  ".lf-mobile-toggle--active",
+  ".lf-mobile-sort-btn--primary",
+  ".lf-action-button--active",
+  ".lf-action-button--danger-active"
+].join(", ");
 
 function findPressable(target: EventTarget | null): HTMLElement | null {
   if (!(target instanceof Element)) return null;
   return target.closest<HTMLElement>(PRESSABLE);
 }
 
+type ListenerEntry = {
+  type: string;
+  handler: EventListenerOrEventListenerObject;
+  options: AddEventListenerOptions | boolean;
+};
+
+let installedListeners: ListenerEntry[] | null = null;
+
+export function uninstallPressFeedback(): void {
+  if (!installedListeners) return;
+  for (const { type, handler, options } of installedListeners) {
+    window.removeEventListener(type, handler, options);
+  }
+  installedListeners = null;
+}
+
 export function installPressFeedback(): void {
   if (typeof window === "undefined") return;
+  if (installedListeners) return; // guardia anti doppia installazione
 
-  // Guardia anti doppia installazione (utile nei test, che ri-installano per
-  // cambiare ramo Pointer Events / fallback).
-  if ((window as unknown as { __pressFeedbackInstalled?: boolean }).__pressFeedbackInstalled) return;
-  (window as unknown as { __pressFeedbackInstalled: boolean }).__pressFeedbackInstalled = true;
-
-  let releaseTimer: ReturnType<typeof setTimeout> | undefined;
+  // Su touch (niente hover) lo stato è un latch; su desktop il rilascio pulisce.
+  const isTouch = typeof window.matchMedia === "function" && !window.matchMedia("(hover: hover)").matches;
 
   const release = (): void => {
     document.querySelectorAll(`[${PRESSED_ATTR}]`).forEach((el) => el.removeAttribute(PRESSED_ATTR));
   };
 
-  const clearTimer = (): void => {
-    if (releaseTimer !== undefined) {
-      clearTimeout(releaseTimer);
-      releaseTimer = undefined;
-    }
-  };
-
   const press = (event: Event): void => {
-    clearTimer();
     release();
     const el = findPressable(event.target);
-    if (el) el.setAttribute(PRESSED_ATTR, "true");
+    if (el && !el.matches(PATTERN_STATES)) el.setAttribute(PRESSED_ATTR, "true");
   };
 
-  // Rilascio "sicuro": il feedback resta visibile almeno MIN_FEEDBACK_MS.
-  const scheduleRelease = (): void => {
-    clearTimer();
-    releaseTimer = window.setTimeout(release, MIN_FEEDBACK_MS);
+  // Su touch: no-op (latch — il bottone resta del colore pattern).
+  // Su desktop: pulizia al rilascio (lo :hover copre la continuità visiva).
+  const releaseOrLatch = (): void => {
+    if (!isTouch) release();
   };
 
-  // Rilascio immediato: gesto interrotto (cancel) o rubato (scroll).
-  const cancel = (): void => {
-    clearTimer();
-    release();
+  // Gesto interrotto (cancel) o rubato (scroll): il tap non è andato a buon fine.
+  const cancel = (): void => release();
+
+  installedListeners = [];
+  const add = (type: string, handler: EventListenerOrEventListenerObject, options: AddEventListenerOptions | boolean): void => {
+    window.addEventListener(type, handler, options);
+    installedListeners!.push({ type, handler, options });
   };
 
   // Pointer Events (iOS 13+, tutti i browser moderni).
   const hasPointerEvents = typeof window.PointerEvent !== "undefined";
   if (hasPointerEvents) {
-    window.addEventListener("pointerdown", press, true);
-    window.addEventListener("pointerup", scheduleRelease, true);
-    window.addEventListener("pointercancel", cancel, true);
+    add("pointerdown", press, true);
+    add("pointerup", releaseOrLatch, true);
+    add("pointercancel", cancel, true);
   } else {
     // Fallback: webview/iOS < 13 senza Pointer Events.
-    window.addEventListener("touchstart", press, { capture: true, passive: true });
-    window.addEventListener("touchend", scheduleRelease, { capture: true, passive: true });
-    window.addEventListener("touchcancel", cancel, { capture: true, passive: true });
-    window.addEventListener("mousedown", press, true);
-    window.addEventListener("mouseup", scheduleRelease, true);
+    add("touchstart", press, { capture: true, passive: true });
+    add("touchend", releaseOrLatch, { capture: true, passive: true });
+    add("touchcancel", cancel, { capture: true, passive: true });
+    add("mousedown", press, true);
+    add("mouseup", releaseOrLatch, true);
   }
 
   // Lo scroll (gesto che "ruba" il pointer su iOS) deve rilasciare subito.
-  window.addEventListener("scroll", cancel, true);
+  add("scroll", cancel, true);
 }
