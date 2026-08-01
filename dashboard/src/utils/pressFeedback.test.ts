@@ -1,7 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { installPressFeedback } from "./pressFeedback";
-
-const MIN_FEEDBACK_MS = 120;
+import { installPressFeedback, MIN_FEEDBACK_MS } from "./pressFeedback";
 
 function makePressable(id: string, className: string): HTMLElement {
   const el = document.createElement("button");

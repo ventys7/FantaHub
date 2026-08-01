@@ -21,7 +21,11 @@
  */
 
 const PRESSED_ATTR = "data-lf-pressed";
-const MIN_FEEDBACK_MS = 120;
+/** Durata minima del feedback dopo il rilascio: su iOS il rendering è sospeso
+ * durante il tocco, quindi il feedback si vede solo post-rilascio — deve durare
+ * abbastanza da essere percepito come una risposta al tap (120ms risultava un
+ * lampo: "appare e dura poco"). 250ms è il minimo percepibile come feedback. */
+export const MIN_FEEDBACK_MS = 250;
 const PRESSABLE = [
   ".lf-role-pill",
   ".lf-mobile-toggle",
