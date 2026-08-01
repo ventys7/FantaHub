@@ -145,7 +145,7 @@
   display: inline-flex;
   min-height: 40px;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 7px;
   padding: 0 12px;
   border: 1px solid #dbe3df;
@@ -153,8 +153,9 @@
   background: #ffffff;
   color: #53635d;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
+  touch-action: manipulation;
 }
 
 .lf-mobile-toggle:hover { border-color: var(--primary-border); background: var(--primary-bg); }
@@ -188,20 +189,33 @@
 .lf-mobile-sort-btn--active { border-color: var(--primary-border); background: var(--primary-bg); color: var(--primary); }
 .lf-mobile-sort-btn--primary { border-color: var(--primary); background: var(--primary); color: #ffffff; }
 
-/* Mobile: niente evidenziatore grigio di default al tap, il feedback usa il colore del pattern. */
+/* Mobile: niente evidenziatore grigio di default al tap, il feedback usa il colore del pattern.
+   touch-action: manipulation disabilita il double-tap-zoom iOS: lo stato :active scatta e si
+   rilascia subito al tap, senza restare "tenuto premuto" finché non tocchi altrove. */
 .lf-role-pill,
 .lf-mobile-toggle,
 .lf-mobile-sort-btn,
 .lf-select-wrap,
 .lf-action-button,
-.lf-reset-button {
+.lf-reset-button,
+.lf-sort {
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .lf-role-pill:active,
 .lf-mobile-toggle:active,
 .lf-mobile-sort-btn:active {
   background: var(--primary-bg);
+}
+
+/* Il feedback di pressione non deve sbiadire chi è già sul colore del pattern:
+   le varianti attive/primarie restano sul primario pieno. */
+.lf-role-pill--active:active,
+.lf-mobile-toggle--active:active,
+.lf-mobile-sort-btn--primary:active {
+  background: var(--primary);
+  color: #ffffff;
 }
 
 .lf-mobile-sort-btn--active:active { color: var(--primary); }
@@ -219,7 +233,7 @@
   z-index: 50;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 8px;
   padding: 10px 24px;
   background: #f8fafc;
