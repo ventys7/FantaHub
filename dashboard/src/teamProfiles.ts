@@ -5,6 +5,12 @@ export type TeamProfile = {
 
 export type TeamProfiles = Record<string, TeamProfile>;
 
+/** Normalizza il nome di una fantasquadra/mister per il lookup dei loghi
+ *  (stessa chiave usata dalla classifica): accent-free, solo alfanumerici, minuscolo. */
+export function normalizeTeamName(name: string): string {
+  return name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]+/g, " ").trim().toLowerCase();
+}
+
 type RawTeamProfile = {
   credits?: unknown;
   logoUrl?: unknown;

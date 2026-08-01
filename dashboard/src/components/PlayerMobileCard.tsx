@@ -1,11 +1,15 @@
 import { memo } from "react";
 import { ROLE_BADGE_CLASSES, ROLE_LABELS } from "../constants";
 import type { PlayerMediaEntry } from "../media";
+import { normalizeTeamName } from "../teamProfiles";
 import type { DashboardAsset } from "../types";
 
 function initials(name: string) { return name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("") || "?"; }
 
-export const PlayerMobileCard = memo(function PlayerMobileCard({ player, media, crestUrl }: { player: DashboardAsset; media?: PlayerMediaEntry | null; crestUrl?: string }) {
+export const PlayerMobileCard = memo(function PlayerMobileCard({ player, media, crestUrl, ownerLogos }: { player: DashboardAsset; media?: PlayerMediaEntry | null; crestUrl?: string; ownerLogos?: Record<string, string> }) {
+  // Stemma della fantasquadra del proprietario (chiave normalizzata); l'emoji resta
+  // come fallback per chi non ha logo e per gli svincolati.
+  const ownerLogo = player.ownerTag ? ownerLogos?.[normalizeTeamName(player.ownerTag)] : undefined;
   return (
     <article className="lf-list-row tw-p-3 tw-transition hover:tw-bg-slate-50">
       <div className="tw-flex tw-items-start tw-gap-3">
@@ -25,8 +29,9 @@ export const PlayerMobileCard = memo(function PlayerMobileCard({ player, media, 
             <span><span className="tw-text-slate-400">Quot:</span> <strong className="tw-text-slate-900">{player.quotation || "—"}</strong></span>
             <span><span className="tw-text-slate-400">Acq:</span> <strong className="tw-text-[var(--primary)]">{player.purchasePrice || "—"}</strong></span>
           </div>
-          <div className="tw-mt-1 tw-text-sm">
-            <span className={`tw-max-w-full tw-truncate ${player.ownerTag ? "tw-text-slate-500" : "tw-italic tw-text-slate-400"}`}>👤 {player.ownerTag || "Svincolato"}</span>
+          <div className="tw-mt-1 tw-flex tw-items-center tw-gap-1.5 tw-text-sm">
+            {ownerLogo ? <img src={ownerLogo} alt="" className="lf-owner-logo" loading="lazy" referrerPolicy="no-referrer" /> : <span aria-hidden="true">👤</span>}
+            <span className={`tw-max-w-full tw-truncate ${player.ownerTag ? "tw-text-slate-500" : "tw-italic tw-text-slate-400"}`}>{player.ownerTag || "Svincolato"}</span>
           </div>
         </div>
       </div>

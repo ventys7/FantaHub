@@ -9,6 +9,7 @@ import { PlayerDesktopRow } from "../components/PlayerDesktopRow";
 import { PlayerFilters } from "../components/PlayerFilters";
 import { PlayerListHeader } from "../components/PlayerListHeader";
 import { PlayerMobileCard } from "../components/PlayerMobileCard";
+import { loadTeamProfiles, normalizeTeamName, type TeamProfiles } from "../teamProfiles";
 
 function normalizeText(value: string) {
   return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/Ø/g, "O").replace(/ø/g, "o").toLowerCase();
@@ -52,8 +53,10 @@ function useChromeOffset(rootRef: RefObject<HTMLDivElement | null>) {
 export function Players({ assets }: { assets: DashboardAsset[] }) {
   const rootRef = useRef<HTMLDivElement>(null);
   useChromeOffset(rootRef);
-  const leagueId = window.LINEUP_FANTA?.league?.id ?? "";
+  const league = window.LINEUP_FANTA?.league;
+  const leagueId = league?.id ?? "";
   const media = usePlayerMedia(assets, leagueId);
+  const [teamProfiles, setTeamProfiles] = useState<TeamProfiles>({});
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   // Debounce: la ricerca viene applicata 120ms dopo l'ultima digitazione (meno re-render a ogni tasto).
@@ -76,6 +79,38 @@ export function Players({ assets }: { assets: DashboardAsset[] }) {
     mediaQuery.addEventListener("change", onChange);
     return () => mediaQuery.removeEventListener("change", onChange);
   }, []);
+
+  // Profili delle fantasquadre (per gli stemmi dei proprietari nel listone mobile):
+  // caricati da /api/settings o dal fallback configurato; l'evento di upload aggiorna
+  // il profilo al volo, così lo stemma compare senza ricaricare la pagina.
+  useEffect(() => {
+    let cancelled = false;
+    loadTeamProfiles(leagueId, league?.leagueData?.teamProfilesUrl)
+      .then((profiles) => { if (!cancelled) setTeamProfiles(profiles); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [leagueId, league?.leagueData?.teamProfilesUrl]);
+
+  useEffect(() => {
+    const onLogoUpdated = (event: Event) => {
+      const detail = (event as CustomEvent<{ leagueId: string; teamName: string; logoUrl: string }>).detail;
+      if (!detail || detail.leagueId !== leagueId || !detail.teamName) return;
+      setTeamProfiles((current) => ({
+        ...current,
+        [detail.teamName]: {
+          ...(current[detail.teamName] || { credits: null, logoUrl: "" }),
+          logoUrl: detail.logoUrl
+        }
+      }));
+    };
+    window.addEventListener("lineup:team-logo-updated", onLogoUpdated as EventListener);
+    return () => window.removeEventListener("lineup:team-logo-updated", onLogoUpdated as EventListener);
+  }, [leagueId]);
+
+  const ownerLogos = useMemo(() => Object.entries(teamProfiles).reduce<Record<string, string>>((result, [name, profile]) => {
+    if (profile.logoUrl) result[normalizeTeamName(name)] = profile.logoUrl;
+    return result;
+  }, {}), [teamProfiles]);
 
   const teams = useMemo(() => [...new Set(assets.map((asset) => asset.realTeam).filter(Boolean))].sort((a, b) => a.localeCompare(b, "it")), [assets]);
   const owners = useMemo(() => [...new Set(assets.map((asset) => asset.ownerTag).filter(Boolean))].sort((a, b) => a.localeCompare(b, "it")), [assets]);
@@ -285,8 +320,8 @@ export function Players({ assets }: { assets: DashboardAsset[] }) {
                   ? <GoalkeeperBlock key={asset.assetCode} asset={asset} expanded={expandedBlocks.has(asset.assetCode)} onToggle={() => toggleBlock(asset.assetCode)} crestUrl={media.crest(asset.realTeam)} media={media} />
                   : <PlayerDesktopRow key={asset.assetCode} player={asset} media={media.player(asset.displayName, asset.realTeam)} crestUrl={media.crest(asset.realTeam)} />)
               : renderListBody((asset) => isGoalkeeperBlock(asset)
-                  ? <GoalkeeperBlock key={asset.assetCode} asset={asset} expanded={expandedBlocks.has(asset.assetCode)} onToggle={() => toggleBlock(asset.assetCode)} crestUrl={media.crest(asset.realTeam)} media={media} />
-                  : <PlayerMobileCard key={asset.assetCode} player={asset} media={media.player(asset.displayName, asset.realTeam)} crestUrl={media.crest(asset.realTeam)} />)}
+                  ? <GoalkeeperBlock key={asset.assetCode} asset={asset} expanded={expandedBlocks.has(asset.assetCode)} onToggle={() => toggleBlock(asset.assetCode)} crestUrl={media.crest(asset.realTeam)} media={media} ownerLogos={ownerLogos} />
+                  : <PlayerMobileCard key={asset.assetCode} player={asset} media={media.player(asset.displayName, asset.realTeam)} crestUrl={media.crest(asset.realTeam)} ownerLogos={ownerLogos} />)}
             {processedList.length === 0 && (
               <div className="tw-px-6 tw-py-14 tw-text-center"><SearchIcon size={34} className="tw-mx-auto tw-mb-3 tw-text-slate-300"/><h2 className="tw-m-0 tw-text-lg tw-font-bold tw-text-slate-800">Nessun giocatore trovato</h2><p className="tw-mb-0 tw-mt-1 tw-text-sm tw-text-slate-500">Prova a modificare i filtri di ricerca.</p></div>
             )}

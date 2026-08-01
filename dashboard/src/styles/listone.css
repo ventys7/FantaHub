@@ -319,6 +319,18 @@
 .lf-player-avatar--mobile { width: 48px; height: 48px; flex-basis: 48px; }
 .lf-mini-avatar { display: flex; width: 28px; height: 28px; flex: 0 0 28px; align-items: center; justify-content: center; border-radius: 999px; background: #fff3c4; color: #8a6300; font-size: 11px; font-weight: 900; }
 
+/* Stemma della fantasquadra del proprietario nella riga proprietario (listone mobile):
+   dimensioni coerenti con la riga (text-sm), stesso ritaglio centrato della classifica. */
+.lf-owner-logo {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 4px;
+  background: #fff;
+}
+
 .lf-role-badge {
   display: inline-flex;
   min-height: 26px;
