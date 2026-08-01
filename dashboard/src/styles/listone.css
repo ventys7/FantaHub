@@ -166,17 +166,25 @@
 .lf-mobile-filters .lf-mobile-toggle__label {
   flex: 1;
   min-width: 0;
-  text-align: center;
+  /* text-align: left perché su iOS i <select> ignorano text-align:center (testo
+     attaccato a sinistra dopo l'emoji): il label deve stare "in linea" con i filtri. */
+  text-align: left;
   font-family: inherit;
   font-size: inherit;
   font-weight: inherit;
 }
 
-/* Su mobile i select centrano solo il testo interno (text-align: center sul select);
-   il bottone svincolati replica la struttura label + testo flessibile, quindi niente
-   justify-content: la regola è esclusa in teams.css via :not(.lf-mobile-toggle). */
+/* Su mobile i select centrano solo il testo interno (text-align: center sul select,
+   non rispettato da iOS); il bottone svincolati replica la struttura label + testo
+   flessibile, quindi niente justify-content: la regola è esclusa in teams.css via
+   :not(.lf-mobile-toggle). */
 
 .lf-mobile-toggle--active { border-color: var(--primary); background: var(--primary); color: #ffffff; }
+
+/* La freccetta del bottone Svincolati è un placeholder strutturale: occupa lo spazio
+   del chevron dei select (allineamento del testo identico) ma è invisibile — con una
+   freccia visibile il bottone sembrerebbe un select finto. */
+.lf-mobile-toggle__chevron { visibility: hidden; }
 
 /* Ordinamenti mobile: pill affiancate alla search bar nella header row (stessi criteri del desktop). */
 .lf-mobile-sort-inline {

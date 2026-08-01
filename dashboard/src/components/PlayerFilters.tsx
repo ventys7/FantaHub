@@ -90,7 +90,7 @@ export function PlayerFilters({
           >
             <span aria-hidden="true">🆓</span>
             <span className="lf-mobile-toggle__label">Svincolati</span>
-            <ChevronDownIcon size={14} />
+            <ChevronDownIcon size={14} className="lf-mobile-toggle__chevron" />
           </button>
         </div>
 
