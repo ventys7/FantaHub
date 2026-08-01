@@ -17,7 +17,7 @@
 }
 
 .lf-dashboard-card {
-  overflow: hidden;
+  overflow: clip;
   border: 1px solid var(--primary-border, rgba(124, 58, 237, 0.18));
   border-radius: 20px;
   background: var(--card, #ffffff);
@@ -140,10 +140,28 @@
 }
 
 .lf-list-table {
-  overflow: hidden;
+  overflow: clip;
   border: 1px solid #e2e8e5;
   border-radius: 16px;
   background: #ffffff;
+}
+
+.lf-role-section-header {
+  position: sticky;
+  top: var(--lf-chrome-bottom, 0px);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 24px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .lf-sort {
@@ -222,6 +240,7 @@
   .lf-dashboard-card { border-radius: 16px; }
   .lf-action-button { width: 48px; padding: 0; }
   .lf-list-table { border-radius: 14px; }
+  .lf-role-section-header { padding: 8px 12px; font-size: 10px; }
 }
 
 .lf-player-avatar.has-photo { overflow: hidden; padding: 0; background: #eef3f1; }

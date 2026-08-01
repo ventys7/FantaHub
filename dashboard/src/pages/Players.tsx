@@ -1,5 +1,6 @@
-import { useCallback, useMemo, useState } from "react";
-import { ROLE_ORDER } from "../constants";
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
+import type { ReactNode, RefObject } from "react";
+import { ROLE_LABELS, ROLE_ORDER, ROLE_SECTION_LABELS } from "../constants";
 import { SearchIcon, UserXIcon, XIcon } from "../icons";
 import type { DashboardAsset, SortDirection, SortKey } from "../types";
 import { usePlayerMedia } from "../media";
@@ -17,7 +18,33 @@ function isGoalkeeperBlock(asset: DashboardAsset) {
   return asset.type === "goalkeeper_block" || (asset.role === "P" && /\s+-\s+/.test(asset.displayName));
 }
 
+type RoleSection = { role: string; label: string; items: DashboardAsset[] };
+
+/** Espone l'altezza dell'app-chrome sticky come --lf-chrome-bottom sul root,
+ *  così gli header di ruolo sticky si ancorano sotto il chrome (altezza variabile su mobile). */
+function useChromeOffset(rootRef: RefObject<HTMLDivElement | null>) {
+  useLayoutEffect(() => {
+    const node = rootRef.current;
+    if (!node) return;
+    const chrome = document.querySelector<HTMLElement>(".app-chrome");
+    const apply = () => {
+      const height = chrome ? chrome.getBoundingClientRect().height : 0;
+      node.style.setProperty("--lf-chrome-bottom", `${height}px`);
+    };
+    apply();
+    const observer = chrome ? new ResizeObserver(apply) : null;
+    if (observer && chrome) observer.observe(chrome);
+    window.addEventListener("resize", apply);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", apply);
+    };
+  }, [rootRef]);
+}
+
 export function Players({ assets }: { assets: DashboardAsset[] }) {
+  const rootRef = useRef<HTMLDivElement>(null);
+  useChromeOffset(rootRef);
   const leagueId = window.LINEUP_FANTA?.league?.id ?? "";
   const media = usePlayerMedia(assets, leagueId);
   const [searchQuery, setSearchQuery] = useState("");
@@ -66,6 +93,41 @@ export function Players({ assets }: { assets: DashboardAsset[] }) {
 
   const hasActiveFilters = Boolean(searchQuery || roleFilter !== "Tutti" || teamFilter !== "Tutti" || ownerFilter !== "Tutti" || showFreeAgentsOnly);
 
+  // Raggruppa per ruolo solo quando il sort è per posizione (l'ordinamento naturale del listone).
+  const sections = useMemo<RoleSection[] | null>(() => {
+    if (sortKey !== "position") return null;
+    const groups = new Map<string, DashboardAsset[]>();
+    for (const asset of processedList) {
+      const role = asset.role || "U";
+      const items = groups.get(role);
+      if (items) items.push(asset);
+      else groups.set(role, [asset]);
+    }
+    const known = Object.keys(ROLE_ORDER).filter((role) => groups.has(role));
+    const unknown = [...groups.keys()].filter((role) => !(role in ROLE_ORDER)).sort((a, b) => a.localeCompare(b, "it"));
+    const ordered = sortDirection === "asc" ? [...known, ...unknown] : [...unknown.reverse(), ...known.reverse()];
+    return ordered.map((role) => ({
+      role,
+      label: ROLE_SECTION_LABELS[role] ?? ROLE_LABELS[role] ?? role,
+      items: groups.get(role) ?? []
+    }));
+  }, [processedList, sortDirection, sortKey]);
+
+  const renderListBody = useCallback((renderItem: (asset: DashboardAsset) => ReactNode) => {
+    if (!sections) {
+      return <div className="tw-divide-y tw-divide-slate-100">{processedList.map(renderItem)}</div>;
+    }
+    return sections.map((section) => (
+      <div key={section.role}>
+        <div className="lf-role-section-header">
+          <span>{section.label}</span>
+          <span>({section.items.length})</span>
+        </div>
+        <div className="tw-divide-y tw-divide-slate-100">{section.items.map(renderItem)}</div>
+      </div>
+    ));
+  }, [processedList, sections]);
+
   const resetFilters = () => {
     setSearchQuery("");
     setRoleFilter("Tutti");
@@ -96,7 +158,7 @@ export function Players({ assets }: { assets: DashboardAsset[] }) {
   }, []);
 
   return (
-    <div className="tw-px-2 tw-py-3 sm:tw-px-5 sm:tw-py-7 lg:tw-px-7">
+    <div ref={rootRef} className="tw-px-2 tw-py-3 sm:tw-px-5 sm:tw-py-7 lg:tw-px-7">
       <section className="lf-dashboard-card tw-mx-auto tw-max-w-7xl">
         <div className="tw-flex tw-justify-center tw-p-4 sm:tw-p-6 lg:tw-p-8">
           <div className="tw-flex tw-w-full tw-flex-wrap tw-items-stretch tw-gap-2 lg:tw-w-auto lg:tw-justify-center">
@@ -136,13 +198,13 @@ export function Players({ assets }: { assets: DashboardAsset[] }) {
 
           <div className="lf-list-table">
             <PlayerListHeader sortKey={sortKey} sortDirection={sortDirection} onSort={handleSort} />
-            <div className="tw-hidden tw-divide-y tw-divide-slate-100 md:tw-block">
-              {processedList.map((asset) => isGoalkeeperBlock(asset)
+            <div className="tw-hidden md:tw-block">
+              {renderListBody((asset) => isGoalkeeperBlock(asset)
                 ? <GoalkeeperBlock key={asset.assetCode} asset={asset} expanded={expandedBlocks.has(asset.assetCode)} onToggle={() => toggleBlock(asset.assetCode)} crestUrl={media.crest(asset.realTeam)} media={media} />
                 : <PlayerDesktopRow key={asset.assetCode} player={asset} media={media.player(asset.displayName, asset.realTeam)} crestUrl={media.crest(asset.realTeam)} />)}
             </div>
-            <div className="tw-divide-y tw-divide-slate-100 md:tw-hidden">
-              {processedList.map((asset) => isGoalkeeperBlock(asset)
+            <div className="md:tw-hidden">
+              {renderListBody((asset) => isGoalkeeperBlock(asset)
                 ? <GoalkeeperBlock key={asset.assetCode} asset={asset} expanded={expandedBlocks.has(asset.assetCode)} onToggle={() => toggleBlock(asset.assetCode)} crestUrl={media.crest(asset.realTeam)} media={media} />
                 : <PlayerMobileCard key={asset.assetCode} player={asset} media={media.player(asset.displayName, asset.realTeam)} crestUrl={media.crest(asset.realTeam)} />)}
             </div>
