@@ -22,7 +22,9 @@
 }
 
 .lf-mobile-filters .lf-select-wrap { flex: 1; min-width: 0; }
-.lf-mobile-filters .lf-select-wrap--mobile { justify-content: center; border-radius: 999px; }
+/* Solo i select centrano il testo interno; il bottone Svincolati (lf-mobile-toggle)
+   replica la struttura label + testo flessibile e non deve centrare il gruppo emoji+testo. */
+.lf-mobile-filters .lf-select-wrap--mobile:not(.lf-mobile-toggle) { justify-content: center; border-radius: 999px; }
 .lf-mobile-filters .lf-select-wrap--mobile select { text-align: center; }
 
 .lf-teams-heading {

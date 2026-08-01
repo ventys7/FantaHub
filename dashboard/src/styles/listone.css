@@ -70,10 +70,18 @@
   transition: transform 150ms ease, background 150ms ease, border-color 150ms ease;
 }
 
-.lf-action-button:hover,
-.lf-reset-button:hover { transform: translateY(-1px); background: #f6f8f7; }
-.lf-action-button--active { border-color: var(--primary); background: var(--primary); color: #ffffff; }
-.lf-action-button--active:hover { border-color: var(--primary-light); background: var(--primary-light); color: #ffffff; transform: translateY(-1px); }
+/* Gli :hover vivono solo dove esiste un hover reale (mouse/trackpad). Su touch/iOS
+   Safari lo :hover è sticky: scatta al tap e resta attaccato finché non tocchi
+   altrove (il sintomo "resta premuto, il colore appare quando tocco il vuoto").
+   Su touch il feedback è solo via .lf-pressed (pressFeedback.ts), istantaneo e pulito. */
+@media (hover: hover) {
+  .lf-action-button:hover,
+  .lf-reset-button:hover { transform: translateY(-1px); background: #f6f8f7; }
+  .lf-action-button--active:hover { border-color: var(--primary-light); background: var(--primary-light); color: #ffffff; transform: translateY(-1px); }
+  .lf-role-pill:hover { border-color: var(--primary-border); background: var(--primary-bg); }
+  .lf-mobile-toggle:hover { border-color: var(--primary-border); background: var(--primary-bg); }
+}
+
 .lf-action-button--danger-active { border-color: #ef4444; background: #ef4444; color: #ffffff; }
 .lf-reset-button { width: 48px; padding: 0; border-color: rgba(239, 68, 68, 0.24); background: rgba(239, 68, 68, 0.08); color: #dc2626; }
 
@@ -89,7 +97,6 @@
   transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
 }
 
-.lf-role-pill:hover { border-color: var(--primary-border); background: var(--primary-bg); }
 .lf-role-pill--active { border-color: var(--primary); background: var(--primary); color: #ffffff; }
 .lf-select-wrap--full { width: 100%; }
 .lf-select-wrap--full select { max-width: none; width: 100%; }
@@ -141,14 +148,29 @@
 
 /* Bottone Svincolati dentro la griglia 2×2 dei filtri (mobile): UI IDENTICA ai filtri
    elenco — usa le stesse classi .lf-select-wrap (pill, emoji + testo, font, padding) —,
-   cambia solo la semantica: è un bottone con stato attivo invece di un select. */
+   cambia solo la semantica: è un bottone con stato attivo invece di un select.
+   Il testo vive in .lf-mobile-toggle__label, che replica il select: flessibile,
+   centrato, stesso font-size/weight dei select mobile. */
 .lf-mobile-toggle {
   cursor: pointer;
+  font-family: inherit;
   font-size: 12px;
   font-weight: 700;
 }
 
-.lf-mobile-toggle:hover { border-color: var(--primary-border); background: var(--primary-bg); }
+.lf-mobile-toggle__label {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+/* Su mobile i select centrano solo il testo interno (text-align: center sul select);
+   il bottone svincolati replica la struttura label + testo flessibile, quindi niente
+   justify-content: la regola è esclusa in teams.css via :not(.lf-mobile-toggle). */
+
 .lf-mobile-toggle--active { border-color: var(--primary); background: var(--primary); color: #ffffff; }
 
 /* Ordinamenti mobile: pill affiancate alla search bar nella header row (stessi criteri del desktop). */
@@ -183,7 +205,9 @@
    Il feedback di pressione è gestito via Pointer Events (pressFeedback.ts): la classe
    .lf-pressed viene aggiunta al pointerdown e rimossa al rilascio. Lo stato CSS :active
    su iOS Safari scatta in ritardo e resta "appeso" finché non tocchi altrove, quindi
-   qui non lo usiamo: .lf-pressed dà subito il colore pattern e si rilascia pulito. */
+   qui non lo usiamo: .lf-pressed dà subito il colore pattern e si rilascia pulito.
+   Per gli stati già sul colore del pattern (--active / --primary) il feedback è un
+   scurimento (brightness) invece di uno stesso-colore invisibile. */
 .lf-role-pill,
 .lf-mobile-toggle,
 .lf-mobile-sort-btn,
@@ -200,6 +224,13 @@
 .lf-mobile-sort-btn.lf-pressed {
   background: var(--primary);
   color: #ffffff;
+}
+
+.lf-role-pill--active.lf-pressed,
+.lf-mobile-toggle--active.lf-pressed,
+.lf-mobile-sort-btn--primary.lf-pressed,
+.lf-action-button--active.lf-pressed {
+  filter: brightness(0.88);
 }
 
 .lf-list-table {
@@ -246,7 +277,6 @@
 /* Il criterio di ordinamento principale (la prima colonna attiva) è evidenziato col colore primario. */
 .lf-sort--primary { color: var(--primary); }
 .lf-sort--primary:hover { color: var(--primary); }
-
 /* Le righe fuori viewport non vengono renderizzate: layout/paint crollano, scroll e apertura filtri più reattivi.
    contain-intrinsic-size: auto ricorda l'altezza reale dopo il primo render (fallback iniziale 72px). */
 .lf-list-row {
