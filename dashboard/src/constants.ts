@@ -8,6 +8,14 @@ export const ROLE_LABELS: Record<string, string> = {
   U: "Altro"
 };
 
+export const ROLE_SECTION_LABELS: Record<string, string> = {
+  P: "Portieri",
+  D: "Difensori",
+  C: "Centrocampisti",
+  A: "Attaccanti",
+  U: "Altri"
+};
+
 export const ROLE_ORDER: Record<string, number> = {
   P: 1,
   D: 2,

@@ -7,7 +7,7 @@ function initials(name: string) { return name.split(/\s+/).filter(Boolean).slice
 
 export const PlayerDesktopRow = memo(function PlayerDesktopRow({ player, media, crestUrl }: { player: DashboardAsset; media?: PlayerMediaEntry | null; crestUrl?: string }) {
   return (
-    <div className="tw-group tw-grid tw-grid-cols-12 tw-gap-4 tw-px-6 tw-py-4 tw-transition hover:tw-bg-slate-50">
+    <div className="lf-list-row tw-group tw-grid tw-grid-cols-12 tw-gap-4 tw-px-6 tw-py-4 tw-transition hover:tw-bg-slate-50">
       <div className="tw-col-span-4 tw-flex tw-min-w-0 tw-items-center tw-gap-3">
         <div className={`lf-player-avatar ${media?.photoUrl ? "has-photo" : ""}`} aria-hidden="true">
           {media?.photoUrl ? <img src={media.photoUrl} alt="" loading="lazy" decoding="async" /> : initials(player.displayName)}

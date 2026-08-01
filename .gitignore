@@ -10,3 +10,10 @@ bsd-matching-*/
 bsd-team-selection-*/
 .claude-flow/
 .env*
+
+# Artefatti generati dalla build: Vercel li rigenera a ogni deploy
+# (buildCommand: npm run build && node scripts/generate-route-pages.mjs).
+# In locale: npm run verify li ricrea prima dei controlli.
+assets/dashboard/
+fp/index.html
+pd/index.html

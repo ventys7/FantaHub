@@ -8,10 +8,12 @@ type Props = {
   currentRole: string;
   currentTeam: string;
   currentOwner: string;
+  showFreeAgentsOnly: boolean;
   hasActiveFilters: boolean;
   onRoleChange: (role: string) => void;
   onTeamChange: (team: string) => void;
   onOwnerChange: (owner: string) => void;
+  onToggleFreeAgents: () => void;
   onResetFilters: () => void;
 };
 
@@ -21,10 +23,12 @@ export function PlayerFilters({
   currentRole,
   currentTeam,
   currentOwner,
+  showFreeAgentsOnly,
   hasActiveFilters,
   onRoleChange,
   onTeamChange,
   onOwnerChange,
+  onToggleFreeAgents,
   onResetFilters
 }: Props) {
   const teamOptions = useMemo(() => teams.map((team) => <option key={team} value={team}>{team}</option>), [teams]);
@@ -67,7 +71,7 @@ export function PlayerFilters({
       </div>
 
       <div className="lf-mobile-filters md:tw-hidden">
-        <div className="tw-flex tw-flex-col tw-gap-2">
+        <div className="tw-grid tw-grid-cols-2 tw-gap-2">
           <label className="lf-select-wrap lf-select-wrap--mobile lf-select-wrap--full">
             <span aria-hidden="true">🎯</span>
             <select value={currentRole} onChange={(event) => onRoleChange(event.target.value)} aria-label="Filtra per ruolo">
@@ -78,25 +82,36 @@ export function PlayerFilters({
             <ChevronDownIcon size={14} />
           </label>
 
-          <div className="tw-flex tw-gap-2">
-            <label className="lf-select-wrap lf-select-wrap--mobile">
-              <span aria-hidden="true">🏟️</span>
-              <select value={currentTeam} onChange={(event) => onTeamChange(event.target.value)} aria-label="Filtra per squadra reale">
-                <option value="Tutti">Squadra</option>
-                {teams.map((team) => <option key={team} value={team}>{team}</option>)}
-              </select>
-              <ChevronDownIcon size={14} />
-            </label>
+          <button
+            type="button"
+            onClick={onToggleFreeAgents}
+            aria-pressed={showFreeAgentsOnly}
+            className={`lf-select-wrap lf-select-wrap--mobile lf-select-wrap--full lf-mobile-toggle${showFreeAgentsOnly ? " lf-mobile-toggle--active" : ""}`}
+          >
+            <span aria-hidden="true">🆓</span>
+            <span className="lf-mobile-toggle__label">Svincolati</span>
+            <ChevronDownIcon size={14} className="lf-mobile-toggle__chevron" />
+          </button>
+        </div>
 
-            <label className="lf-select-wrap lf-select-wrap--mobile">
-              <span aria-hidden="true">👤</span>
-              <select value={currentOwner} onChange={(event) => onOwnerChange(event.target.value)} aria-label="Filtra per proprietario">
-                <option value="Tutti">Proprietario</option>
-                {ownerOptions}
-              </select>
-              <ChevronDownIcon size={14} />
-            </label>
-          </div>
+        <div className="tw-mt-2 tw-grid tw-grid-cols-2 tw-gap-2">
+          <label className="lf-select-wrap lf-select-wrap--mobile">
+            <span aria-hidden="true">🏟️</span>
+            <select value={currentTeam} onChange={(event) => onTeamChange(event.target.value)} aria-label="Filtra per squadra reale">
+              <option value="Tutti">Squadra</option>
+              {teams.map((team) => <option key={team} value={team}>{team}</option>)}
+            </select>
+            <ChevronDownIcon size={14} />
+          </label>
+
+          <label className="lf-select-wrap lf-select-wrap--mobile">
+            <span aria-hidden="true">👤</span>
+            <select value={currentOwner} onChange={(event) => onOwnerChange(event.target.value)} aria-label="Filtra per proprietario">
+              <option value="Tutti">Proprietario</option>
+              {ownerOptions}
+            </select>
+            <ChevronDownIcon size={14} />
+          </label>
         </div>
       </div>
 

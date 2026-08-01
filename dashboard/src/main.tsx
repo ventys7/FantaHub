@@ -5,6 +5,7 @@ import RoseApp from "./RoseApp";
 import StandingsApp from "./StandingsApp";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { createLogger } from "./debug/logger";
+import { installPressFeedback } from "./utils/pressFeedback";
 import "./styles/runtime.css";
 import "./styles/listone.css";
 import "./styles/teams.css";
@@ -27,6 +28,22 @@ function mount(rootId: string, name: string, app: React.ReactNode): void {
   log.debug("mounted", { rootId, name });
 }
 
+// Rose e Classifica vengono montate solo al primo accesso alla sezione:
+// l'avvio monta solo il Listone, il cambio tab non deve più pagare il
+// render iniziale delle altre app (e i successivi cambi sono immediati).
+const mountedSections = new Set<string>();
+function mountSectionOnce(section: string): void {
+  if (mountedSections.has(section)) return;
+  mountedSections.add(section);
+  if (section === "rose") mount("league-rose-root", "Rose", <RoseApp />);
+  else if (section === "classifica") mount("league-standings-root", "Classifica", <StandingsApp />);
+}
+
+window.addEventListener("lineup:league-section-change", (event) => {
+  const detail = (event as CustomEvent<{ section?: string }>).detail;
+  if (detail?.section) mountSectionOnce(detail.section);
+});
+
 window.addEventListener("error", (event) => {
   log.error("unhandled window error", event.error ?? event.message);
 });
@@ -35,6 +52,11 @@ window.addEventListener("unhandledrejection", (event) => {
   log.error("unhandled promise rejection", event.reason);
 });
 
+// Feedback di pressione touch/pointer per i controlli del listone (vedi pressFeedback.ts).
+installPressFeedback();
+
+// Il Listone è sempre montato; Rose e Classifica vengono montate al primo
+// accesso alla sezione (evento) oppure subito se la pagina è già aperta su di esse.
 mount("league-dashboard-root", "Listone", <App />);
-mount("league-rose-root", "Rose", <RoseApp />);
-mount("league-standings-root", "Classifica", <StandingsApp />);
+const initialSection = document.documentElement.dataset.leagueSection;
+if (initialSection === "rose" || initialSection === "classifica") mountSectionOnce(initialSection);

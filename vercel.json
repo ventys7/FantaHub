@@ -167,7 +167,7 @@
     }
   ],
   "installCommand": "npm ci --include=dev --no-audit --no-fund --registry=https://registry.npmjs.org/ && npm --prefix dashboard ci --include=dev --no-audit --no-fund --registry=https://registry.npmjs.org/",
-  "buildCommand": "npm run build",
+  "buildCommand": "npm run build && node scripts/generate-route-pages.mjs",
   "outputDirectory": ".",
   "functions": {
     "api/player-media.js": {

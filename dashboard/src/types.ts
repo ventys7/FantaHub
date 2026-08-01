@@ -17,3 +17,6 @@ export type DashboardAsset = {
 
 export type SortKey = "position" | "quotation" | "purchasePrice";
 export type SortDirection = "asc" | "desc";
+
+/** Criterio di ordinamento attivo. Il primo elemento dell'array di `sorts` è quello principale. */
+export type PlayerSort = { key: SortKey; direction: SortDirection };
