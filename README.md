@@ -1,68 +1,77 @@
 # Lineup-Fanta
 
-Lineup-Fanta è il builder per le due leghe FP e PD, con Formazione, Listone, Rose, Classifica, card Kick-off e gestione essenziale delle fonti.
+Builder di formazioni per **PianginaCUP (FP)** e **LaLigaCUP (PD)**: Formazione, Listone, Rose, Classifica, card Kick-off e pannelli di amministrazione separati per lega.
+
+Pagine statiche + API serverless + dashboard React precompilata, con dati delle leghe sempre separati tramite `leagueId`.
 
 ## Sezioni pubbliche
 
-- `/fp/` — PianginaCUP / Fanta Premier
-- `/pd/` — Fanta Liga
+| Route | Lega |
+| --- | --- |
+| `/` | Landing con scelta della lega |
+| `/fp/` | PianginaCUP · Fanta Premier |
+| `/pd/` | LaLigaCUP · Fanta Liga |
 
-Ogni lega mantiene il proprio Listone, le proprie Rose, la propria Classifica e la propria configurazione.
+Ogni lega ha la propria barra sezioni con quattro tab:
+
+- **Formazione** — builder con 7 moduli (3-4-3 … 5-4-1), rosa da 22, drag & drop, slot desktop e mobile, blocco portiere unico, **Switch opzionale** (Base: stesso ruolo · Plus: ruolo diverso), card Kick-off, anteprima 9:16 e testo formazione copiabile.
+- **Listone** — tabella React con filtri per ruolo/quotazione, righe desktop e card mobile, board disciplinare.
+- **Rose** — card delle fantasquadre, ruoli per sezione e caricamento **stemmi** via codice squadra (senza password admin).
+- **Classifica** — tabella con penalità inline dal CSV.
+
+Le formazioni salvate restano nel `localStorage` con scope per lega.
 
 ## Pannelli Admin Links
-
-I pannelli sono separati ma utilizzano la stessa password configurata tramite `ADMIN_LINKS_PASSWORD_HASH`:
 
 - `/fp/admin-links/`
 - `/pd/admin-links/`
 
-Da ciascun pannello è possibile:
+Separati per lega, stessa password (`ADMIN_LINKS_PASSWORD_HASH`). Da ciascun pannello:
 
-- cambiare il CSV Listone/Rose della sola lega;
-- cambiare il CSV Classifica della sola lega;
-- cambiare il Docs pubblicato Richiami/Penalizzazioni;
-- generare o resettare i codici stemma delle fantasquadre;
-- ricalcolare i collegamenti tra Listone e rose BSD;
-- controllare e salvare su Neon le associazioni rimaste ambigue;
-- migrare una volta impostazioni, codici e stemmi legacy dal Blob a Neon.
+- aggiornare CSV Listone/Rose e Classifica della sola lega;
+- aggiornare il Docs pubblicato di Richiami/Penalizzazioni;
+- generare/resettare i codici stemma delle fantasquadre;
+- ricalcolare le associazioni Listone ↔ rose BSD e salvare in Neon gli override;
+- migrazione legacy una tantum **Blob → Neon** (sola lettura dal Blob).
 
-## Richiami, penalizzazioni e Classifica
+## Foto giocatori e fonti
 
-La sezione disciplinare viene mostrata sotto la Classifica. Il parser pulisce l'HTML pubblicato da Google Docs ed estrae soltanto le voci reali, ignorando CSS, JavaScript e metadati interni.
+- Dati fantacalcistici (ruolo, quotazione, proprietario) **solo** dal CSV ufficiale della lega.
+- Facce servite direttamente da BSD (`https://sports.bzzoiro.com/img/player/<id>/`): il backend calcola il manifest in memoria (matching per nome e club, mai per ruolo BSD), lo restituisce al browser e lo cachea in Neon per 6 ore. Lazy loading sul client.
+- Nessuna faccia finisce nel Blob: nessun cron, job o staging media.
+- I crest reali arrivano esclusivamente dalla card Kick-off.
 
-Le penalizzazioni del CSV Classifica restano visibili direttamente accanto al nome della fantasquadra, senza un secondo riepilogo duplicato sotto la tabella.
+## Architettura
 
-## Foto giocatori e crest
+- **Frontend**: shell storica in JS vanilla (`js/`) + dashboard React/TypeScript (`dashboard/src/`), compilata in `assets/dashboard/` — gli asset generati si aggiornano solo con `npm run build`.
+- **API**: endpoint serverless Vercel in `api/` con logica condivisa in `lib/` (moduli CJS): settings, admin/auth, team-logo, player-media, player-photo (proxy same-origin per il canvas), discipline.
+- **Persistenza**: Neon è l'unica sorgente runtime (impostazioni, fantasquadre, codici, stemmi, override BSD, cache manifest). Il Vercel Blob esiste solo per la migrazione legacy.
+- **Dettagli e vincoli**: `docs/ARCHITECTURE.md`.
 
-I dati fantacalcistici — ruolo, quotazione, proprietario e rosa — arrivano sempre dal CSV ufficiale.
+## Struttura
 
-- Foto giocatori FP e PD: BSD, usato esclusivamente dal backend come sorgente di acquisizione.
-- Crest FP e PD: manifest già esposto dalla card Kick-off.
-- Stemmi fantasquadre: salvati in Neon e modificabili dalla sezione Rose usando il codice della singola squadra, senza condividere la password admin.
-
-Le pagine pubbliche ricevono dal backend un manifest calcolato in memoria con URL BSD diretti del formato `https://sports.bzzoiro.com/img/player/<id>/`. Il browser usa lazy loading e scarica soltanto le facce visibili o vicine allo schermo.
-
-Il backend:
-
-1. legge il Listone della lega;
-2. recupera le rose BSD;
-3. identifica automaticamente la squadra corretta tramite seed e sovrapposizione dei nomi;
-4. abbina i giocatori usando nome e club, senza usare il ruolo BSD;
-5. restituisce gli URL diretti e conserva il risultato in Neon per sei ore;
-6. salva in Neon gli override manuali di giocatori e squadre.
-
-Le facce non vengono scaricate, caricate, elencate o verificate nel Vercel Blob. Non esistono job, staging o cron media attivi. Impostazioni runtime, profili delle fantasquadre, codici stemma, stemmi e override BSD sono salvati in Neon. Il Blob viene letto soltanto dalla procedura di migrazione legacy, che non effettua scritture.
+```text
+api/                  Endpoint serverless Vercel
+assets/dashboard/     Bundle React generato (non modificare a mano)
+css/  js/             Fogli stile e moduli della shell storica
+dashboard/            App React (Listone, Rose, Classifica) + test Vitest
+data/                 Fallback statici: classifica.csv, teams.json, settings.json, seed BSD
+docs/                 ARCHITECTURE, DEBUGGING, audit
+fp/  pd/              Route pubbliche generate da scripts/generate-route-pages.mjs
+lib/                  Logica condivisa delle API (CJS)
+scripts/              Dev server, diagnosi, generazione route, check statico
+tests/                Suite Node (node --test)
+vercel.json           Header, rewrite e configurazione build
+```
 
 ## Avvio locale
 
-Creare `.env.local` nella root:
+Creare `.env.local` nella root (senza prefisso `VITE_`, la chiave resta server-side):
 
 ```env
-BSD_API_KEY=token_privato
+BSD_API_KEY=token_bsd
 DATABASE_URL=connessione_neon
 ```
-
-Il nome non deve avere il prefisso `VITE_`: la chiave deve restare server-side.
 
 Poi:
 
@@ -70,12 +79,10 @@ Poi:
 npm ci
 npm --prefix dashboard ci
 npm run verify
-npm run dev:test
+npm run dev:test     # password admin locale: prova123
 ```
 
-La password locale di test è `prova123`.
-
-Indirizzi abituali:
+Indirizzi abituali (la porta è quella stampata dal Terminale se 4173 è occupata):
 
 ```text
 http://localhost:4173/fp/
@@ -84,20 +91,29 @@ http://localhost:4173/fp/admin-links/
 http://localhost:4173/pd/admin-links/
 ```
 
-La porta può cambiare se `4173` è già occupata: usare sempre quella stampata dal Terminale.
-
-## Variabili Vercel
-
-- `ADMIN_LINKS_PASSWORD_HASH`
-- `ADMIN_LINKS_SESSION_SECRET`
-- `BSD_API_KEY`
-- `DATABASE_URL` e le altre variabili Neon aggiunte automaticamente da Vercel
-- credenziali Blob solo durante la migrazione legacy, poi rimovibili
-- eventuali variabili già necessarie alla card Kick-off
-
 ## Verifica
 
 ```bash
 npm run verify
-git diff --check
 ```
+
+Esegue nell'ordine: test Node (`tests/*.test.cjs`), test UI Vitest (`dashboard`), typecheck + build Vite, rigenerazione route statiche, diagnosi e controllo statico (`scripts/check-static.sh`), incluso `git diff --check`.
+
+## Variabili Vercel
+
+| Variabile | Uso |
+| --- | --- |
+| `ADMIN_LINKS_PASSWORD_HASH` | Password dei pannelli Admin Links |
+| `ADMIN_LINKS_SESSION_SECRET` | Firma della sessione admin |
+| `BSD_API_KEY` | Token sorgente foto giocatori |
+| `DATABASE_URL` | Connessione Neon (altre variabili Neon aggiunte da Vercel) |
+
+Le credenziali Blob servono solo durante la migrazione legacy, poi sono rimovibili.
+
+## Documentazione correlata
+
+- `docs/ARCHITECTURE.md` — confini del prodotto e vincoli invarianti
+- `docs/DEBUGGING.md` — debug locale e verifica API
+- `docs/MERGE_AUDIT.md` — audit pre-merge delle funzioni principali
+- `RELEASE_NOTES_BSD.md` — flusso foto BSD, matching e Neon
+- `RESET_ESSENZIALE.md` — perimetro del reset: cosa è stato rimosso (calendario, giornate, voti, admin legacy)
