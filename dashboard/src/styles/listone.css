@@ -180,6 +180,17 @@
 
 .lf-sort:hover { color: #1f2d28; }
 
+/* Il criterio di ordinamento principale (la prima colonna attiva) è evidenziato col colore primario. */
+.lf-sort--primary { color: var(--primary); }
+.lf-sort--primary:hover { color: var(--primary); }
+
+/* Le righe fuori viewport non vengono renderizzate: layout/paint crollano, scroll e apertura filtri più reattivi.
+   contain-intrinsic-size: auto ricorda l'altezza reale dopo il primo render (fallback iniziale 72px). */
+.lf-list-row {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 72px;
+}
+
 .lf-player-avatar {
   display: flex;
   width: 42px;

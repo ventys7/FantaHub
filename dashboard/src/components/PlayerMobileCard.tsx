@@ -7,7 +7,7 @@ function initials(name: string) { return name.split(/\s+/).filter(Boolean).slice
 
 export const PlayerMobileCard = memo(function PlayerMobileCard({ player, media, crestUrl }: { player: DashboardAsset; media?: PlayerMediaEntry | null; crestUrl?: string }) {
   return (
-    <article className="tw-p-3 tw-transition hover:tw-bg-slate-50">
+    <article className="lf-list-row tw-p-3 tw-transition hover:tw-bg-slate-50">
       <div className="tw-flex tw-items-start tw-gap-3">
         <div className={`lf-player-avatar lf-player-avatar--mobile ${media?.photoUrl ? "has-photo" : ""}`} aria-hidden="true">
           {media?.photoUrl ? <img src={media.photoUrl} alt="" loading="lazy" decoding="async" /> : initials(player.displayName)}

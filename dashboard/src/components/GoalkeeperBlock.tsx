@@ -19,7 +19,7 @@ export const GoalkeeperBlock = memo(function GoalkeeperBlock({ asset, expanded, 
   const players = splitGoalkeepers(asset.displayName);
 
   return (
-    <div>
+    <div className="lf-list-row">
       <button type="button" onClick={onToggle} className="tw-hidden tw-w-full tw-grid-cols-12 tw-gap-4 tw-px-6 tw-py-4 tw-text-left tw-transition hover:tw-bg-slate-50 md:tw-grid">
         <div className="tw-col-span-4 tw-flex tw-min-w-0 tw-items-center tw-gap-3">
           <div className={`lf-player-avatar ${crestUrl ? "has-photo lf-player-avatar--crest" : ""}`}>{crestUrl ? <img src={crestUrl} alt="" loading="lazy" decoding="async" /> : <ShieldIcon size={22} />}</div>

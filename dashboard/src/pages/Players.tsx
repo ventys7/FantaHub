@@ -1,8 +1,8 @@
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode, RefObject } from "react";
 import { ROLE_LABELS, ROLE_ORDER, ROLE_SECTION_LABELS } from "../constants";
 import { SearchIcon, UserXIcon, XIcon } from "../icons";
-import type { DashboardAsset, SortDirection, SortKey } from "../types";
+import type { DashboardAsset, PlayerSort, SortKey } from "../types";
 import { usePlayerMedia } from "../media";
 import { GoalkeeperBlock } from "../components/GoalkeeperBlock";
 import { PlayerDesktopRow } from "../components/PlayerDesktopRow";
@@ -52,9 +52,17 @@ export function Players({ assets }: { assets: DashboardAsset[] }) {
   const [teamFilter, setTeamFilter] = useState("Tutti");
   const [ownerFilter, setOwnerFilter] = useState("Tutti");
   const [showFreeAgentsOnly, setShowFreeAgentsOnly] = useState(false);
-  const [sortKey, setSortKey] = useState<SortKey>("position");
-  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  // Criteri di ordinamento attivi: il primo è il principale (definisce le sezioni per ruolo).
+  const [sorts, setSorts] = useState<PlayerSort[]>([{ key: "position", direction: "asc" }]);
   const [expandedBlocks, setExpandedBlocks] = useState<Set<string>>(new Set());
+  // Rendering singolo: solo la lista visibile (desktop O mobile) è nel DOM → metà nodi e immagini.
+  const [isDesktop, setIsDesktop] = useState(() => window.matchMedia("(min-width: 768px)").matches);
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(min-width: 768px)");
+    const onChange = (event: MediaQueryListEvent) => setIsDesktop(event.matches);
+    mediaQuery.addEventListener("change", onChange);
+    return () => mediaQuery.removeEventListener("change", onChange);
+  }, []);
 
   const teams = useMemo(() => [...new Set(assets.map((asset) => asset.realTeam).filter(Boolean))].sort((a, b) => a.localeCompare(b, "it")), [assets]);
   const owners = useMemo(() => [...new Set(assets.map((asset) => asset.ownerTag).filter(Boolean))].sort((a, b) => a.localeCompare(b, "it")), [assets]);
@@ -76,26 +84,28 @@ export function Players({ assets }: { assets: DashboardAsset[] }) {
 
   const processedList = useMemo(() => {
     return [...filteredPlayers].sort((a, b) => {
-      if (sortKey === "position") {
-        const roleDiff = (ROLE_ORDER[a.role] ?? 9) - (ROLE_ORDER[b.role] ?? 9);
-        const directedRoleDiff = sortDirection === "asc" ? roleDiff : -roleDiff;
-        if (directedRoleDiff !== 0) return directedRoleDiff;
-        const teamDiff = a.realTeam.localeCompare(b.realTeam, "it");
-        if (teamDiff !== 0) return teamDiff;
-        const quotationDiff = b.quotation - a.quotation;
-        if (quotationDiff !== 0) return quotationDiff;
-        return a.displayName.localeCompare(b.displayName, "it");
+      for (const { key, direction } of sorts) {
+        let diff = 0;
+        if (key === "position") {
+          diff = (ROLE_ORDER[a.role] ?? 9) - (ROLE_ORDER[b.role] ?? 9);
+        } else {
+          diff = Number(a[key] ?? 0) - Number(b[key] ?? 0);
+        }
+        if (diff !== 0) return direction === "asc" ? diff : -diff;
       }
-      const difference = (a[sortKey] || 0) - (b[sortKey] || 0);
-      return sortDirection === "asc" ? difference : -difference;
+      const teamDiff = a.realTeam.localeCompare(b.realTeam, "it");
+      if (teamDiff !== 0) return teamDiff;
+      const quotationDiff = b.quotation - a.quotation;
+      if (quotationDiff !== 0) return quotationDiff;
+      return a.displayName.localeCompare(b.displayName, "it");
     });
-  }, [filteredPlayers, sortDirection, sortKey]);
+  }, [filteredPlayers, sorts]);
 
   const hasActiveFilters = Boolean(searchQuery || roleFilter !== "Tutti" || teamFilter !== "Tutti" || ownerFilter !== "Tutti" || showFreeAgentsOnly);
 
-  // Raggruppa per ruolo solo quando il sort è per posizione (l'ordinamento naturale del listone).
+  // Raggruppa per ruolo solo quando il criterio principale è la posizione (l'ordinamento naturale del listone).
   const sections = useMemo<RoleSection[] | null>(() => {
-    if (sortKey !== "position") return null;
+    if (sorts[0]?.key !== "position") return null;
     const groups = new Map<string, DashboardAsset[]>();
     for (const asset of processedList) {
       const role = asset.role || "U";
@@ -105,13 +115,13 @@ export function Players({ assets }: { assets: DashboardAsset[] }) {
     }
     const known = Object.keys(ROLE_ORDER).filter((role) => groups.has(role));
     const unknown = [...groups.keys()].filter((role) => !(role in ROLE_ORDER)).sort((a, b) => a.localeCompare(b, "it"));
-    const ordered = sortDirection === "asc" ? [...known, ...unknown] : [...unknown.reverse(), ...known.reverse()];
+    const ordered = sorts[0].direction === "asc" ? [...known, ...unknown] : [...unknown.reverse(), ...known.reverse()];
     return ordered.map((role) => ({
       role,
       label: ROLE_SECTION_LABELS[role] ?? ROLE_LABELS[role] ?? role,
       items: groups.get(role) ?? []
     }));
-  }, [processedList, sortDirection, sortKey]);
+  }, [processedList, sorts]);
 
   const renderListBody = useCallback((renderItem: (asset: DashboardAsset) => ReactNode) => {
     if (!sections) {
@@ -134,19 +144,20 @@ export function Players({ assets }: { assets: DashboardAsset[] }) {
     setTeamFilter("Tutti");
     setOwnerFilter("Tutti");
     setShowFreeAgentsOnly(false);
-    setSortKey("position");
-    setSortDirection("asc");
+    setSorts([{ key: "position", direction: "asc" }]);
   };
 
+  // Multi-sort: click su criterio inattivo → lo aggiunge come secondario;
+  // click sul primario → inverte; click su un secondario → lo promuove a primario.
   const handleSort = useCallback((key: SortKey) => {
-    if (sortKey === key) {
-      if (sortDirection === "desc") setSortDirection("asc");
-      else { setSortKey("position"); setSortDirection("asc"); }
-      return;
-    }
-    setSortKey(key);
-    setSortDirection("desc");
-  }, [sortKey, sortDirection]);
+    setSorts((current) => {
+      const index = current.findIndex((sort) => sort.key === key);
+      if (index === -1) return [...current, { key, direction: key === "position" ? "asc" : "desc" }];
+      if (index === 0) return [{ key, direction: current[0].direction === "asc" ? "desc" : "asc" }, ...current.slice(1)];
+      const promoted = current[index];
+      return [promoted, ...current.filter((sort) => sort.key !== key)];
+    });
+  }, []);
 
   const toggleBlock = useCallback((assetCode: string) => {
     setExpandedBlocks((current) => {
@@ -191,23 +202,20 @@ export function Players({ assets }: { assets: DashboardAsset[] }) {
             onResetFilters={resetFilters}
           />
 
-          <div className="tw-mb-3 tw-flex tw-items-center tw-justify-between tw-text-xs tw-font-semibold tw-text-slate-500">
+          <div className="tw-mb-3 tw-flex tw-items-center tw-justify-end tw-text-xs tw-font-semibold tw-text-slate-500">
             <span>{processedList.length} risultati</span>
-            {processedList.length !== assets.length && <span>su {assets.length}</span>}
+            {processedList.length !== assets.length && <span className="tw-ml-1">su {assets.length}</span>}
           </div>
 
           <div className="lf-list-table">
-            <PlayerListHeader sortKey={sortKey} sortDirection={sortDirection} onSort={handleSort} />
-            <div className="tw-hidden md:tw-block">
-              {renderListBody((asset) => isGoalkeeperBlock(asset)
-                ? <GoalkeeperBlock key={asset.assetCode} asset={asset} expanded={expandedBlocks.has(asset.assetCode)} onToggle={() => toggleBlock(asset.assetCode)} crestUrl={media.crest(asset.realTeam)} media={media} />
-                : <PlayerDesktopRow key={asset.assetCode} player={asset} media={media.player(asset.displayName, asset.realTeam)} crestUrl={media.crest(asset.realTeam)} />)}
-            </div>
-            <div className="md:tw-hidden">
-              {renderListBody((asset) => isGoalkeeperBlock(asset)
-                ? <GoalkeeperBlock key={asset.assetCode} asset={asset} expanded={expandedBlocks.has(asset.assetCode)} onToggle={() => toggleBlock(asset.assetCode)} crestUrl={media.crest(asset.realTeam)} media={media} />
-                : <PlayerMobileCard key={asset.assetCode} player={asset} media={media.player(asset.displayName, asset.realTeam)} crestUrl={media.crest(asset.realTeam)} />)}
-            </div>
+            <PlayerListHeader sorts={sorts} onSort={handleSort} />
+            {isDesktop
+              ? renderListBody((asset) => isGoalkeeperBlock(asset)
+                  ? <GoalkeeperBlock key={asset.assetCode} asset={asset} expanded={expandedBlocks.has(asset.assetCode)} onToggle={() => toggleBlock(asset.assetCode)} crestUrl={media.crest(asset.realTeam)} media={media} />
+                  : <PlayerDesktopRow key={asset.assetCode} player={asset} media={media.player(asset.displayName, asset.realTeam)} crestUrl={media.crest(asset.realTeam)} />)
+              : renderListBody((asset) => isGoalkeeperBlock(asset)
+                  ? <GoalkeeperBlock key={asset.assetCode} asset={asset} expanded={expandedBlocks.has(asset.assetCode)} onToggle={() => toggleBlock(asset.assetCode)} crestUrl={media.crest(asset.realTeam)} media={media} />
+                  : <PlayerMobileCard key={asset.assetCode} player={asset} media={media.player(asset.displayName, asset.realTeam)} crestUrl={media.crest(asset.realTeam)} />)}
             {processedList.length === 0 && (
               <div className="tw-px-6 tw-py-14 tw-text-center"><SearchIcon size={34} className="tw-mx-auto tw-mb-3 tw-text-slate-300"/><h2 className="tw-m-0 tw-text-lg tw-font-bold tw-text-slate-800">Nessun giocatore trovato</h2><p className="tw-mb-0 tw-mt-1 tw-text-sm tw-text-slate-500">Prova a modificare i filtri di ricerca.</p></div>
             )}

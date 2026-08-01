@@ -60,6 +60,10 @@ async function checkJson() {
 
 async function checkLeaguePages() {
   for (const page of ["fp/index.html", "pd/index.html"]) {
+    if (!(await exists(page))) {
+      fail(`${page} mancante (esegui prima: node scripts/generate-route-pages.mjs)`);
+      continue;
+    }
     const html = await read(page);
     for (const section of ["formation", "listone", "rose", "classifica"]) {
       if (!html.includes(`data-league-tab="${section}"`)) fail(`${page}: sezione ${section} mancante`);
@@ -71,6 +75,10 @@ async function checkLeaguePages() {
 }
 
 async function checkGeneratedAssets() {
+  if (!(await exists("assets/dashboard/dashboard.css")) || !(await exists("assets/dashboard/dashboard.js"))) {
+    fail("Bundle dashboard mancanti (esegui prima: npm run build)");
+    return;
+  }
   const builtCss = await read("assets/dashboard/dashboard.css");
   const builtJs = await read("assets/dashboard/dashboard.js");
   if (builtCss.length < 8_000) fail("Bundle CSS dashboard sospettosamente piccolo");
