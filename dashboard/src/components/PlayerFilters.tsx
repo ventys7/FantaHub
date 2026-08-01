@@ -86,7 +86,7 @@ export function PlayerFilters({
             type="button"
             onClick={onToggleFreeAgents}
             aria-pressed={showFreeAgentsOnly}
-            className={`lf-mobile-toggle${showFreeAgentsOnly ? " lf-mobile-toggle--active" : ""}`}
+            className={`lf-select-wrap lf-select-wrap--mobile lf-select-wrap--full lf-mobile-toggle${showFreeAgentsOnly ? " lf-mobile-toggle--active" : ""}`}
           >
             <span aria-hidden="true">🆓</span><span>Svincolati</span>
           </button>

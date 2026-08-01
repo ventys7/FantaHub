@@ -139,34 +139,24 @@
   font-weight: 800;
 }
 
-/* Bottone Svincolati dentro la griglia 2×2 dei filtri (mobile): stesso look dei riquadri
-   seleziona (pill con emoji a sinistra), ma resta un bottone con stato attivo. */
+/* Bottone Svincolati dentro la griglia 2×2 dei filtri (mobile): UI IDENTICA ai filtri
+   elenco — usa le stesse classi .lf-select-wrap (pill, emoji + testo, font, padding) —,
+   cambia solo la semantica: è un bottone con stato attivo invece di un select. */
 .lf-mobile-toggle {
-  display: inline-flex;
-  min-height: 40px;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 7px;
-  padding: 0 12px;
-  border: 1px solid #dbe3df;
-  border-radius: 999px;
-  background: #ffffff;
-  color: #53635d;
+  cursor: pointer;
   font-size: 12px;
   font-weight: 700;
-  cursor: pointer;
-  touch-action: manipulation;
 }
 
 .lf-mobile-toggle:hover { border-color: var(--primary-border); background: var(--primary-bg); }
 .lf-mobile-toggle--active { border-color: var(--primary); background: var(--primary); color: #ffffff; }
 
-/* Barra ordinamenti mobile (stessi criteri del desktop, centrati). */
-.lf-mobile-sort-row {
+/* Ordinamenti mobile: pill affiancate alla search bar nella header row (stessi criteri del desktop). */
+.lf-mobile-sort-inline {
   display: flex;
-  justify-content: center;
+  flex: 0 0 auto;
+  align-items: center;
   gap: 8px;
-  padding: 0 2px 12px;
 }
 
 .lf-mobile-sort-btn {
@@ -189,9 +179,11 @@
 .lf-mobile-sort-btn--active { border-color: var(--primary-border); background: var(--primary-bg); color: var(--primary); }
 .lf-mobile-sort-btn--primary { border-color: var(--primary); background: var(--primary); color: #ffffff; }
 
-/* Mobile: niente evidenziatore grigio di default al tap, il feedback usa il colore del pattern.
-   touch-action: manipulation disabilita il double-tap-zoom iOS: lo stato :active scatta e si
-   rilascia subito al tap, senza restare "tenuto premuto" finché non tocchi altrove. */
+/* Mobile: niente evidenziatore grigio di default al tap.
+   Il feedback di pressione è gestito via Pointer Events (pressFeedback.ts): la classe
+   .lf-pressed viene aggiunta al pointerdown e rimossa al rilascio. Lo stato CSS :active
+   su iOS Safari scatta in ritardo e resta "appeso" finché non tocchi altrove, quindi
+   qui non lo usiamo: .lf-pressed dà subito il colore pattern e si rilascia pulito. */
 .lf-role-pill,
 .lf-mobile-toggle,
 .lf-mobile-sort-btn,
@@ -203,22 +195,12 @@
   touch-action: manipulation;
 }
 
-.lf-role-pill:active,
-.lf-mobile-toggle:active,
-.lf-mobile-sort-btn:active {
-  background: var(--primary-bg);
-}
-
-/* Il feedback di pressione non deve sbiadire chi è già sul colore del pattern:
-   le varianti attive/primarie restano sul primario pieno. */
-.lf-role-pill--active:active,
-.lf-mobile-toggle--active:active,
-.lf-mobile-sort-btn--primary:active {
+.lf-role-pill.lf-pressed,
+.lf-mobile-toggle.lf-pressed,
+.lf-mobile-sort-btn.lf-pressed {
   background: var(--primary);
   color: #ffffff;
 }
-
-.lf-mobile-sort-btn--active:active { color: var(--primary); }
 
 .lf-list-table {
   overflow: clip;

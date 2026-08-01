@@ -5,6 +5,7 @@ import RoseApp from "./RoseApp";
 import StandingsApp from "./StandingsApp";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { createLogger } from "./debug/logger";
+import { installPressFeedback } from "./utils/pressFeedback";
 import "./styles/runtime.css";
 import "./styles/listone.css";
 import "./styles/teams.css";
@@ -50,6 +51,9 @@ window.addEventListener("error", (event) => {
 window.addEventListener("unhandledrejection", (event) => {
   log.error("unhandled promise rejection", event.reason);
 });
+
+// Feedback di pressione touch/pointer per i controlli del listone (vedi pressFeedback.ts).
+installPressFeedback();
 
 // Il Listone è sempre montato; Rose e Classifica vengono montate al primo
 // accesso alla sezione (evento) oppure subito se la pagina è già aperta su di esse.

@@ -20,9 +20,9 @@ function isGoalkeeperBlock(asset: DashboardAsset) {
 
 // Ordinamenti disponibili: il ruolo non è ordinabile (esiste già il filtro ruolo),
 // i criteri Quot./Prezzo sono gli stessi su desktop e mobile.
-const SORT_LABELS: { key: SortKey; label: string }[] = [
-  { key: "quotation", label: "Quot." },
-  { key: "purchasePrice", label: "Prezzo" }
+const SORT_LABELS: { key: SortKey; label: string; emoji: string }[] = [
+  { key: "quotation", label: "Quot.", emoji: "📈" },
+  { key: "purchasePrice", label: "Prezzo", emoji: "💰" }
 ];
 
 type RoleSection = { role: string; label: string; items: DashboardAsset[] };
@@ -230,6 +230,28 @@ export function Players({ assets }: { assets: DashboardAsset[] }) {
               />
             </label>
 
+            {!isDesktop && processedList.length > 0 && (
+              <div className="lf-mobile-sort-inline" role="group" aria-label="Ordinamento listone">
+                {SORT_LABELS.map(({ key, label, emoji }) => {
+                  const entry = sorts.find((sort) => sort.key === key);
+                  const isPrimary = sorts[0]?.key === key;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => handleSort(key)}
+                      aria-pressed={Boolean(entry)}
+                      className={`lf-mobile-sort-btn${entry ? " lf-mobile-sort-btn--active" : ""}${isPrimary ? " lf-mobile-sort-btn--primary" : ""}`}
+                    >
+                      <span aria-hidden="true">{emoji}</span>
+                      {label}
+                      {entry ? (entry.direction === "asc" ? <ChevronUpIcon size={13} /> : <ChevronDownIcon size={13} />) : null}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
             <button type="button" onClick={() => setShowFreeAgentsOnly((value) => !value)} className={`lf-action-button tw-hidden md:tw-flex ${showFreeAgentsOnly ? "lf-action-button--active" : ""}`} title="Mostra solo giocatori svincolati">
               <UserXIcon size={20} /><span className="tw-hidden sm:tw-inline">Svincolati</span>
             </button>
@@ -255,27 +277,6 @@ export function Players({ assets }: { assets: DashboardAsset[] }) {
             onToggleFreeAgents={() => setShowFreeAgentsOnly((value) => !value)}
             onResetFilters={resetFilters}
           />
-
-          {!isDesktop && processedList.length > 0 && (
-            <div className="lf-mobile-sort-row" role="group" aria-label="Ordinamento listone">
-              {SORT_LABELS.map(({ key, label }) => {
-                const entry = sorts.find((sort) => sort.key === key);
-                const isPrimary = sorts[0]?.key === key;
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => handleSort(key)}
-                    aria-pressed={Boolean(entry)}
-                    className={`lf-mobile-sort-btn${entry ? " lf-mobile-sort-btn--active" : ""}${isPrimary ? " lf-mobile-sort-btn--primary" : ""}`}
-                  >
-                    {label}
-                    {entry ? (entry.direction === "asc" ? <ChevronUpIcon size={13} /> : <ChevronDownIcon size={13} />) : null}
-                  </button>
-                );
-              })}
-            </div>
-          )}
 
           <div className="lf-list-table">
             <PlayerListHeader sorts={sorts} onSort={handleSort} />
