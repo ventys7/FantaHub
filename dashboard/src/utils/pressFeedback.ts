@@ -4,17 +4,23 @@
  * Su iOS Safari lo stato CSS `:active` è inaffidabile: scatta in ritardo e resta
  * "appeso" finché non tocchi altrove. Inoltre lo `:hover` su touch è sticky
  * (si attacca al primo tap e resta finché non tocchi altrove). Quindi su touch
- * il feedback è guidato via Pointer Events (con fallback touch/mouse): la classe
- * `lf-pressed` viene aggiunta al pointerdown e rimossa al rilascio.
+ * il feedback è guidato via Pointer Events (con fallback touch/mouse): l'attributo
+ * `data-lf-pressed` viene aggiunto al pointerdown e rimosso al rilascio.
+ *
+ * ATTRIBUTO E NON CLASSE: i controlli del listone sono componenti React che al
+ * click (setState) vengono re-renderizzati: React riscrive `className` e cancella
+ * qualsiasi classe aggiunta via JS prima che il browser la disegni — il feedback
+ * diventava invisibile proprio su iPhone. Un data-attribute impostato fuori da
+ * React non viene toccato dal re-render.
  *
  * RILASCIO RITARDATO: iOS Safari sospende il rendering mentre il dito è sul
- * display — la classe aggiunta al pointerdown di un tap rapido verrebbe rimossa
+ * display — l'attributo aggiunto al pointerdown di un tap rapido verrebbe rimosso
  * al pointerup PRIMA che il browser disegni un frame, rendendo il feedback
  * invisibile. Il rilascio viene quindi ritardato di MIN_FEEDBACK_MS: il feedback
  * resta visibile almeno un frame anche per i tap più veloci.
  */
 
-const PRESSED_CLASS = "lf-pressed";
+const PRESSED_ATTR = "data-lf-pressed";
 const MIN_FEEDBACK_MS = 120;
 const PRESSABLE = [
   ".lf-role-pill",
@@ -40,7 +46,7 @@ export function installPressFeedback(): void {
   let releaseTimer: ReturnType<typeof setTimeout> | undefined;
 
   const release = (): void => {
-    document.querySelectorAll(`.${PRESSED_CLASS}`).forEach((el) => el.classList.remove(PRESSED_CLASS));
+    document.querySelectorAll(`[${PRESSED_ATTR}]`).forEach((el) => el.removeAttribute(PRESSED_ATTR));
   };
 
   const clearTimer = (): void => {
@@ -54,7 +60,7 @@ export function installPressFeedback(): void {
     clearTimer();
     release();
     const el = findPressable(event.target);
-    if (el) el.classList.add(PRESSED_CLASS);
+    if (el) el.setAttribute(PRESSED_ATTR, "true");
   };
 
   // Rilascio "sicuro": il feedback resta visibile almeno MIN_FEEDBACK_MS.

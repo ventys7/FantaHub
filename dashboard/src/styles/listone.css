@@ -167,8 +167,11 @@
   flex: 1;
   min-width: 0;
   /* text-align: left perché su iOS i <select> ignorano text-align:center (testo
-     attaccato a sinistra dopo l'emoji): il label deve stare "in linea" con i filtri. */
+     attaccato a sinistra dopo l'emoji): il label deve stare "in linea" con i filtri.
+     padding-left: 8px replica l'indent nativo del <select> iOS (nessun padding
+     dichiarato nel CSS: lo spazio emoji→testo nei filtri è l'indent di piattaforma). */
   text-align: left;
+  padding-left: 8px;
   font-family: inherit;
   font-size: inherit;
   font-weight: inherit;
@@ -215,12 +218,16 @@
 .lf-mobile-sort-btn--primary { border-color: var(--primary); background: var(--primary); color: #ffffff; }
 
 /* Mobile: niente evidenziatore grigio di default al tap.
-   Il feedback di pressione è gestito via Pointer Events (pressFeedback.ts): la classe
-   .lf-pressed viene aggiunta al pointerdown e rimossa al rilascio. Lo stato CSS :active
-   su iOS Safari scatta in ritardo e resta "appeso" finché non tocchi altrove, quindi
-   qui non lo usiamo: .lf-pressed dà subito il colore pattern e si rilascia pulito.
-   Per gli stati già sul colore del pattern (--active / --primary) il feedback è un
-   scurimento (brightness) invece di uno stesso-colore invisibile. */
+   Il feedback di pressione è gestito via Pointer Events (pressFeedback.ts): l'attributo
+   data-lf-pressed viene aggiunto al pointerdown e rimosso al rilascio. Lo stato CSS
+   :active su iOS Safari scatta in ritardo e resta "appeso" finché non tocchi altrove,
+   quindi qui non lo usiamo: data-lf-pressed dà subito il colore pattern e si rilascia
+   pulito. Per gli stati già sul colore del pattern (--active / --primary) il feedback
+   è uno scurimento (brightness) invece di uno stesso-colore invisibile.
+   ATTRIBUTO E NON CLASSE: React re-renderizza i controlli al click (setState) e
+   riscrive className, cancellando qualsiasi classe aggiunta via JS prima che il
+   browser la disegni. Un data-attribute impostato fuori da React non viene toccato
+   dal re-render e il feedback resta visibile. */
 .lf-role-pill,
 .lf-mobile-toggle,
 .lf-mobile-sort-btn,
@@ -232,21 +239,21 @@
   touch-action: manipulation;
 }
 
-.lf-role-pill.lf-pressed,
-.lf-mobile-toggle.lf-pressed,
-.lf-mobile-sort-btn.lf-pressed,
-.lf-action-button.lf-pressed,
-.lf-reset-button.lf-pressed {
+.lf-role-pill[data-lf-pressed="true"],
+.lf-mobile-toggle[data-lf-pressed="true"],
+.lf-mobile-sort-btn[data-lf-pressed="true"],
+.lf-action-button[data-lf-pressed="true"],
+.lf-reset-button[data-lf-pressed="true"] {
   background: var(--primary);
   color: #ffffff;
 }
 
-.lf-role-pill--active.lf-pressed,
-.lf-mobile-toggle--active.lf-pressed,
-.lf-mobile-sort-btn--primary.lf-pressed,
-.lf-action-button--active.lf-pressed,
-.lf-action-button--danger-active.lf-pressed,
-.lf-reset-button.lf-pressed {
+.lf-role-pill--active[data-lf-pressed="true"],
+.lf-mobile-toggle--active[data-lf-pressed="true"],
+.lf-mobile-sort-btn--primary[data-lf-pressed="true"],
+.lf-action-button--active[data-lf-pressed="true"],
+.lf-action-button--danger-active[data-lf-pressed="true"],
+.lf-reset-button[data-lf-pressed="true"] {
   filter: brightness(0.88);
 }
 
