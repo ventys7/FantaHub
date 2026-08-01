@@ -1,6 +1,7 @@
 import { memo } from "react";
 import { ChevronDownIcon, ShieldIcon } from "../icons";
 import type { PlayerMediaEntry } from "../media";
+import { normalizeTeamName } from "../teamProfiles";
 import type { DashboardAsset } from "../types";
 
 function splitGoalkeepers(name: string) {
@@ -13,10 +14,13 @@ type Props = {
   onToggle: () => void;
   crestUrl?: string;
   media: { player: (name: string, team: string) => PlayerMediaEntry | null };
+  ownerLogos?: Record<string, string>;
 };
 
-export const GoalkeeperBlock = memo(function GoalkeeperBlock({ asset, expanded, onToggle, crestUrl, media }: Props) {
+export const GoalkeeperBlock = memo(function GoalkeeperBlock({ asset, expanded, onToggle, crestUrl, media, ownerLogos }: Props) {
   const players = splitGoalkeepers(asset.displayName);
+  // Stemma della fantasquadra del proprietario (solo nel blocco mobile); emoji come fallback.
+  const ownerLogo = asset.ownerTag ? ownerLogos?.[normalizeTeamName(asset.ownerTag)] : undefined;
 
   return (
     <div className="lf-list-row">
@@ -49,8 +53,9 @@ export const GoalkeeperBlock = memo(function GoalkeeperBlock({ asset, expanded, 
             <span><span className="tw-text-slate-400">Quot:</span> <strong>{asset.quotation || "—"}</strong></span>
             <span><span className="tw-text-slate-400">Acq:</span> <strong className="tw-text-[var(--primary)]">{asset.purchasePrice || "—"}</strong></span>
           </div>
-          <div className="tw-mt-1 tw-text-sm">
-            <span className={`tw-truncate ${asset.ownerTag ? "tw-text-slate-500" : "tw-italic tw-text-slate-400"}`}>👤 {asset.ownerTag || "Svincolato"}</span>
+          <div className="tw-mt-1 tw-flex tw-items-center tw-gap-1.5 tw-text-sm">
+            {ownerLogo ? <img src={ownerLogo} alt="" className="lf-owner-logo" loading="lazy" referrerPolicy="no-referrer" /> : <span aria-hidden="true">👤</span>}
+            <span className={`tw-truncate ${asset.ownerTag ? "tw-text-slate-500" : "tw-italic tw-text-slate-400"}`}>{asset.ownerTag || "Svincolato"}</span>
           </div>
         </div>
       </button>
