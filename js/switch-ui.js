@@ -33,25 +33,6 @@ function updateSwitchUI() {
       placeholder.textContent = "＋";
       content.appendChild(placeholder);
     } else {
-      const photo = document.createElement("span");
-      photo.className = "switch-slot__photo";
-      const photoSource = player.isTeamLabel
-        ? window.LineupPlayerMedia?.crest(player.n)
-        : player.isGkBlock
-          ? window.LineupPlayerMedia?.crest(player.t)
-          : window.LineupPlayerMedia?.photo(player.n, player.t);
-      if (photoSource) {
-        const image = document.createElement("img");
-        image.src = photoSource;
-        image.alt = "";
-        image.loading = "lazy";
-        image.decoding = "async";
-        if (player.isTeamLabel || player.isGkBlock) image.className = "is-crest";
-        photo.appendChild(image);
-      } else {
-        photo.hidden = true;
-      }
-
       const role = document.createElement("span");
       role.className = "switch-slot__role";
       role.dataset.role = player.r;
@@ -69,7 +50,7 @@ function updateSwitchUI() {
       club.textContent = player.t || "";
 
       identity.append(name, club);
-      content.append(photo, role, identity);
+      content.append(role, identity);
     }
 
     slotEl.appendChild(content);

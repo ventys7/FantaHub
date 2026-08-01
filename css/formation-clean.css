@@ -536,30 +536,6 @@ html[data-route="league"] .switch-slot__role {
   font-weight: 900;
 }
 
-html[data-route="league"] .switch-slot__photo {
-  flex: 0 0 auto;
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 999px;
-  overflow: hidden;
-  background: #fff;
-}
-
-html[data-route="league"] .switch-slot__photo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-html[data-route="league"] .switch-slot__photo img.is-crest {
-  padding: 5px;
-  object-fit: contain;
-  object-position: center;
-  background: rgba(255,255,255,.94);
-}
-
 html[data-route="league"] .switch-slot[data-role="D"] .switch-slot__role { color: #2563eb; background: #dbeafe; }
 html[data-route="league"] .switch-slot[data-role="C"] .switch-slot__role { color: #15803d; background: #dcfce7; }
 html[data-route="league"] .switch-slot[data-role="A"] .switch-slot__role { color: #dc2626; background: #fee2e2; }
@@ -602,21 +578,16 @@ html[data-route="league"] .switch-slot-placeholder {
 }
 
 html[data-route="league"] .switch-clear-btn {
-  position: absolute;
-  top: 18px;
-  right: 8px;
-  z-index: 2;
-  display: grid;
-  place-items: center;
-  width: 20px;
-  min-width: 20px;
-  height: 20px;
+  align-self: center;
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
   padding: 0;
   border: 1px solid #fecaca;
   border-radius: 999px;
   color: #dc2626;
   background: #fff;
-  font-size: .8rem;
+  font-size: 1rem;
   line-height: 1;
 }
 
