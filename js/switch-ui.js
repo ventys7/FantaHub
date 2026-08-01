@@ -61,15 +61,6 @@ function updateSwitchUI() {
   renderSwitchSlot(document.getElementById("switchStarterSlotMobile"), state.starterIndex);
   renderSwitchSlot(document.getElementById("switchBenchSlotMobile"), state.benchIndex);
 
-  function setClearVisibility(button, value) {
-    if (button) button.style.display = Number.isInteger(value) ? "inline-flex" : "none";
-  }
-
-  setClearVisibility(document.getElementById("clearStarterSwitch"), state.starterIndex);
-  setClearVisibility(document.getElementById("clearBenchSwitch"), state.benchIndex);
-  setClearVisibility(document.getElementById("clearStarterSwitchMobile"), state.starterIndex);
-  setClearVisibility(document.getElementById("clearBenchSwitchMobile"), state.benchIndex);
-
   [
     document.getElementById("switchPlusBtn"),
     document.getElementById("switchPlusBtnMobile")

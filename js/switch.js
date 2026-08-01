@@ -19,26 +19,6 @@ function setupSwitchListeners() {
   bindSwitchClick(document.getElementById("switchBenchSlotMobile"), openSwitchBenchModal);
 
   [
-    document.getElementById("clearStarterSwitch"),
-    document.getElementById("clearStarterSwitchMobile")
-  ].forEach((button) => {
-    bindSwitchClick(button, (event) => {
-      event.stopPropagation();
-      window.LineupSwitch?.clear("starter");
-    });
-  });
-
-  [
-    document.getElementById("clearBenchSwitch"),
-    document.getElementById("clearBenchSwitchMobile")
-  ].forEach((button) => {
-    bindSwitchClick(button, (event) => {
-      event.stopPropagation();
-      window.LineupSwitch?.clear("bench");
-    });
-  });
-
-  [
     document.getElementById("switchPlusBtn"),
     document.getElementById("switchPlusBtnMobile")
   ].forEach((button) => {

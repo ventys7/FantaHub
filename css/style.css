@@ -404,11 +404,6 @@ button[onclick^="close"] {
   transition: all .2s;
 }
 .switch-slot:hover       { border-color: var(--primary); background: var(--primary-bg); }
-.switch-clear-btn {
-  margin-top: 4px; padding: 4px 8px; border-radius: 6px;
-  border: 1.5px solid #fecaca; background: #fef2f2;
-  color: #ef4444; cursor: pointer; font-weight: 700; font-size: 0.72rem;
-}
 .mobile-switch { margin-top: 20px; }
 
 /* MOBILE SECTION */
