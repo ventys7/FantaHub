@@ -139,6 +139,55 @@
   font-weight: 800;
 }
 
+/* Bottone Svincolati dentro la griglia 2×2 dei filtri (mobile). */
+.lf-mobile-toggle {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 12px;
+  border: 1px solid #dbe3df;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #53635d;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.lf-mobile-toggle:hover { border-color: var(--primary-border); background: var(--primary-bg); }
+.lf-mobile-toggle--active { border-color: var(--primary); background: var(--primary); color: #ffffff; }
+
+/* Barra ordinamenti mobile (Ruolo / Quot. / Prezzo). */
+.lf-mobile-sort-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 0 2px 12px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.lf-mobile-sort-btn {
+  display: inline-flex;
+  flex: 0 0 auto;
+  min-height: 34px;
+  align-items: center;
+  gap: 4px;
+  padding: 0 14px;
+  border: 1px solid #dbe3df;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #53635d;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.lf-mobile-sort-btn--active { border-color: var(--primary-border); background: var(--primary-bg); color: var(--primary); }
+.lf-mobile-sort-btn--primary { border-color: var(--primary); background: var(--primary); color: #ffffff; }
+
 .lf-list-table {
   overflow: clip;
   border: 1px solid #e2e8e5;

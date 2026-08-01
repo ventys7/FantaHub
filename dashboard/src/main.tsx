@@ -27,6 +27,22 @@ function mount(rootId: string, name: string, app: React.ReactNode): void {
   log.debug("mounted", { rootId, name });
 }
 
+// Rose e Classifica vengono montate solo al primo accesso alla sezione:
+// l'avvio monta solo il Listone, il cambio tab non deve più pagare il
+// render iniziale delle altre app (e i successivi cambi sono immediati).
+const mountedSections = new Set<string>();
+function mountSectionOnce(section: string): void {
+  if (mountedSections.has(section)) return;
+  mountedSections.add(section);
+  if (section === "rose") mount("league-rose-root", "Rose", <RoseApp />);
+  else if (section === "classifica") mount("league-standings-root", "Classifica", <StandingsApp />);
+}
+
+window.addEventListener("lineup:league-section-change", (event) => {
+  const detail = (event as CustomEvent<{ section?: string }>).detail;
+  if (detail?.section) mountSectionOnce(detail.section);
+});
+
 window.addEventListener("error", (event) => {
   log.error("unhandled window error", event.error ?? event.message);
 });

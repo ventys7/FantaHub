@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode, RefObject } from "react";
 import { ROLE_LABELS, ROLE_ORDER, ROLE_SECTION_LABELS } from "../constants";
-import { SearchIcon, UserXIcon, XIcon } from "../icons";
+import { ChevronDownIcon, ChevronUpIcon, SearchIcon, UserXIcon, XIcon } from "../icons";
 import type { DashboardAsset, PlayerSort, SortKey } from "../types";
 import { usePlayerMedia } from "../media";
 import { GoalkeeperBlock } from "../components/GoalkeeperBlock";
@@ -17,6 +17,12 @@ function normalizeText(value: string) {
 function isGoalkeeperBlock(asset: DashboardAsset) {
   return asset.type === "goalkeeper_block" || (asset.role === "P" && /\s+-\s+/.test(asset.displayName));
 }
+
+const SORT_LABELS: { key: SortKey; label: string }[] = [
+  { key: "position", label: "Ruolo" },
+  { key: "quotation", label: "Quot." },
+  { key: "purchasePrice", label: "Prezzo" }
+];
 
 type RoleSection = { role: string; label: string; items: DashboardAsset[] };
 
@@ -47,7 +53,13 @@ export function Players({ assets }: { assets: DashboardAsset[] }) {
   useChromeOffset(rootRef);
   const leagueId = window.LINEUP_FANTA?.league?.id ?? "";
   const media = usePlayerMedia(assets, leagueId);
+  const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  // Debounce: la ricerca viene applicata 120ms dopo l'ultima digitazione (meno re-render a ogni tasto).
+  useEffect(() => {
+    const timer = window.setTimeout(() => setSearchQuery(searchInput), 120);
+    return () => window.clearTimeout(timer);
+  }, [searchInput]);
   const [roleFilter, setRoleFilter] = useState("Tutti");
   const [teamFilter, setTeamFilter] = useState("Tutti");
   const [ownerFilter, setOwnerFilter] = useState("Tutti");
@@ -139,7 +151,7 @@ export function Players({ assets }: { assets: DashboardAsset[] }) {
   }, [processedList, sections]);
 
   const resetFilters = () => {
-    setSearchQuery("");
+    setSearchInput("");
     setRoleFilter("Tutti");
     setTeamFilter("Tutti");
     setOwnerFilter("Tutti");
@@ -175,10 +187,14 @@ export function Players({ assets }: { assets: DashboardAsset[] }) {
           <div className="tw-flex tw-w-full tw-flex-wrap tw-items-stretch tw-gap-2 lg:tw-w-auto lg:tw-justify-center">
             <label className="lf-search tw-min-w-0 tw-flex-1 lg:tw-w-80 lg:tw-flex-none">
               <SearchIcon size={20} />
-              <input type="search" placeholder="Cerca giocatore..." value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} />
+              <input type="search" placeholder="Cerca giocatore..." value={searchInput} onChange={(event) => setSearchInput(event.target.value)} />
             </label>
 
-            <button type="button" onClick={() => setShowFreeAgentsOnly((value) => !value)} className={`lf-action-button ${showFreeAgentsOnly ? "lf-action-button--active" : ""}`} title="Mostra solo giocatori svincolati">
+            <div className="tw-flex tw-items-center tw-self-center tw-whitespace-nowrap tw-px-1 tw-text-xs tw-font-semibold tw-text-slate-500">
+              <span>tra {processedList.length}{processedList.length !== assets.length ? ` su ${assets.length}` : ""} risultati</span>
+            </div>
+
+            <button type="button" onClick={() => setShowFreeAgentsOnly((value) => !value)} className={`lf-action-button tw-hidden md:tw-flex ${showFreeAgentsOnly ? "lf-action-button--active" : ""}`} title="Mostra solo giocatori svincolati">
               <UserXIcon size={20} /><span className="tw-hidden sm:tw-inline">Svincolati</span>
             </button>
 
@@ -195,17 +211,35 @@ export function Players({ assets }: { assets: DashboardAsset[] }) {
             currentRole={roleFilter}
             currentTeam={teamFilter}
             currentOwner={ownerFilter}
+            showFreeAgentsOnly={showFreeAgentsOnly}
             hasActiveFilters={hasActiveFilters}
             onRoleChange={setRoleFilter}
             onTeamChange={setTeamFilter}
             onOwnerChange={setOwnerFilter}
+            onToggleFreeAgents={() => setShowFreeAgentsOnly((value) => !value)}
             onResetFilters={resetFilters}
           />
 
-          <div className="tw-mb-3 tw-flex tw-items-center tw-justify-end tw-text-xs tw-font-semibold tw-text-slate-500">
-            <span>{processedList.length} risultati</span>
-            {processedList.length !== assets.length && <span className="tw-ml-1">su {assets.length}</span>}
-          </div>
+          {!isDesktop && processedList.length > 0 && (
+            <div className="lf-mobile-sort-row" role="group" aria-label="Ordinamento listone">
+              {SORT_LABELS.map(({ key, label }) => {
+                const entry = sorts.find((sort) => sort.key === key);
+                const isPrimary = sorts[0]?.key === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => handleSort(key)}
+                    aria-pressed={Boolean(entry)}
+                    className={`lf-mobile-sort-btn${entry ? " lf-mobile-sort-btn--active" : ""}${isPrimary ? " lf-mobile-sort-btn--primary" : ""}`}
+                  >
+                    {label}
+                    {entry ? (entry.direction === "asc" ? <ChevronUpIcon size={13} /> : <ChevronDownIcon size={13} />) : null}
+                  </button>
+                );
+              })}
+            </div>
+          )}
 
           <div className="lf-list-table">
             <PlayerListHeader sorts={sorts} onSort={handleSort} />
