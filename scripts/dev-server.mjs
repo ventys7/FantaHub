@@ -10,7 +10,7 @@ const port = Number(process.env.PORT || 4173);
 const host = process.env.HOST || "0.0.0.0";
 
 const apiHandlers = new Map();
-for (const route of ["settings", "admin", "team-logo", "discipline", "player-media", "cron-media-sync"]) {
+for (const route of ["settings", "admin", "team-logo", "discipline", "player-media"]) {
   const pathname = `/api/${route}`;
   try { apiHandlers.set(pathname, require(path.join(root, "api", `${route}.js`))); }
   catch (error) { console.warn(`API locale non caricata (${pathname}):`, error.message); }

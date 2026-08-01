@@ -12,7 +12,7 @@
   --formation-border: rgba(23, 67, 57, .14);
 }
 
-/* ----- shared controls / desktop canvas ----- */
+/* shared controls / desktop canvas */
 
 html[data-route="league"] .content-wrapper { gap: 0; }
 
@@ -74,7 +74,7 @@ html[data-route="league"].roster-open body {
   overscroll-behavior: none;
 }
 
-/* ----- shared formation primitives ----- */
+/* shared formation primitives */
 
 html[data-route="league"] #startersSlots,
 html[data-route="league"] #mobileStartersSlots {
@@ -325,7 +325,7 @@ html[data-route="league"] .formation-shirt[data-role="A"] .formation-shirt__role
   background: #fee2e2;
 }
 
-/* ----- bench matrix ----- */
+/* bench matrix */
 
 html[data-route="league"] #benchSlots,
 html[data-route="league"] #mobileBenchSlots {
@@ -417,7 +417,7 @@ html[data-route="league"] #mobileBenchSlots .formation-slot--team-label .formati
   display: none;
 }
 
-/* ----- Switch ----- */
+/* Switch */
 
 html[data-route="league"] .switch-section {
   width: 100%;
@@ -667,7 +667,7 @@ html[data-route="league"] .switch-mode-toggle.active > span:last-child {
   color: #fff;
 }
 
-/* ----- Output flow ----- */
+/* Output flow */
 
 html[data-route="league"] .output-modal-box { max-width: 720px; }
 html[data-route="league"] .output-modal__heading {
@@ -722,7 +722,7 @@ html[data-route="league"] .output-copy-output-btn {
   background: linear-gradient(135deg, #d97706, #ea580c);
 }
 
-/* ----- desktop layout ----- */
+/* desktop layout */
 
 @media (min-width: 768px) {
   html[data-route="league"] .controls {
@@ -824,7 +824,7 @@ html[data-route="league"] .output-copy-output-btn {
   }
 }
 
-/* ----- mobile layout ----- */
+/* mobile layout */
 
 @media (max-width: 767px) {
   html[data-route="league"] .container { margin-top: 14px; }
@@ -1068,7 +1068,7 @@ html[data-route="league"] .output-copy-output-btn {
   }
 }
 
-/* ----- 9:16 STORY EXPORT ----- */
+/* 9:16 STORY EXPORT */
 html[data-route="league"] .output-story-btn {
   width: 100%;
   min-height: 46px;

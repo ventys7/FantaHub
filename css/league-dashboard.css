@@ -113,7 +113,6 @@ html[data-route="league"] [hidden] {
   }
 }
 
-/* STEP 1C - Tab centrate su desktop e ottimizzate per mobile. */
 @media (min-width: 768px) {
   html[data-route="league"] .league-tabs__inner {
     justify-content: center;
@@ -159,7 +158,6 @@ html[data-route="league"] [hidden] {
 }
 
 
-/* STEP 2C - Listone alimentato dal CSV principale della lega. */
 html[data-route="league"] .listone-shell {
   width: 100%;
   min-width: 0;
@@ -619,7 +617,6 @@ html[data-route="league"] .listone-sr-only {
   }
 }
 
-/* STEP 7A - Menu hamburger mobile al posto delle tab orizzontali. */
 .league-menu-toggle {
   display: none;
 }

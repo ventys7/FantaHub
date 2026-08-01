@@ -10,6 +10,8 @@ bsd-matching-*/
 bsd-team-selection-*/
 .claude-flow/
 .env*
+ruvector.db
+.tmp/
 
 # Artefatti generati dalla build: Vercel li rigenera a ogni deploy
 # (buildCommand: npm run build && node scripts/generate-route-pages.mjs).

@@ -1,4 +1,3 @@
-/* STEP 3D - Listone React e Rose React alimentati dal CSV della lega corrente. */
 import { Players } from "./pages/Players";
 import { useLeagueAssets } from "./hooks";
 
