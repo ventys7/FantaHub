@@ -18,8 +18,9 @@ function isGoalkeeperBlock(asset: DashboardAsset) {
   return asset.type === "goalkeeper_block" || (asset.role === "P" && /\s+-\s+/.test(asset.displayName));
 }
 
+// Ordinamenti disponibili: il ruolo non è ordinabile (esiste già il filtro ruolo),
+// i criteri Quot./Prezzo sono gli stessi su desktop e mobile.
 const SORT_LABELS: { key: SortKey; label: string }[] = [
-  { key: "position", label: "Ruolo" },
   { key: "quotation", label: "Quot." },
   { key: "purchasePrice", label: "Prezzo" }
 ];
@@ -135,20 +136,51 @@ export function Players({ assets }: { assets: DashboardAsset[] }) {
     }));
   }, [processedList, sorts]);
 
+  // Rendering progressivo: le righe vengono aggiunte a blocchi (rAF) invece di montare
+  // l'intera lista in un colpo solo → cambiare filtro (es. tornare a "Tutti") non blocca più il primo paint.
+  const ROW_CHUNK = 80;
+  const [visibleRows, setVisibleRows] = useState(ROW_CHUNK);
+  const totalRows = useMemo(() => {
+    if (!sections) return processedList.length;
+    return sections.reduce((total, section) => total + section.items.length, 0);
+  }, [processedList, sections]);
+
+  useEffect(() => {
+    setVisibleRows(Math.min(ROW_CHUNK, totalRows));
+  }, [totalRows]);
+
+  useEffect(() => {
+    if (visibleRows >= totalRows) return;
+    const id = window.requestAnimationFrame(() => {
+      setVisibleRows((current) => Math.min(current + ROW_CHUNK, totalRows));
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [totalRows, visibleRows]);
+
   const renderListBody = useCallback((renderItem: (asset: DashboardAsset) => ReactNode) => {
     if (!sections) {
-      return <div className="tw-divide-y tw-divide-slate-100">{processedList.map(renderItem)}</div>;
+      return <div className="tw-divide-y tw-divide-slate-100">{processedList.slice(0, visibleRows).map(renderItem)}</div>;
     }
-    return sections.map((section) => (
-      <div key={section.role}>
-        <div className="lf-role-section-header">
-          <span>{section.label}</span>
-          <span>({section.items.length})</span>
+    // Mostra sezioni complete finché il budget di righe visibili lo consente
+    // (una sezione più grande del budget viene riempita dai frame successivi).
+    let budget = visibleRows;
+    const out: ReactNode[] = [];
+    for (const section of sections) {
+      if (budget <= 0) break;
+      const take = Math.min(budget, section.items.length);
+      budget -= take;
+      out.push(
+        <div key={section.role}>
+          <div className="lf-role-section-header">
+            <span>{section.label}</span>
+            <span>({section.items.length})</span>
+          </div>
+          <div className="tw-divide-y tw-divide-slate-100">{section.items.slice(0, take).map(renderItem)}</div>
         </div>
-        <div className="tw-divide-y tw-divide-slate-100">{section.items.map(renderItem)}</div>
-      </div>
-    ));
-  }, [processedList, sections]);
+      );
+    }
+    return <>{out}</>;
+  }, [processedList, sections, visibleRows]);
 
   const resetFilters = () => {
     setSearchInput("");
@@ -159,15 +191,18 @@ export function Players({ assets }: { assets: DashboardAsset[] }) {
     setSorts([{ key: "position", direction: "asc" }]);
   };
 
-  // Multi-sort: click su criterio inattivo → lo aggiunge come secondario;
-  // click sul primario → inverte; click su un secondario → lo promuove a primario.
+  // Multi-sort: click su un criterio inattivo → lo aggiunge (secondario se esiste già un primario);
+  // click sul criterio principale → reset totale all'ordinamento default (sezioni per ruolo);
+  // click su un secondario → lo rimuove soltanto, il primario resta.
   const handleSort = useCallback((key: SortKey) => {
     setSorts((current) => {
       const index = current.findIndex((sort) => sort.key === key);
-      if (index === -1) return [...current, { key, direction: key === "position" ? "asc" : "desc" }];
-      if (index === 0) return [{ key, direction: current[0].direction === "asc" ? "desc" : "asc" }, ...current.slice(1)];
-      const promoted = current[index];
-      return [promoted, ...current.filter((sort) => sort.key !== key)];
+      if (index === -1) {
+        const active = current.filter((sort) => sort.key !== "position");
+        return [...active, { key, direction: "desc" }];
+      }
+      if (index === 0) return [{ key: "position", direction: "asc" }];
+      return current.filter((sort) => sort.key !== key);
     });
   }, []);
 
@@ -187,12 +222,13 @@ export function Players({ assets }: { assets: DashboardAsset[] }) {
           <div className="tw-flex tw-w-full tw-flex-wrap tw-items-stretch tw-gap-2 lg:tw-w-auto lg:tw-justify-center">
             <label className="lf-search tw-min-w-0 tw-flex-1 lg:tw-w-80 lg:tw-flex-none">
               <SearchIcon size={20} />
-              <input type="search" placeholder="Cerca giocatore..." value={searchInput} onChange={(event) => setSearchInput(event.target.value)} />
+              <input
+                type="search"
+                placeholder={`Cerca giocatore tra ${processedList.length}${processedList.length !== assets.length ? ` su ${assets.length}` : ""} risultati...`}
+                value={searchInput}
+                onChange={(event) => setSearchInput(event.target.value)}
+              />
             </label>
-
-            <div className="tw-flex tw-items-center tw-self-center tw-whitespace-nowrap tw-px-1 tw-text-xs tw-font-semibold tw-text-slate-500">
-              <span>tra {processedList.length}{processedList.length !== assets.length ? ` su ${assets.length}` : ""} risultati</span>
-            </div>
 
             <button type="button" onClick={() => setShowFreeAgentsOnly((value) => !value)} className={`lf-action-button tw-hidden md:tw-flex ${showFreeAgentsOnly ? "lf-action-button--active" : ""}`} title="Mostra solo giocatori svincolati">
               <UserXIcon size={20} /><span className="tw-hidden sm:tw-inline">Svincolati</span>

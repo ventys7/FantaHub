@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { ChevronDownIcon, UserXIcon, XIcon } from "../icons";
+import { ChevronDownIcon, XIcon } from "../icons";
 import { ROLE_LABELS, ROLE_OPTIONS } from "../constants";
 
 type Props = {
@@ -88,7 +88,7 @@ export function PlayerFilters({
             aria-pressed={showFreeAgentsOnly}
             className={`lf-mobile-toggle${showFreeAgentsOnly ? " lf-mobile-toggle--active" : ""}`}
           >
-            <UserXIcon size={16} /><span>Svincolati</span>
+            <span aria-hidden="true">🆓</span><span>Svincolati</span>
           </button>
         </div>
 

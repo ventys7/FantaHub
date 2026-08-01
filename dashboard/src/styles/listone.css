@@ -139,7 +139,8 @@
   font-weight: 800;
 }
 
-/* Bottone Svincolati dentro la griglia 2×2 dei filtri (mobile). */
+/* Bottone Svincolati dentro la griglia 2×2 dei filtri (mobile): stesso look dei riquadri
+   seleziona (pill con emoji a sinistra), ma resta un bottone con stato attivo. */
 .lf-mobile-toggle {
   display: inline-flex;
   min-height: 40px;
@@ -148,10 +149,10 @@
   gap: 7px;
   padding: 0 12px;
   border: 1px solid #dbe3df;
-  border-radius: 12px;
+  border-radius: 999px;
   background: #ffffff;
   color: #53635d;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
   cursor: pointer;
 }
@@ -159,13 +160,12 @@
 .lf-mobile-toggle:hover { border-color: var(--primary-border); background: var(--primary-bg); }
 .lf-mobile-toggle--active { border-color: var(--primary); background: var(--primary); color: #ffffff; }
 
-/* Barra ordinamenti mobile (Ruolo / Quot. / Prezzo). */
+/* Barra ordinamenti mobile (stessi criteri del desktop, centrati). */
 .lf-mobile-sort-row {
   display: flex;
+  justify-content: center;
   gap: 8px;
-  overflow-x: auto;
   padding: 0 2px 12px;
-  -webkit-overflow-scrolling: touch;
 }
 
 .lf-mobile-sort-btn {
@@ -187,6 +187,24 @@
 
 .lf-mobile-sort-btn--active { border-color: var(--primary-border); background: var(--primary-bg); color: var(--primary); }
 .lf-mobile-sort-btn--primary { border-color: var(--primary); background: var(--primary); color: #ffffff; }
+
+/* Mobile: niente evidenziatore grigio di default al tap, il feedback usa il colore del pattern. */
+.lf-role-pill,
+.lf-mobile-toggle,
+.lf-mobile-sort-btn,
+.lf-select-wrap,
+.lf-action-button,
+.lf-reset-button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.lf-role-pill:active,
+.lf-mobile-toggle:active,
+.lf-mobile-sort-btn:active {
+  background: var(--primary-bg);
+}
+
+.lf-mobile-sort-btn--active:active { color: var(--primary); }
 
 .lf-list-table {
   overflow: clip;

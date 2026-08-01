@@ -51,6 +51,8 @@ window.addEventListener("unhandledrejection", (event) => {
   log.error("unhandled promise rejection", event.reason);
 });
 
+// Il Listone è sempre montato; Rose e Classifica vengono montate al primo
+// accesso alla sezione (evento) oppure subito se la pagina è già aperta su di esse.
 mount("league-dashboard-root", "Listone", <App />);
-mount("league-rose-root", "Rose", <RoseApp />);
-mount("league-standings-root", "Classifica", <StandingsApp />);
+const initialSection = document.documentElement.dataset.leagueSection;
+if (initialSection === "rose" || initialSection === "classifica") mountSectionOnce(initialSection);
