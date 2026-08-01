@@ -67,14 +67,18 @@
   color: #52615c;
   font-weight: 800;
   cursor: pointer;
-  transition: transform 150ms ease, background 150ms ease, border-color 150ms ease;
 }
 
-/* Gli :hover vivono solo dove esiste un hover reale (mouse/trackpad). Su touch/iOS
-   Safari lo :hover è sticky: scatta al tap e resta attaccato finché non tocchi
-   altrove (il sintomo "resta premuto, il colore appare quando tocco il vuoto").
-   Su touch il feedback è solo via .lf-pressed (pressFeedback.ts), istantaneo e pulito. */
+/* La transition (background/transform) vive SOLO dove c'è hover reale: su touch
+   una transition di background di 150ms rende invisibile il feedback di pressione
+   (.lf-pressed via JS) sui tap veloci — al rilascio il colore non ha fatto in
+   tempo a partire. Su touch il .lf-pressed è istantaneo e pulito. */
 @media (hover: hover) {
+  .lf-action-button,
+  .lf-reset-button,
+  .lf-role-pill {
+    transition: background 150ms ease, border-color 150ms ease, color 150ms ease, transform 150ms ease;
+  }
   .lf-action-button:hover,
   .lf-reset-button:hover { transform: translateY(-1px); background: #f6f8f7; }
   .lf-action-button--active:hover { border-color: var(--primary-light); background: var(--primary-light); color: #ffffff; transform: translateY(-1px); }
@@ -94,7 +98,6 @@
   color: #53635d;
   font-weight: 750;
   cursor: pointer;
-  transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
 }
 
 .lf-role-pill--active { border-color: var(--primary); background: var(--primary); color: #ffffff; }
@@ -147,18 +150,20 @@
 }
 
 /* Bottone Svincolati dentro la griglia 2×2 dei filtri (mobile): UI IDENTICA ai filtri
-   elenco — usa le stesse classi .lf-select-wrap (pill, emoji + testo, font, padding) —,
+   elenco — usa le stesse classi .lf-select-wrap (pill, emoji + testo, chevron, font, padding) —,
    cambia solo la semantica: è un bottone con stato attivo invece di un select.
    Il testo vive in .lf-mobile-toggle__label, che replica il select: flessibile,
-   centrato, stesso font-size/weight dei select mobile. */
-.lf-mobile-toggle {
-  cursor: pointer;
+   centrato, stesso font-size/weight dei select mobile.
+   Specificità alta perché .league-react-root button { font: inherit } (regola globale
+   del reset, 0,1,1) batta i default del bottone: senza questo override il testo del
+   toggle usciva a 14px/400 invece dei 12px/700 dei select mobile. */
+.lf-mobile-filters .lf-select-wrap--mobile.lf-mobile-toggle {
   font-family: inherit;
   font-size: 12px;
   font-weight: 700;
 }
 
-.lf-mobile-toggle__label {
+.lf-mobile-filters .lf-mobile-toggle__label {
   flex: 1;
   min-width: 0;
   text-align: center;
@@ -221,7 +226,9 @@
 
 .lf-role-pill.lf-pressed,
 .lf-mobile-toggle.lf-pressed,
-.lf-mobile-sort-btn.lf-pressed {
+.lf-mobile-sort-btn.lf-pressed,
+.lf-action-button.lf-pressed,
+.lf-reset-button.lf-pressed {
   background: var(--primary);
   color: #ffffff;
 }
@@ -229,7 +236,9 @@
 .lf-role-pill--active.lf-pressed,
 .lf-mobile-toggle--active.lf-pressed,
 .lf-mobile-sort-btn--primary.lf-pressed,
-.lf-action-button--active.lf-pressed {
+.lf-action-button--active.lf-pressed,
+.lf-action-button--danger-active.lf-pressed,
+.lf-reset-button.lf-pressed {
   filter: brightness(0.88);
 }
 
