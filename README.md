@@ -1,4 +1,4 @@
-# Lineup-Fanta
+# FantaHub
 
 Builder di formazioni per **PianginaCUP (FP)** e **LaLigaCUP (PD)**: Formazione, Listone, Rose, Classifica, card Kick-off e pannelli di amministrazione separati per lega.
 
