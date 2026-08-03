@@ -68,28 +68,46 @@ describe("SquadRoleSection selectable", () => {
     expect(row).toHaveAttribute("aria-pressed", "false");
   });
 
-  it("il blocco portieri seleziona dal click sulla riga e la tendina dal chevron", () => {
+  it("il blocco portieri seleziona e apre subito la tendina dei singoli, senza chevron", () => {
     const onToggle = vi.fn();
-    render(
-      <SquadRoleSection
-        players={[players[2]]}
-        role="P"
-        label="Portieri"
-        media={media}
-        selectable
-        selectedCodes={new Set()}
-        onToggleSelect={onToggle}
-      />
-    );
+    function StatefulHarness() {
+      const [selected, setSelected] = useState<Set<string>>(new Set());
+      return (
+        <SquadRoleSection
+          players={[players[2]]}
+          role="P"
+          label="Portieri"
+          media={media}
+          selectable
+          selectedCodes={selected}
+          onToggleSelect={(code) => {
+            onToggle(code);
+            setSelected((current) => {
+              const next = new Set(current);
+              if (next.has(code)) next.delete(code);
+              else next.add(code);
+              return next;
+            });
+          }}
+        />
+      );
+    }
+    render(<StatefulHarness />);
+
+    // nessun chevron: esiste solo il bottone della riga
+    expect(screen.queryByRole("button", { name: /Mostra i portieri del blocco/ })).not.toBeInTheDocument();
+
+    // il click seleziona il blocco e apre la tendina dei portieri
     const row = screen.getByRole("button", { name: /Blocco Roma/ });
     fireEvent.click(row);
     expect(onToggle).toHaveBeenCalledWith("b1");
-
-    // la tendina si apre dal chevron, senza selezionare
-    const chevron = screen.getByRole("button", { name: /Mostra i portieri del blocco Roma/ });
-    fireEvent.click(chevron);
-    expect(onToggle).not.toHaveBeenCalledTimes(2);
+    expect(row).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByText("Marco")).toBeInTheDocument();
     expect(screen.getByText("Luca")).toBeInTheDocument();
+
+    // deselezionando la tendina si richiude
+    fireEvent.click(row);
+    expect(row).toHaveAttribute("aria-pressed", "false");
+    expect(screen.queryByText("Marco")).not.toBeInTheDocument();
   });
 });

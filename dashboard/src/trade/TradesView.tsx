@@ -106,7 +106,6 @@ export function TradesView({ managers, squadsByManager, media, leagueId }: Trade
                 ))}
               </select>
             </label>
-            <span className="lf-trade-selectors__arrow" aria-hidden="true">⇄</span>
             <label className="lf-trade-selector">
               <span>Chi riceve</span>
               <select value={managerB} onChange={(event) => changeManagerB(event.target.value)}>

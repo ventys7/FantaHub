@@ -119,31 +119,21 @@ export function SquadRoleSection({ players, role, label, media, selectable = fal
               );
             }
 
-            // Blocco selezionabile: la riga seleziona il blocco, il chevron apre la tendina.
+            // Blocco selezionabile: il click seleziona il blocco e apre
+            // subito la tendina dei portieri singoli (niente chevron).
             if (selectable && isBlock) {
               return (
                 <div key={player.assetCode} className="lf-squad-item-wrap">
-                  <div className="lf-squad-item lf-squad-item--block-select">
-                    <button
-                      type="button"
-                      className={`lf-squad-item__select ${selected ? "is-selected" : ""}`}
-                      onClick={() => onToggleSelect?.(player.assetCode)}
-                      aria-pressed={selected}
-                    >
-                      <SelectionCheck selected={selected} />
-                      {rowContent}
-                    </button>
-                    <button
-                      type="button"
-                      className="lf-squad-item__chevron"
-                      onClick={() => toggleBlock(player.assetCode)}
-                      aria-expanded={expanded}
-                      aria-label={`Mostra i portieri del blocco ${player.realTeam || player.displayName}`}
-                    >
-                      <ChevronDownIcon size={14} className={expanded ? "lf-chevron-open" : ""} />
-                    </button>
-                  </div>
-                  {expanded && (
+                  <button
+                    type="button"
+                    className={`lf-squad-item lf-squad-item--selectable ${selected ? "is-selected" : ""}`}
+                    onClick={() => onToggleSelect?.(player.assetCode)}
+                    aria-pressed={selected}
+                  >
+                    <SelectionCheck selected={selected} />
+                    {rowContent}
+                  </button>
+                  {selected && (
                     <div className="lf-squad-goalkeepers">
                       {goalkeepers.map((goalkeeper) => {
                         const photo = media.player(goalkeeper, player.realTeam)?.photoUrl;
