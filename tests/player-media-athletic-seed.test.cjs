@@ -100,6 +100,67 @@ test("a seed id outside the country directory still resolves (Athletic 843)", as
   assert.equal(catalog.teams["athletic club"].id, "843");
 });
 
+test("a persisted neon override with a stale roster is repaired via seed (911 -> 843)", async (t) => {
+  const tempRoot = await setup();
+  t.after(() => teardown(tempRoot));
+
+  // Directory Spagna reale: il vero Athletic (843) e' catalogato da BSD fuori
+  // dal country Spain, quindi qui ci sono solo i namesake stantii (911/4915/51).
+  const directory = {
+    "911": { id: 911, name: "Athletic Club", country: "Spain" },
+    "4915": { id: 4915, name: "Athletic Club B U21", country: "Spain" },
+    "51": { id: 51, name: "Athletic Club", country: "Spain" }
+  };
+
+  const rosters = {
+    "911": [{ id: 91101, name: "Vivian" }, { id: 91102, name: "Stale One" }],
+    "4915": [{ id: 491501, name: "Vivian" }, { id: 491502, name: "Stale Two" }],
+    "51": [{ id: 5101, name: "Only One" }],
+    "843": [
+      { id: 84301, name: "Vivian" },
+      ...Array.from({ length: 22 }, (_, i) => ({ id: 84302 + i, name: `Player ${String(i + 1).padStart(2, "0")}` }))
+    ]
+  };
+
+  // Listone: 23 giocatori (Vivian + Player 01..22) -> 23/23 sulla rosa 843.
+  const assetRows = [
+    { displayName: "Vivian" },
+    ...Array.from({ length: 22 }, (_, i) => ({ displayName: `Player ${String(i + 1).padStart(2, "0")}` }))
+  ];
+
+  global.fetch = async (input) => {
+    const url = new URL(String(input));
+    if (url.pathname === "/api/players/") {
+      const roster = rosters[String(url.searchParams.get("team"))] || [];
+      return jsonResponse({ count: roster.length, next: null, results: roster });
+    }
+    assert.equal(url.pathname, "/api/teams/");
+    return jsonResponse({ count: Object.keys(directory).length, next: null, results: Object.values(directory) });
+  };
+
+  const media = require(path.join(originalCwd, "lib", "player-media.cjs"));
+  const catalog = {
+    teams: {
+      "athletic club": {
+        id: "911", name: "Athletic Club", country: "Spain",
+        resolutionSource: "neon", playerIds: [], checkedAt: null,
+        key: "athletic club", listoneName: "Athletic Club"
+      }
+    },
+    players: {},
+    providerTeams: directory
+  };
+
+  // Riproduce l'errore produzione "Squadra BSD da confermare per Athletic Club:
+  // Athletic Club [911] 1/23; Athletic Club B U21 [4915] 1/23; Athletic Club
+  // [51] 0/23": una override persistita "neon" con rosa stantia entra nel repair
+  // path, che deve ri-risolvere via seed (843) e non via overlap (911).
+  const result = await media.refreshTeamSquad("pd", "Athletic Club", catalog, assetRows);
+  assert.equal(result.id, "843");
+  assert.equal(result.resolutionSource, "seed");
+  assert.equal(result.playerIds.length, 23);
+});
+
 test("pd seeds point at the full male senior BSD rosters", async (t) => {
   const seeds = JSON.parse(await fs.readFile(path.join(originalCwd, "data", "bsd-team-seeds.json"), "utf8"));
   const pd = seeds.pd || {};
