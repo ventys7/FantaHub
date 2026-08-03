@@ -1,30 +1,38 @@
 import { useMemo, useState, type Dispatch, type SetStateAction } from "react";
-import { AlertCircleIcon, CoinsIcon } from "../icons";
-import type { DashboardAsset } from "../types";
-import { TradeOutputModal } from "./TradeOutputModal";
-import { TradeTeamPanel, type PlayerMedia } from "./TradeTeamPanel";
+import { AlertCircleIcon, CoinsIcon, UsersIcon } from "../icons";
+import { TeamCard } from "../components/teams/TeamCard";
+import type { TeamSquad } from "../components/teams/types";
+import type { PlayerMediaEntry } from "../media";
 import { buildTradeText, creditsValid, roleBalanceSummary } from "./tradeModel";
+import { TradeSummaryModal } from "./TradeSummaryModal";
+
+export type PlayerMedia = {
+  player: (name: string, team: string) => PlayerMediaEntry | null;
+  crest: (team: string) => string;
+};
 
 export type TradesViewProps = {
   managers: string[];
-  assetsByManager: Record<string, readonly DashboardAsset[]>;
-  creditsByManager: Record<string, number | null>;
+  squadsByManager: Record<string, TeamSquad>;
   media: PlayerMedia;
+  leagueId: string;
+  onLogoUpdated?: (managerName: string, logoUrl: string) => void;
 };
 
 type CreditMode = "off" | "offer" | "request";
 
-export function TradesView({ managers, assetsByManager, creditsByManager, media }: TradesViewProps) {
-  const [managerA, setManagerA] = useState<string>(managers[0] ?? "");
-  const [managerB, setManagerB] = useState<string>(managers[1] ?? "");
+export function TradesView({ managers, squadsByManager, media, leagueId, onLogoUpdated }: TradesViewProps) {
+  // Nessuna selezione automatica: l'utente sceglie chi offre e chi riceve.
+  const [managerA, setManagerA] = useState<string>("");
+  const [managerB, setManagerB] = useState<string>("");
   const [selectedA, setSelectedA] = useState<Set<string>>(new Set());
   const [selectedB, setSelectedB] = useState<Set<string>>(new Set());
   const [creditMode, setCreditMode] = useState<CreditMode>("off");
   const [creditAmount, setCreditAmount] = useState(0);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [summaryOpen, setSummaryOpen] = useState(false);
 
-  const assetsA = assetsByManager[managerA] ?? [];
-  const assetsB = assetsByManager[managerB] ?? [];
+  const squadA = squadsByManager[managerA];
+  const squadB = squadsByManager[managerB];
 
   const toggle = (setter: Dispatch<SetStateAction<Set<string>>>) => (assetCode: string) => {
     setter((current) => {
@@ -36,22 +44,23 @@ export function TradesView({ managers, assetsByManager, creditsByManager, media 
   };
 
   const aGives = useMemo(
-    () => assetsA.filter((asset) => selectedA.has(asset.assetCode)),
-    [assetsA, selectedA]
+    () => (squadA?.players ?? []).filter((asset) => selectedA.has(asset.assetCode)),
+    [squadA, selectedA]
   );
   const bGives = useMemo(
-    () => assetsB.filter((asset) => selectedB.has(asset.assetCode)),
-    [assetsB, selectedB]
+    () => (squadB?.players ?? []).filter((asset) => selectedB.has(asset.assetCode)),
+    [squadB, selectedB]
   );
 
   const hasSelection = aGives.length > 0 && bGives.length > 0;
   const balance = roleBalanceSummary(aGives, bGives);
   const offered =
     creditMode === "offer" ? creditAmount : creditMode === "request" ? -creditAmount : 0;
-  const creditsA = creditsByManager[managerA] ?? null;
-  const creditsB = creditsByManager[managerB] ?? null;
+  const creditsA = squadA?.credits ?? null;
+  const creditsB = squadB?.credits ?? null;
   const creditsOk = creditsValid(offered, creditsA, creditsB);
   const canCopy = hasSelection && balance.length === 0 && creditsOk;
+  const totalSelected = selectedA.size + selectedB.size;
 
   const changeManagerA = (name: string) => {
     setManagerA(name);
@@ -59,8 +68,7 @@ export function TradesView({ managers, assetsByManager, creditsByManager, media 
     setCreditMode("off");
     // evita che entrambi i lati mostrino lo stesso proprietario
     if (name === managerB) {
-      const next = managers.find((candidate) => candidate !== name);
-      setManagerB(next ?? "");
+      setManagerB("");
       setSelectedB(new Set());
     }
   };
@@ -78,11 +86,12 @@ export function TradesView({ managers, assetsByManager, creditsByManager, media 
     credits: offered
   });
 
+  const bothSelected = Boolean(squadA && squadB);
+
   return (
     <div className="lf-trades">
       <header className="lf-trades-heading">
         <h1>Scambi</h1>
-        <p>Componi lo scambio tra due rose e copia il messaggio per il gruppo.</p>
       </header>
 
       {managers.length < 2 ? (
@@ -95,6 +104,7 @@ export function TradesView({ managers, assetsByManager, creditsByManager, media 
             <label className="lf-trade-selector">
               <span>Chi offre</span>
               <select value={managerA} onChange={(event) => changeManagerA(event.target.value)}>
+                <option value="" disabled>Scegli la rosa…</option>
                 {managers.map((name) => (
                   <option key={name} value={name}>{name}</option>
                 ))}
@@ -104,6 +114,7 @@ export function TradesView({ managers, assetsByManager, creditsByManager, media 
             <label className="lf-trade-selector">
               <span>Chi riceve</span>
               <select value={managerB} onChange={(event) => changeManagerB(event.target.value)}>
+                <option value="" disabled>Scegli la rosa…</option>
                 {managers.filter((name) => name !== managerA).map((name) => (
                   <option key={name} value={name}>{name}</option>
                 ))}
@@ -111,68 +122,106 @@ export function TradesView({ managers, assetsByManager, creditsByManager, media 
             </label>
           </div>
 
-          <div className="lf-trade-panels">
-            <TradeTeamPanel managerName={managerA} assets={assetsA} selected={selectedA} onToggle={toggle(setSelectedA)} media={media} />
-            <TradeTeamPanel managerName={managerB} assets={assetsB} selected={selectedB} onToggle={toggle(setSelectedB)} media={media} />
-          </div>
-
-          <div className="lf-trade-credits">
-            <div className="lf-trade-credits__heading">
-              <CoinsIcon size={16} />
-              <span>Crediti</span>
+          {!bothSelected ? (
+            <div className="lf-trade-empty">
+              <UsersIcon size={34} />
+              <h2>Componi il tuo scambio</h2>
+              <p>Seleziona chi offre e chi riceve per mettere a confronto le rose.</p>
             </div>
-            <div className="lf-trade-credits__controls">
-              <div className="lf-trade-credit-toggle" role="group" aria-label="Direzione crediti">
-                <button type="button" className={creditMode === "offer" ? "is-active" : ""} onClick={() => setCreditMode("offer")} aria-pressed={creditMode === "offer"}>
-                  Offri
-                </button>
-                <button type="button" className={creditMode === "request" ? "is-active" : ""} onClick={() => setCreditMode("request")} aria-pressed={creditMode === "request"}>
-                  Richiedi
+          ) : (
+            <>
+              <div className="lf-trade-panels">
+                <TeamCard
+                  team={squadA}
+                  leagueId={leagueId}
+                  media={media}
+                  onLogoUpdated={(logoUrl) => onLogoUpdated?.(managerA, logoUrl)}
+                  selectable
+                  selectedCodes={selectedA}
+                  onToggleSelect={toggle(setSelectedA)}
+                />
+                <TeamCard
+                  team={squadB}
+                  leagueId={leagueId}
+                  media={media}
+                  onLogoUpdated={(logoUrl) => onLogoUpdated?.(managerB, logoUrl)}
+                  selectable
+                  selectedCodes={selectedB}
+                  onToggleSelect={toggle(setSelectedB)}
+                />
+              </div>
+
+              <div className="lf-trade-credits">
+                <div className="lf-trade-credits__heading">
+                  <CoinsIcon size={16} />
+                  <span>Crediti</span>
+                </div>
+                <div className="lf-trade-credits__controls">
+                  <div className="lf-trade-credit-toggle" role="group" aria-label="Direzione crediti">
+                    <button type="button" className={creditMode === "offer" ? "is-active" : ""} onClick={() => setCreditMode("offer")} aria-pressed={creditMode === "offer"}>
+                      Offri
+                    </button>
+                    <button type="button" className={creditMode === "request" ? "is-active" : ""} onClick={() => setCreditMode("request")} aria-pressed={creditMode === "request"}>
+                      Richiedi
+                    </button>
+                  </div>
+                  {creditMode !== "off" && (
+                    <input
+                      type="number"
+                      min={0}
+                      max={999}
+                      value={creditAmount}
+                      onChange={(event) => setCreditAmount(Math.max(0, Number(event.target.value) || 0))}
+                      aria-label="Importo crediti"
+                    />
+                  )}
+                  <span className="lf-trade-credits__hint">
+                    {creditMode === "offer"
+                      ? `${creditAmount} crediti a ${managerB}`
+                      : creditMode === "request"
+                        ? `${creditAmount} crediti da ${managerA}`
+                        : "Senza crediti"}
+                  </span>
+                </div>
+              </div>
+
+              <div className={`lf-trade-status ${canCopy ? "is-ok" : ""}`} role="status">
+                {!hasSelection ? (
+                  <span className="lf-trade-status__msg"><AlertCircleIcon size={15} /> Seleziona almeno un giocatore per ciascuna rosa.</span>
+                ) : balance.length > 0 ? (
+                  <span className="lf-trade-status__msg lf-trade-status__msg--error"><AlertCircleIcon size={15} /> Ruoli non bilanciati: {balance.join(", ")}</span>
+                ) : !creditsOk ? (
+                  <span className="lf-trade-status__msg lf-trade-status__msg--error"><AlertCircleIcon size={15} /> Crediti insufficienti.</span>
+                ) : (
+                  <span className="lf-trade-status__msg"><span className="lf-trade-status__ok" aria-hidden="true">✓</span> Scambio pronto!</span>
+                )}
+              </div>
+
+              <div className="lf-trade-actions">
+                <button type="button" className="lf-action-button lf-trade-submit" onClick={() => setSummaryOpen(true)} disabled={!canCopy}>
+                  Riepilogo
                 </button>
               </div>
-              {creditMode !== "off" && (
-                <input
-                  type="number"
-                  min={0}
-                  max={999}
-                  value={creditAmount}
-                  onChange={(event) => setCreditAmount(Math.max(0, Number(event.target.value) || 0))}
-                  aria-label="Importo crediti"
-                />
-              )}
-              <span className="lf-trade-credits__hint">
-                {creditMode === "offer"
-                  ? `${creditAmount} crediti a ${managerB}`
-                  : creditMode === "request"
-                    ? `${creditAmount} crediti da ${managerA}`
-                    : "Senza crediti"}
-              </span>
-            </div>
-          </div>
+            </>
+          )}
 
-          <div className={`lf-trade-status ${canCopy ? "is-ok" : ""}`} role="status">
-            {!hasSelection ? (
-              <span className="lf-trade-status__msg"><AlertCircleIcon size={15} /> Seleziona almeno un giocatore per ciascuna rosa.</span>
-            ) : balance.length > 0 ? (
-              <span className="lf-trade-status__msg lf-trade-status__msg--error"><AlertCircleIcon size={15} /> Ruoli non bilanciati: {balance.join(", ")}</span>
-            ) : !creditsOk ? (
-              <span className="lf-trade-status__msg lf-trade-status__msg--error"><AlertCircleIcon size={15} /> Crediti insufficienti.</span>
-            ) : (
-              <span className="lf-trade-status__msg"><span className="lf-trade-status__ok" aria-hidden="true">✓</span> Scambio pronto!</span>
-            )}
-          </div>
-
-          <div className="lf-trade-actions">
-            <button type="button" className="lf-action-button lf-trade-submit" onClick={() => setModalOpen(true)} disabled={!canCopy}>
-              Visualizza / Copia
+          {bothSelected && (
+            <button
+              type="button"
+              className={`lf-trade-fab ${canCopy ? "" : "is-disabled"}`}
+              onClick={() => setSummaryOpen(true)}
+              disabled={!canCopy}
+            >
+              Riepilogo ({totalSelected})
             </button>
-          </div>
+          )}
 
-          <TradeOutputModal
-            open={modalOpen}
-            title="Scambio"
+          <TradeSummaryModal
+            open={summaryOpen}
+            summary={{ managerA, managerB, aGives, bGives, credits: offered }}
             text={outputText}
-            onClose={() => setModalOpen(false)}
+            media={media}
+            onClose={() => setSummaryOpen(false)}
           />
         </>
       )}

@@ -3,6 +3,8 @@ import { createLogger } from "../debug/logger";
 import { usePlayerMedia } from "../media";
 import { useSectionRefresh } from "../liveRefresh";
 import { loadTeamProfiles, type TeamProfiles } from "../teamProfiles";
+import { buildTeamSquads } from "../components/teams/buildSquads";
+import type { TeamSquad } from "../components/teams/types";
 import type { DashboardAsset } from "../types";
 import { TradesView } from "./TradesView";
 
@@ -36,27 +38,19 @@ export function TradesPage({ assets, leagueId, profilesUrl }: TradesPageProps) {
     };
   }, [leagueId, profilesUrl, refreshToken]);
 
-  const { managers, assetsByManager, creditsByManager } = useMemo(() => {
-    const grouped = new Map<string, DashboardAsset[]>();
-
-    assets.forEach((asset) => {
-      if (asset.isFreeAgent || !asset.ownerTag) return;
-      const owner = asset.ownerTag.trim();
-      if (!owner) return;
-      const current = grouped.get(owner) ?? [];
-      current.push(asset);
-      grouped.set(owner, current);
-    });
-
-    const managers = [...grouped.keys()].sort((a, b) => a.localeCompare(b, "it"));
-    const assetsByManager: Record<string, readonly DashboardAsset[]> = Object.fromEntries(grouped);
-    const creditsByManager: Record<string, number | null> = {};
-    managers.forEach((manager) => {
-      creditsByManager[manager] = profiles[manager]?.credits ?? null;
-    });
-
-    return { managers, assetsByManager, creditsByManager };
+  const { managers, squadsByManager } = useMemo(() => {
+    const squads = buildTeamSquads(assets, profiles);
+    const byManager: Record<string, TeamSquad> = {};
+    squads.forEach((squad) => { byManager[squad.managerName] = squad; });
+    return { managers: squads.map((squad) => squad.managerName), squadsByManager: byManager };
   }, [assets, profiles]);
 
-  return <TradesView managers={managers} assetsByManager={assetsByManager} creditsByManager={creditsByManager} media={media} />;
+  const handleLogoUpdated = (managerName: string, logoUrl: string) => {
+    setProfiles((current) => ({
+      ...current,
+      [managerName]: { ...(current[managerName] || { credits: squadsByManager[managerName]?.credits ?? null }), logoUrl }
+    }));
+  };
+
+  return <TradesView managers={managers} squadsByManager={squadsByManager} media={media} leagueId={leagueId} onLogoUpdated={handleLogoUpdated} />;
 }

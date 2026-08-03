@@ -8,7 +8,16 @@ import type { PlayerMediaEntry } from "../../media";
 const ROLE_TARGETS: Record<RoleKey, number> = { P: 2, D: 8, C: 8, A: 6 };
 const numberFormatter = new Intl.NumberFormat("it-IT", { maximumFractionDigits: 2 });
 
-export function TeamCard({ team, leagueId, media, onLogoUpdated }: { team: TeamSquad; leagueId: string; media: { player: (name: string, team: string) => PlayerMediaEntry | null; crest: (team: string) => string }; onLogoUpdated: (url: string) => void }) {
+export function TeamCard({ team, leagueId, media, onLogoUpdated, selectable = false, selectedCodes, onToggleSelect }: {
+  team: TeamSquad;
+  leagueId: string;
+  media: { player: (name: string, team: string) => PlayerMediaEntry | null; crest: (team: string) => string };
+  onLogoUpdated: (url: string) => void;
+  /** Modalità selezionabile (Scambi): le righe diventano bottone con check. */
+  selectable?: boolean;
+  selectedCodes?: ReadonlySet<string>;
+  onToggleSelect?: (assetCode: string) => void;
+}) {
   const [activeFilter, setActiveFilter] = useState<"ALL" | RoleKey>("ALL");
   const [logoFailed, setLogoFailed] = useState(false);
   const [logoOpen, setLogoOpen] = useState(false);
@@ -66,10 +75,10 @@ export function TeamCard({ team, leagueId, media, onLogoUpdated }: { team: TeamS
 
       <div className="lf-team-roster-frame">
         <div className="lf-team-roster">
-          {(activeFilter === "ALL" || activeFilter === "P") && <SquadRoleSection players={team.players} role="P" label="Portieri" media={media} />}
-          {(activeFilter === "ALL" || activeFilter === "D") && <SquadRoleSection players={team.players} role="D" label="Difensori" media={media} />}
-          {(activeFilter === "ALL" || activeFilter === "C") && <SquadRoleSection players={team.players} role="C" label="Centrocampisti" media={media} />}
-          {(activeFilter === "ALL" || activeFilter === "A") && <SquadRoleSection players={team.players} role="A" label="Attaccanti" media={media} />}
+          {(activeFilter === "ALL" || activeFilter === "P") && <SquadRoleSection players={team.players} role="P" label="Portieri" media={media} selectable={selectable} selectedCodes={selectedCodes} onToggleSelect={onToggleSelect} />}
+          {(activeFilter === "ALL" || activeFilter === "D") && <SquadRoleSection players={team.players} role="D" label="Difensori" media={media} selectable={selectable} selectedCodes={selectedCodes} onToggleSelect={onToggleSelect} />}
+          {(activeFilter === "ALL" || activeFilter === "C") && <SquadRoleSection players={team.players} role="C" label="Centrocampisti" media={media} selectable={selectable} selectedCodes={selectedCodes} onToggleSelect={onToggleSelect} />}
+          {(activeFilter === "ALL" || activeFilter === "A") && <SquadRoleSection players={team.players} role="A" label="Attaccanti" media={media} selectable={selectable} selectedCodes={selectedCodes} onToggleSelect={onToggleSelect} />}
         </div>
       </div>
       <LogoEditorDialog open={logoOpen} leagueId={leagueId} teamName={team.managerName} currentLogo={team.logoUrl} onClose={() => setLogoOpen(false)} onUpdated={(url) => { setLogoFailed(false); onLogoUpdated(url); }} />
