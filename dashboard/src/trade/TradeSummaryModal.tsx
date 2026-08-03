@@ -130,7 +130,7 @@ export function TradeSummaryModal({ open, summary, text, media, onClose }: Props
           </section>
 
           <section className="lf-trade-summary__side" aria-label={`In cambio da ${summary.managerB}`}>
-            <h3><span className="lf-trade-summary__badge" aria-hidden="true">⇄</span> in cambio da {summary.managerB} <em>offre</em></h3>
+            <h3><span className="lf-trade-summary__badge" aria-hidden="true">⇄</span> in cambio da {summary.managerB}</h3>
             <ul className="lf-trade-summary__list">
               {summary.bGives.map((asset) => <SummaryRow key={asset.assetCode} asset={asset} media={media} />)}
             </ul>
