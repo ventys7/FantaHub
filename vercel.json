@@ -1,51 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "redirects": [
-    {
-      "source": "/:path*",
-      "has": [
-        {
-          "type": "host",
-          "value": "lineup-fp.vercel.app"
-        }
-      ],
-      "destination": "https://fanta-hub.vercel.app/fp/:path*",
-      "permanent": true
-    },
-    {
-      "source": "/:path*",
-      "has": [
-        {
-          "type": "host",
-          "value": "fanta-pl.vercel.app"
-        }
-      ],
-      "destination": "https://fanta-hub.vercel.app/fp/:path*",
-      "permanent": true
-    },
-    {
-      "source": "/:path*",
-      "has": [
-        {
-          "type": "host",
-          "value": "pianginacup.vercel.app"
-        }
-      ],
-      "destination": "https://fanta-hub.vercel.app/fp/:path*",
-      "permanent": true
-    },
-    {
-      "source": "/:path*",
-      "has": [
-        {
-          "type": "host",
-          "value": "laligacup.vercel.app"
-        }
-      ],
-      "destination": "https://fanta-hub.vercel.app/pd/:path*",
-      "permanent": true
-    }
-  ],
   "headers": [
     {
       "source": "/:path*",
