@@ -40,14 +40,14 @@ test("stale imported team overrides are repaired when their roster does not matc
 test("public media responses and browser refreshes cannot keep manual Neon overrides stale", () => {
   const api = source("api/player-media.js");
   const browser = source("js/player-media.js");
-  const server = source("lib/player-media.cjs");
+  const state = source("lib/media/manifest-state.cjs");
   const keys = source("js/club-keys.js");
 
   assert.match(api, /no-store, max-age=0, must-revalidate/);
   assert.match(browser, /const CACHE_VERSION = 12/);
   assert.match(browser, /cache: "no-store"/);
-  assert.match(server, /Neon is the shared source of truth across serverless instances/);
-  assert.match(server, /DIRECT_STATE_VERSION = 2/);
+  assert.match(state, /Neon is the shared source of truth across serverless instances/);
+  assert.match(state, /DIRECT_STATE_VERSION = 2/);
   assert.match(keys, /replace\(\/ø\/g, "o"\)/);
   assert.match(keys, /replace\(\/ł\/g, "l"\)/);
 });

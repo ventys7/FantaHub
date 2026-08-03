@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="it" data-league="{{LEAGUE_ID}}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="{{THEME_COLOR}}">
+  <title>Admin Links · {{LEAGUE_NAME}}</title>
+  <link rel="stylesheet" href="/css/admin-links.css">
+</head>
+<body>
+  <div class="admin-backdrop" aria-hidden="true"></div>
+  <main class="admin-shell">
+    <header class="admin-header">
+      <a class="admin-brand" href="/{{LEAGUE_ID}}/" aria-label="Torna alla {{LEAGUE_NAME}}">
+        <span class="admin-brand__mark">{{LEAGUE_MARK}}</span>
+        <span class="admin-brand__copy"><strong>{{LEAGUE_NAME}}</strong><small>{{LEAGUE_TAGLINE}}</small></span>
+      </a>
+      <div class="admin-header__title">
+        <p>CONTROL ROOM</p>
+        <h1>Admin Links</h1>
+      </div>
+      <a class="admin-backlink" href="/{{LEAGUE_ID}}/"><span aria-hidden="true">←</span> Torna alla lega</a>
+    </header>
+
+    <section id="loginView" class="admin-login-layout">
+      <div class="admin-login-intro">
+        <span class="admin-login-intro__icon" aria-hidden="true">↗</span>
+        <p>AREA RISERVATA</p>
+        <h2>Gestisci la lega senza toccare il codice.</h2>
+      </div>
+      <section class="admin-card admin-login">
+        <div class="admin-card__heading">
+          <div><p>AUTENTICAZIONE</p><h2>Accesso amministratore</h2></div>
+          <span class="admin-status-dot" aria-hidden="true"></span>
+        </div>
+        <form id="loginForm">
+          <label>Password amministratore<input id="adminPassword" type="password" autocomplete="current-password" required placeholder="Inserisci la password"></label>
+          <button type="submit">Accedi al pannello</button>
+        </form>
+      </section>
+    </section>
+
+    <div id="adminView" hidden>
+      <section class="admin-toolbar" aria-label="Azioni amministratore">
+        <div class="admin-toolbar__status"><span></span><strong>{{LEAGUE_MARK}} · Neon attivo</strong></div>
+        <div class="admin-actions">
+          <button id="saveSettings" type="button">Salva collegamenti</button>
+          <button id="logoutButton" class="secondary secondary--danger" type="button">Esci</button>
+        </div>
+      </section>
+
+      <div class="admin-dashboard-grid">
+        <section id="leagueSettings" class="admin-card admin-card--settings"></section>
+
+        <section class="admin-card admin-card--codes">
+          <div class="admin-section-title">
+            <div><p>ACCESSO MANAGER</p><h2>Codici stemma</h2></div>
+          </div>
+          <div id="logoCodes" class="code-grid"></div>
+        </section>
+
+        <section class="admin-card admin-card--media admin-card--wide">
+          <div class="admin-section-title">
+            <div><p>BSD DIRETTO</p><h2>Foto giocatori</h2></div>
+            <div class="media-actions"><button id="mediaRefresh" class="secondary" type="button">Ricalcola collegamenti</button></div>
+          </div>
+          <div class="media-overview">
+            <div id="mediaStatus" class="media-status">Caricamento stato…</div>
+          </div>
+          <div id="unresolvedTeams" class="unresolved-grid team-issues-grid"></div>
+          <div id="unresolvedPlayers" class="unresolved-grid"></div>
+        </section>
+      </div>
+    </div>
+
+    <p id="adminFeedback" class="admin-feedback" role="status" aria-live="polite"></p>
+  </main>
+  <script src="/js/admin-links.js"></script>
+</body>
+</html>

@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const checkOnly = process.argv.includes("--check");
 const template = readFileSync(resolve(root, "index.html"), "utf8");
+const adminTemplate = readFileSync(resolve(root, "admin-links.html"), "utf8");
 const iconVersion = "8";
 
 const routes = {
@@ -21,6 +22,11 @@ const routes = {
     appleTouchIcon: "/pd/apple-touch-icon.png?v=5",
     themeColor: "#b91c1c"
   }
+};
+
+const adminRoutes = {
+  fp: { name: "PianginaCUP", mark: "FP", tagline: "Fanta Premier", themeColor: "#6d28d9" },
+  pd: { name: "Fanta Liga", mark: "PD", tagline: "Primera División", themeColor: "#b4232f" }
 };
 
 function renderRoutePage(id, identity) {
@@ -41,10 +47,31 @@ function renderRoutePage(id, identity) {
     .replaceAll('<script src="js/config.js"></script>', `${staticHead}\n<script src="js/config.js"></script>`);
 }
 
+function renderAdminPage(id, identity) {
+  // replaceAll ensures every occurrence is replaced, not just the first
+  return adminTemplate
+    .replaceAll("{{LEAGUE_ID}}", id)
+    .replaceAll("{{THEME_COLOR}}", identity.themeColor)
+    .replaceAll("{{LEAGUE_NAME}}", identity.name)
+    .replaceAll("{{LEAGUE_MARK}}", identity.mark)
+    .replaceAll("{{LEAGUE_TAGLINE}}", identity.tagline);
+}
+
+const pages = [
+  ...Object.entries(routes).map(([id, identity]) => ({
+    target: resolve(root, id, "index.html"),
+    label: `${id}/index.html`,
+    expected: renderRoutePage(id, identity)
+  })),
+  ...Object.entries(adminRoutes).map(([id, identity]) => ({
+    target: resolve(root, id, "admin-links", "index.html"),
+    label: `${id}/admin-links/index.html`,
+    expected: renderAdminPage(id, identity)
+  }))
+];
+
 const outOfSync = [];
-for (const [id, identity] of Object.entries(routes)) {
-  const target = resolve(root, id, "index.html");
-  const expected = renderRoutePage(id, identity);
+for (const { target, label, expected } of pages) {
   let current = null;
   try {
     current = readFileSync(target, "utf8");
@@ -53,9 +80,9 @@ for (const [id, identity] of Object.entries(routes)) {
   }
 
   if (current !== expected) {
-    outOfSync.push(`${id}/index.html`);
+    outOfSync.push(label);
     if (!checkOnly) {
-      mkdirSync(resolve(root, id), { recursive: true });
+      mkdirSync(resolve(target, ".."), { recursive: true });
       writeFileSync(target, expected, "utf8");
     }
   }
