@@ -45,12 +45,5 @@ export function TradesPage({ assets, leagueId, profilesUrl }: TradesPageProps) {
     return { managers: squads.map((squad) => squad.managerName), squadsByManager: byManager };
   }, [assets, profiles]);
 
-  const handleLogoUpdated = (managerName: string, logoUrl: string) => {
-    setProfiles((current) => ({
-      ...current,
-      [managerName]: { ...(current[managerName] || { credits: squadsByManager[managerName]?.credits ?? null }), logoUrl }
-    }));
-  };
-
-  return <TradesView managers={managers} squadsByManager={squadsByManager} media={media} leagueId={leagueId} onLogoUpdated={handleLogoUpdated} />;
+  return <TradesView managers={managers} squadsByManager={squadsByManager} media={media} leagueId={leagueId} />;
 }

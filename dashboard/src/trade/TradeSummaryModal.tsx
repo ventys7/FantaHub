@@ -60,6 +60,7 @@ function initials(name: string) {
 function SummaryRow({ asset, media }: { asset: DashboardAsset; media: Props["media"] }) {
   const isBlock = isGoalkeeperBlock(asset);
   const crest = media.crest(asset.realTeam);
+  const photo = isBlock ? undefined : media.player(asset.displayName, asset.realTeam)?.photoUrl;
   return (
     <li className="lf-trade-summary__row">
       {isBlock ? (
@@ -67,8 +68,8 @@ function SummaryRow({ asset, media }: { asset: DashboardAsset; media: Props["med
           {crest ? <img src={crest} alt="" loading="lazy" decoding="async" /> : <ShieldIcon size={17} />}
         </span>
       ) : (
-        <span className={`lf-squad-avatar lf-squad-avatar--${asset.role.toLowerCase()}`} aria-hidden="true">
-          {initials(asset.displayName)}
+        <span className={`lf-squad-avatar lf-squad-avatar--${asset.role.toLowerCase()} ${photo ? "has-photo" : ""}`} aria-hidden="true">
+          {photo ? <img src={photo} alt="" loading="lazy" decoding="async" /> : initials(asset.displayName)}
         </span>
       )}
       <span className="lf-trade-summary__name">
@@ -86,11 +87,17 @@ export function TradeSummaryModal({ open, summary, text, media, onClose }: Props
   useEffect(() => {
     if (!open) return;
     setCopied(false);
+    // blocca lo scroll della pagina sotto la card (mobile incluso)
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
     };
     document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", onKeyDown);
+    };
   }, [open, onClose]);
 
   if (!open) return null;

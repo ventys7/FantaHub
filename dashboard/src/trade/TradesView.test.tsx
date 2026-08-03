@@ -84,6 +84,16 @@ describe("TradesView", () => {
     expect(screen.getByText("Difensore Villa")).toBeInTheDocument();
   });
 
+  it("non mostra il titolo Scambi né i flag rosa completa/incompleta", () => {
+    renderView();
+    selectSides();
+    // niente h1 "Scambi": il contenuto sta già dentro la tab
+    expect(screen.queryByRole("heading", { name: "Scambi" })).not.toBeInTheDocument();
+    // nelle card restano solo i crediti, non lo stato rosa
+    expect(screen.queryByText(/ROSA COMPLETA|INCOMPLETA/)).not.toBeInTheDocument();
+    expect(screen.getAllByText("Crediti").length).toBeGreaterThanOrEqual(2);
+  });
+
   it("mostra stato di selezione finché entrambi i lati non hanno giocatori", () => {
     renderView();
     selectSides();
@@ -131,6 +141,23 @@ describe("TradesView", () => {
     fireEvent.click(screen.getByRole("button", { name: "Offri" }));
     const amount = screen.getByRole("spinbutton", { name: "Importo crediti" });
     fireEvent.change(amount, { target: { value: "3" } });
+    expect(screen.getByText(/Scambio pronto/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Riepilogo" })).toBeEnabled();
+  });
+
+  it("parte con input crediti vuoto e la X lo rimuove dallo scambio", () => {
+    renderView({ squadsByManager: { Casa: makeSquad("Casa", assetsCasa, 3), Villa: makeSquad("Villa", assetsVilla, 10) } });
+    selectSides();
+    fireEvent.click(screen.getByText("Difensore Casa"));
+    fireEvent.click(screen.getByText("Difensore Villa"));
+    fireEvent.click(screen.getByRole("button", { name: "Offri" }));
+    // nessuno "0" precompilato
+    const amount = screen.getByRole("spinbutton", { name: "Importo crediti" });
+    expect(amount).toHaveValue(null);
+    fireEvent.change(amount, { target: { value: "3" } });
+    // la X toglie i crediti: input e chip spariscono, lo scambio torna senza crediti
+    fireEvent.click(screen.getByRole("button", { name: "Rimuovi crediti" }));
+    expect(screen.queryByRole("spinbutton", { name: "Importo crediti" })).not.toBeInTheDocument();
     expect(screen.getByText(/Scambio pronto/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Riepilogo" })).toBeEnabled();
   });

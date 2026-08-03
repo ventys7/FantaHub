@@ -16,12 +16,11 @@ export type TradesViewProps = {
   squadsByManager: Record<string, TeamSquad>;
   media: PlayerMedia;
   leagueId: string;
-  onLogoUpdated?: (managerName: string, logoUrl: string) => void;
 };
 
 type CreditMode = "off" | "offer" | "request";
 
-export function TradesView({ managers, squadsByManager, media, leagueId, onLogoUpdated }: TradesViewProps) {
+export function TradesView({ managers, squadsByManager, media, leagueId }: TradesViewProps) {
   // Nessuna selezione automatica: l'utente sceglie chi offre e chi riceve.
   const [managerA, setManagerA] = useState<string>("");
   const [managerB, setManagerB] = useState<string>("");
@@ -89,11 +88,8 @@ export function TradesView({ managers, squadsByManager, media, leagueId, onLogoU
   const bothSelected = Boolean(squadA && squadB);
 
   return (
-    <div className="lf-trades">
-      <header className="lf-trades-heading">
-        <h1>Scambi</h1>
-      </header>
-
+    <div className="tw-px-2 tw-py-3 sm:tw-px-5 sm:tw-py-7 lg:tw-px-7">
+      <section className="lf-trades lf-dashboard-card tw-mx-auto tw-max-w-7xl">
       {managers.length < 2 ? (
         <div className="lf-teams-empty">
           <p>Servono almeno due rose per comporre uno scambio.</p>
@@ -135,19 +131,21 @@ export function TradesView({ managers, squadsByManager, media, leagueId, onLogoU
                   team={squadA}
                   leagueId={leagueId}
                   media={media}
-                  onLogoUpdated={(logoUrl) => onLogoUpdated?.(managerA, logoUrl)}
                   selectable
                   selectedCodes={selectedA}
                   onToggleSelect={toggle(setSelectedA)}
+                  hideLogoEdit
+                  hideStatusFlag
                 />
                 <TeamCard
                   team={squadB}
                   leagueId={leagueId}
                   media={media}
-                  onLogoUpdated={(logoUrl) => onLogoUpdated?.(managerB, logoUrl)}
                   selectable
                   selectedCodes={selectedB}
                   onToggleSelect={toggle(setSelectedB)}
+                  hideLogoEdit
+                  hideStatusFlag
                 />
               </div>
 
@@ -166,14 +164,26 @@ export function TradesView({ managers, squadsByManager, media, leagueId, onLogoU
                     </button>
                   </div>
                   {creditMode !== "off" && (
-                    <input
-                      type="number"
-                      min={0}
-                      max={999}
-                      value={creditAmount}
-                      onChange={(event) => setCreditAmount(Math.max(0, Number(event.target.value) || 0))}
-                      aria-label="Importo crediti"
-                    />
+                    <span className="lf-trade-credit-input">
+                      <input
+                        type="number"
+                        min={0}
+                        max={999}
+                        value={creditAmount === 0 ? "" : creditAmount}
+                        placeholder="0"
+                        onChange={(event) => setCreditAmount(Math.max(0, Number(event.target.value) || 0))}
+                        aria-label="Importo crediti"
+                      />
+                      <button
+                        type="button"
+                        className="lf-trade-credit-clear"
+                        onClick={() => { setCreditMode("off"); setCreditAmount(0); }}
+                        aria-label="Rimuovi crediti"
+                        title="Togli i crediti dallo scambio"
+                      >
+                        ✕
+                      </button>
+                    </span>
                   )}
                   <span className="lf-trade-credits__hint">
                     {creditMode === "offer"
@@ -225,6 +235,7 @@ export function TradesView({ managers, squadsByManager, media, leagueId, onLogoU
           />
         </>
       )}
+      </section>
     </div>
   );
 }

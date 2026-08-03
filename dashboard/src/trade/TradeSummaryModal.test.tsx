@@ -53,6 +53,25 @@ describe("TradeSummaryModal", () => {
     expect(screen.getByText(/\+5 crediti da Casa a Villa/)).toBeInTheDocument();
   });
 
+  it("mostra la foto del giocatore quando disponibile", () => {
+    const mediaWithPhoto = {
+      player: () => ({ photoUrl: "/foto/attaccante.jpg", flagUrl: "" }),
+      crest: () => ""
+    };
+    render(<TradeSummaryModal open summary={SUMMARY} text={TEXT} media={mediaWithPhoto} onClose={() => {}} />);
+    // l'avatar è decorativo (aria-hidden): la foto è visibile nel DOM, non nell'accessibility tree
+    const photo = document.querySelector(".lf-squad-avatar img") as HTMLImageElement;
+    expect(photo).not.toBeNull();
+    expect(photo.src).toContain("/foto/attaccante.jpg");
+  });
+
+  it("blocca lo scroll del body mentre è aperta e lo ripristina alla chiusura", () => {
+    const { rerender } = render(<TradeSummaryModal open summary={SUMMARY} text={TEXT} media={media} onClose={() => {}} />);
+    expect(document.body.style.overflow).toBe("hidden");
+    rerender(<TradeSummaryModal open={false} summary={SUMMARY} text={TEXT} media={media} onClose={() => {}} />);
+    expect(document.body.style.overflow).toBe("");
+  });
+
   it("non mostra la riga crediti senza crediti", () => {
     render(<TradeSummaryModal open summary={SUMMARY} text={TEXT} media={media} onClose={() => {}} />);
     expect(screen.queryByText(/crediti da/)).not.toBeInTheDocument();

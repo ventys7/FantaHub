@@ -8,15 +8,19 @@ import type { PlayerMediaEntry } from "../../media";
 const ROLE_TARGETS: Record<RoleKey, number> = { P: 2, D: 8, C: 8, A: 6 };
 const numberFormatter = new Intl.NumberFormat("it-IT", { maximumFractionDigits: 2 });
 
-export function TeamCard({ team, leagueId, media, onLogoUpdated, selectable = false, selectedCodes, onToggleSelect }: {
+export function TeamCard({ team, leagueId, media, onLogoUpdated, selectable = false, selectedCodes, onToggleSelect, hideLogoEdit = false, hideStatusFlag = false }: {
   team: TeamSquad;
   leagueId: string;
   media: { player: (name: string, team: string) => PlayerMediaEntry | null; crest: (team: string) => string };
-  onLogoUpdated: (url: string) => void;
+  onLogoUpdated?: (url: string) => void;
   /** Modalità selezionabile (Scambi): le righe diventano bottone con check. */
   selectable?: boolean;
   selectedCodes?: ReadonlySet<string>;
   onToggleSelect?: (assetCode: string) => void;
+  /** Nasconde il bottone "cambia stemma" (Scambi: gli stemmi si gestiscono nelle Rose). */
+  hideLogoEdit?: boolean;
+  /** Nasconde il flag rosa completa/incompleta (Scambi: resta solo il credito). */
+  hideStatusFlag?: boolean;
 }) {
   const [activeFilter, setActiveFilter] = useState<"ALL" | RoleKey>("ALL");
   const [logoFailed, setLogoFailed] = useState(false);
@@ -33,12 +37,20 @@ export function TeamCard({ team, leagueId, media, onLogoUpdated, selectable = fa
     <article className="lf-team-card">
       <header className="lf-team-card__header">
         <div className="lf-team-card__identity">
-          <button type="button" className={`lf-team-card__avatar lf-team-card__avatar--editable ${showLogo ? "has-logo" : ""}`} onClick={() => setLogoOpen(true)} title="Cambia stemma">
-            {showLogo ? (
-              <img src={team.logoUrl} alt={`Logo di ${team.managerName}`} loading="lazy" referrerPolicy="no-referrer" onError={() => setLogoFailed(true)} />
-            ) : team.managerName.charAt(0).toUpperCase()}
-            <span className="lf-team-card__avatar-edit" aria-hidden="true">✎</span>
-          </button>
+          {hideLogoEdit ? (
+            <span className={`lf-team-card__avatar ${showLogo ? "has-logo" : ""}`} aria-hidden="true">
+              {showLogo ? (
+                <img src={team.logoUrl} alt="" loading="lazy" referrerPolicy="no-referrer" onError={() => setLogoFailed(true)} />
+              ) : team.managerName.charAt(0).toUpperCase()}
+            </span>
+          ) : (
+            <button type="button" className={`lf-team-card__avatar lf-team-card__avatar--editable ${showLogo ? "has-logo" : ""}`} onClick={() => setLogoOpen(true)} title="Cambia stemma">
+              {showLogo ? (
+                <img src={team.logoUrl} alt={`Logo di ${team.managerName}`} loading="lazy" referrerPolicy="no-referrer" onError={() => setLogoFailed(true)} />
+              ) : team.managerName.charAt(0).toUpperCase()}
+              <span className="lf-team-card__avatar-edit" aria-hidden="true">✎</span>
+            </button>
+          )}
           <div className="lf-team-card__copy">
             <span className="lf-team-card__eyebrow">Allenatore</span>
             <h2 title={team.managerName}>{team.managerName}</h2>
@@ -50,10 +62,12 @@ export function TeamCard({ team, leagueId, media, onLogoUpdated, selectable = fa
             <span>Crediti</span>
             <strong><CoinsIcon size={16} /> {creditsLabel}</strong>
           </div>
-          <div className={`lf-team-status ${team.isComplete ? "lf-team-status--complete" : "lf-team-status--incomplete"}`}>
-            {team.isComplete ? <ShieldIcon size={13} /> : <AlertCircleIcon size={13} />}
-            {team.isComplete ? "ROSA COMPLETA" : "INCOMPLETA"}
-          </div>
+          {!hideStatusFlag && (
+            <div className={`lf-team-status ${team.isComplete ? "lf-team-status--complete" : "lf-team-status--incomplete"}`}>
+              {team.isComplete ? <ShieldIcon size={13} /> : <AlertCircleIcon size={13} />}
+              {team.isComplete ? "ROSA COMPLETA" : "INCOMPLETA"}
+            </div>
+          )}
         </div>
       </header>
 
@@ -81,7 +95,9 @@ export function TeamCard({ team, leagueId, media, onLogoUpdated, selectable = fa
           {(activeFilter === "ALL" || activeFilter === "A") && <SquadRoleSection players={team.players} role="A" label="Attaccanti" media={media} selectable={selectable} selectedCodes={selectedCodes} onToggleSelect={onToggleSelect} />}
         </div>
       </div>
-      <LogoEditorDialog open={logoOpen} leagueId={leagueId} teamName={team.managerName} currentLogo={team.logoUrl} onClose={() => setLogoOpen(false)} onUpdated={(url) => { setLogoFailed(false); onLogoUpdated(url); }} />
+      {!hideLogoEdit && (
+        <LogoEditorDialog open={logoOpen} leagueId={leagueId} teamName={team.managerName} currentLogo={team.logoUrl} onClose={() => setLogoOpen(false)} onUpdated={(url) => { setLogoFailed(false); onLogoUpdated?.(url); }} />
+      )}
     </article>
   );
 }

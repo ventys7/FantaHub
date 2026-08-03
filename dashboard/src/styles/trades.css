@@ -7,14 +7,9 @@
 .lf-trades {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-}
-
-.lf-trades-heading h1 {
-  margin: 0;
-  font-size: 1.35rem;
-  font-weight: 800;
-  letter-spacing: -0.01em;
+  gap: 18px;
+  /* stesso padding della griglia Rose (teams.css .lf-teams-grid) */
+  padding: 0 22px 24px;
 }
 
 /* ---- Selettori proprietario ---- */
@@ -100,11 +95,11 @@
   line-height: 1.5;
 }
 
-/* ---- Pannelli rose (card TeamCard affiancate) ---- */
+/* ---- Pannelli rose (card TeamCard affiancate, come la griglia Rose) ---- */
 .lf-trade-panels {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
   align-items: start;
 }
 
@@ -178,6 +173,35 @@
   font-size: 14px;
   font-weight: 700;
   text-align: center;
+}
+
+.lf-trade-credit-input {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lf-trade-credit-clear {
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 10px;
+  background: #f1f5f9;
+  color: #64748b;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.lf-trade-credit-clear:hover {
+  background: #fee2e2;
+  color: #b91c1c;
 }
 
 .lf-trade-credits__hint {
@@ -263,7 +287,8 @@
   position: fixed;
   right: 20px;
   bottom: 24px;
-  z-index: 60;
+  /* sopra qualsiasi contenuto della pagina, sotto il modal (9990) */
+  z-index: 1000;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -553,10 +578,8 @@
 @media (max-width: 767px) {
   .lf-trades {
     gap: 12px;
-  }
-
-  .lf-trades-heading h1 {
-    font-size: 1.2rem;
+    /* stesso padding mobile della griglia Rose */
+    padding: 0 10px 14px;
   }
 
   .lf-trade-selectors {
@@ -585,17 +608,6 @@
 
   .lf-trade-submit {
     display: none;
-  }
-
-  .lf-trade-summary {
-    align-items: flex-end;
-    padding: 0;
-  }
-
-  .lf-trade-summary__box {
-    width: 100%;
-    max-height: 88dvh;
-    border-radius: 18px 18px 0 0;
   }
 
   .lf-trade-summary__body {
