@@ -23,23 +23,3 @@ function getSwitchLineup() {
 function getStarters() {
   return getSwitchLineup().starters.map((entry) => entry.player);
 }
-
-function getBench() {
-  return getSwitchLineup().bench.map((entry) => entry.player);
-}
-
-function getSwitchStarters() {
-  return (window.LineupSwitch?.getCandidates().starters || []).map((entry) => entry.player);
-}
-
-function getSwitchBench() {
-  return (window.LineupSwitch?.getCandidates().bench || []).map((entry) => entry.player);
-}
-
-function getStarterIndexFromSwitch() {
-  return window.LineupSwitch?.getState().starterIndex ?? switchStarterIndex;
-}
-
-function getBenchIndexFromSwitch() {
-  return window.LineupSwitch?.getState().benchIndex ?? switchBenchIndex;
-}

@@ -2,14 +2,14 @@ const { isAuthenticated } = require("../lib/admin-auth.cjs");
 const { methodNotAllowed, readBody } = require("../lib/http.cjs");
 const { leagueId } = require("../lib/settings.cjs");
 const {
-  linkManual,
-  linkTeamManual,
-  mediaStatus,
+  directLinkManual,
+  directLinkTeam,
+  directMediaStatus,
   publicManifest,
-  readManifest,
+  directReadManifest,
   refreshDirectManifest,
-  searchProvider,
-  searchProviderTeams
+  directSearchProvider,
+  directSearchProviderTeams
 } = require("../lib/player-media.cjs");
 
 function publicCache(res) {
@@ -30,10 +30,10 @@ module.exports = async function handler(req, res) {
       const id = leagueId(req.query?.league);
       if (fresh) {
         privateNoStore(res);
-        return res.status(200).json(await mediaStatus(id, { fresh: true }));
+        return res.status(200).json(await directMediaStatus(id, { fresh: true }));
       }
       publicCache(res);
-      return res.status(200).json(publicManifest(await readManifest(id)));
+      return res.status(200).json(publicManifest(await directReadManifest(id)));
     }
 
     if (req.method !== "POST") return methodNotAllowed(res, ["GET", "POST"]);
@@ -47,15 +47,15 @@ module.exports = async function handler(req, res) {
       return res.status(200).json(publicManifest(await refreshDirectManifest(id)));
     }
     if (body.action === "search") {
-      return res.status(200).json(await searchProvider(id, body.query, body.teamName, {
+      return res.status(200).json(await directSearchProvider(id, body.query, body.teamName, {
         includeDatabase: Boolean(body.includeDatabase)
       }));
     }
     if (body.action === "search-team") {
-      return res.status(200).json({ candidates: await searchProviderTeams(id, body.teamName) });
+      return res.status(200).json({ candidates: await directSearchProviderTeams(id, body.teamName) });
     }
     if (["link", "link-id"].includes(body.action)) {
-      const entry = await linkManual(id, body.key, body.candidate || {
+      const entry = await directLinkManual(id, body.key, body.candidate || {
         id: body.externalId,
         name: body.externalName,
         teamName: body.teamName
@@ -63,7 +63,7 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ entry });
     }
     if (body.action === "link-team") {
-      const linked = await linkTeamManual(id, body.teamName, body.externalId, body.externalName);
+      const linked = await directLinkTeam(id, body.teamName, body.externalId, body.externalName);
       return res.status(200).json(linked);
     }
     return res.status(400).json({ error: "Azione non riconosciuta" });
