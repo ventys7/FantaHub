@@ -1,0 +1,573 @@
+/* ============================================================
+   SEZIONE SCAMBI — FantaHub
+   Pattern riusati: card Rose (teams.css), FAB e modal (style.css),
+   selettori custom allineati ai controlli del dashboard.
+   ============================================================ */
+
+.lf-trades {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  /* stesso padding della griglia Rose (teams.css .lf-teams-grid) */
+  padding: 0 22px 24px;
+}
+
+/* ---- Selettori proprietario: centrati ciascuno sopra la propria card,
+        con respiro dal bordo superiore del riquadro ---- */
+.lf-trade-selectors {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px; /* stesso gap delle card Rose sotto (lf-trade-panels) */
+  margin-top: 14px;
+}
+
+.lf-trade-selector {
+  display: flex;
+  min-width: 0;
+  max-width: 340px;
+  justify-self: center;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.lf-trade-selector > span {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-align: center;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.lf-trade-selector select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 34px 0 12px;
+  border: 1px solid #dbe3df;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #0f172a;
+  font: inherit;
+  font-weight: 600;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, #64748b 50%),
+    linear-gradient(135deg, #64748b 50%, transparent 50%);
+  background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%;
+  background-size: 5px 5px;
+  background-repeat: no-repeat;
+  cursor: pointer;
+}
+
+/* ---- Empty state (nessuna rosa selezionata) ---- */
+.lf-trade-empty {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 8px;
+  padding: 36px 20px;
+  border: 1px dashed #dbe3df;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #64748b;
+  text-align: center;
+}
+
+.lf-trade-empty svg {
+  color: var(--primary);
+  opacity: 0.7;
+}
+
+.lf-trade-empty h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #334155;
+}
+
+.lf-trade-empty p {
+  margin: 0;
+  max-width: 280px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* ---- Pannelli rose (card TeamCard affiancate, come la griglia Rose) ---- */
+.lf-trade-panels {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+
+/* ---- Crediti ---- */
+.lf-trade-credits {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--primary-border);
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.lf-trade-credits__heading {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #334155;
+}
+
+.lf-trade-credits__heading svg {
+  color: var(--primary);
+}
+
+.lf-trade-credits__controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.lf-trade-credit-toggle {
+  display: inline-flex;
+  padding: 3px;
+  gap: 2px;
+  border: 1px solid #dbe3df;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.lf-trade-credit-toggle button {
+  min-height: 30px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #64748b;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.lf-trade-credit-toggle button.is-active {
+  background: var(--primary);
+  color: #ffffff;
+}
+
+.lf-trade-credits__controls input {
+  width: 72px;
+  min-height: 36px;
+  padding: 0 8px;
+  border: 1px solid #dbe3df;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.lf-trade-credit-input {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lf-trade-credit-clear {
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 10px;
+  background: #f1f5f9;
+  color: #64748b;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.lf-trade-credit-clear:hover {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.lf-trade-credits__hint {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+/* ---- Stato validazione ---- */
+.lf-trade-status {
+  display: flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 8px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.lf-trade-status.is-ok {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.lf-trade-status__msg {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lf-trade-status__msg--error {
+  color: #b91c1c;
+}
+
+.lf-trade-status__msg svg {
+  flex: 0 0 auto;
+}
+
+.lf-trade-status__ok {
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #16a34a;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+/* ---- Azioni (desktop): bottone Riepilogo centrato ---- */
+.lf-trade-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.lf-trade-submit {
+  min-width: 190px;
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.lf-trade-submit:hover:not(:disabled) {
+  background: #6d28d9;
+  border-color: #6d28d9;
+  transform: translateY(-1px);
+}
+
+.lf-trade-submit:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ---- FAB mobile (pattern .fab del tab Formazione) ---- */
+.lf-trade-fab {
+  position: fixed;
+  right: 20px;
+  bottom: 24px;
+  /* sopra qualsiasi contenuto della pagina, sotto il modal (9990) */
+  z-index: 1000;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 20px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--primary), #8b5cf6);
+  color: #ffffff;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 800;
+  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.35);
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+}
+
+.lf-trade-fab:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 12px 32px rgba(124, 58, 237, 0.45);
+}
+
+.lf-trade-fab.is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+@media (min-width: 900px) {
+  .lf-trade-fab {
+    display: none;
+  }
+}
+
+/* ---- Righe selezionabili (dentro le card Rose) ---- */
+.lf-squad-item--selectable {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.lf-squad-check {
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #cbd5e1;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.lf-squad-item.is-selected,
+.lf-squad-item__select.is-selected {
+  background: rgba(124, 58, 237, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(124, 58, 237, 0.4);
+}
+
+.lf-squad-item.is-selected .lf-squad-check {
+  border-color: var(--primary);
+  background: var(--primary);
+}
+
+/* ---- Card Riepilogo (modal pattern .modal .box) ---- */
+.lf-trade-summary {
+  position: fixed;
+  inset: 0;
+  z-index: 9990;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(4px);
+}
+
+.lf-trade-summary__box {
+  display: flex;
+  width: min(560px, 100%);
+  max-height: min(620px, calc(100dvh - 32px));
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--primary-border);
+  border-radius: 18px;
+  background: var(--card);
+  box-shadow: 0 28px 80px rgba(20, 34, 28, 0.25);
+}
+
+.lf-trade-summary__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 18px 10px;
+  border-bottom: 1px solid var(--primary-border);
+}
+
+.lf-trade-summary__heading h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.lf-trade-summary__close {
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.lf-trade-summary__close:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.lf-trade-summary__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  overflow-y: auto;
+  padding: 16px 18px;
+}
+
+.lf-trade-summary__side h3 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #334155;
+}
+
+.lf-trade-summary__side h3 em {
+  font-style: normal;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.lf-trade-summary__badge {
+  display: inline-flex;
+  width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: rgba(124, 58, 237, 0.1);
+  color: var(--primary);
+  font-size: 12px;
+}
+
+.lf-trade-summary__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lf-trade-summary__row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.lf-trade-summary__name {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lf-trade-summary__row .lf-squad-avatar,
+.lf-trade-summary__row .lf-squad-block-crest {
+  width: 28px;
+  height: 28px;
+  flex-basis: 28px;
+}
+
+.lf-trade-summary__credits {
+  grid-column: 1 / -1;
+  padding: 10px 12px;
+  border: 1px solid var(--primary-border);
+  border-radius: 12px;
+  background: rgba(124, 58, 237, 0.06);
+  color: #4c1d95;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.lf-trade-summary__actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 18px 16px;
+  border-top: 1px solid var(--primary-border);
+}
+
+.lf-trade-copy {
+  min-width: 190px;
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.lf-trade-copy:hover:not(:disabled) {
+  background: #6d28d9;
+  border-color: #6d28d9;
+}
+
+.lf-trade-copy:disabled {
+  background: #16a34a;
+  border-color: #16a34a;
+}
+
+/* ---- Mobile ---- */
+@media (max-width: 899px) {
+  .lf-trade-panels {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 767px) {
+  .lf-trades {
+    gap: 12px;
+    /* stesso padding mobile della griglia Rose */
+    padding: 0 10px 14px;
+  }
+
+  .lf-trade-selectors {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .lf-trade-selector {
+    max-width: none;
+    justify-self: stretch;
+  }
+
+  .lf-trade-selector > span {
+    text-align: left;
+  }
+
+  .lf-trade-selector select {
+    min-height: 42px;
+    border-radius: 11px;
+  }
+
+  .lf-trade-credits {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .lf-trade-credits__controls {
+    justify-content: space-between;
+  }
+
+  .lf-trade-submit {
+    display: none;
+  }
+
+  .lf-trade-summary__body {
+    grid-template-columns: 1fr;
+  }
+}

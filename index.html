@@ -118,6 +118,7 @@
       <button class="league-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="formationView" data-league-tab="formation">Formazione</button>
       <button class="league-tab" type="button" role="tab" aria-selected="false" aria-controls="listoneView" data-league-tab="listone" tabindex="-1">Listone</button>
       <button class="league-tab" type="button" role="tab" aria-selected="false" aria-controls="roseView" data-league-tab="rose" tabindex="-1">Rose</button>
+      <button class="league-tab" type="button" role="tab" aria-selected="false" aria-controls="scambiView" data-league-tab="scambi" tabindex="-1">Scambi</button>
       <button class="league-tab" type="button" role="tab" aria-selected="false" aria-controls="classificaView" data-league-tab="classifica" tabindex="-1">Classifica</button>
     </div>
   </nav>
@@ -254,6 +255,10 @@
 
 <main id="roseView" class="league-dashboard-view" data-league-view="rose" role="tabpanel" hidden>
   <div id="league-rose-root" class="league-react-root" aria-live="polite"></div>
+</main>
+
+<main id="scambiView" class="league-dashboard-view" data-league-view="scambi" role="tabpanel" hidden>
+  <div id="league-trades-root" class="league-react-root" aria-live="polite"></div>
 </main>
 
 <main id="classificaView" class="league-dashboard-view" data-league-view="classifica" role="tabpanel" hidden>
