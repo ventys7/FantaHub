@@ -1,5 +1,7 @@
 /* Dashboard condivisa dalle leghe. La Formazione mantiene i suoi CSS esistenti. */
 
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@400;500;600;700&display=swap');
+
 html[data-route="league"] .league-tabs {
   width: 100%;
   padding: 8px 16px 0;
@@ -13,10 +15,13 @@ html[data-route="league"] .league-tabs__inner {
   padding: 4px;
   gap: 4px;
   overflow-x: auto;
-  border: 1px solid var(--primary-border);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.84);
-  box-shadow: 0 8px 18px rgba(23, 67, 57, 0.06);
+  border: 1px solid color-mix(in srgb, var(--primary-border) 60%, transparent);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--primary) 9%, transparent),
+    0 2px 6px rgba(17, 24, 39, 0.04);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
 }
@@ -30,11 +35,14 @@ html[data-route="league"] .league-tab {
   min-height: 38px;
   padding: 8px 14px;
   border: 0;
-  border-radius: 10px;
+  border-radius: 999px;
   background: transparent;
-  color: #66756f;
+  color: #4b5563;
   box-shadow: none;
   white-space: nowrap;
+  font-family: "Barlow", "Inter", system-ui, sans-serif;
+  font-weight: 600;
+  transition: background 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
 }
 
 html[data-route="league"] .league-tab:hover {
@@ -47,11 +55,12 @@ html[data-route="league"] .league-tab:hover {
 html[data-route="league"] .league-tab.is-active {
   background: var(--primary);
   color: #fff;
-  box-shadow: 0 5px 14px rgba(23, 67, 57, 0.18);
+  font-weight: 700;
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--primary) 34%, transparent);
 }
 
 html[data-route="league"] .league-tab:focus-visible {
-  outline: 3px solid var(--primary-border);
+  outline: 3px solid color-mix(in srgb, var(--primary) 55%, transparent);
   outline-offset: 2px;
 }
 
@@ -66,26 +75,34 @@ html[data-route="league"] .league-placeholder {
   border: 1px solid var(--primary-border);
   border-radius: 18px;
   background: var(--card);
-  box-shadow: var(--shadow);
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--primary) 9%, transparent),
+    0 2px 8px rgba(17, 24, 39, 0.05);
 }
 
 html[data-route="league"] .league-placeholder__eyebrow {
   margin-bottom: 10px;
   color: var(--primary);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
+  font-family: "Barlow Condensed", "Arial Narrow", sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 
 html[data-route="league"] .league-placeholder h2 {
   margin-bottom: 10px;
-  font-size: clamp(1.35rem, 3vw, 2rem);
+  font-family: "Barlow Condensed", "Arial Narrow", sans-serif;
+  font-size: clamp(1.6rem, 3.4vw, 2.3rem);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.05;
 }
 
 html[data-route="league"] .league-placeholder p:last-child {
   max-width: 620px;
-  color: #66756f;
+  color: #4b5563;
   line-height: 1.6;
+  font-family: "Barlow", "Inter", system-ui, sans-serif;
 }
 
 html[data-route="league"] [hidden] {
@@ -98,7 +115,7 @@ html[data-route="league"] [hidden] {
   }
 
   html[data-route="league"] .league-tabs__inner {
-    border-radius: 12px;
+    border-radius: 14px;
   }
 
   html[data-route="league"] .league-tab {
@@ -184,7 +201,7 @@ html[data-route="league"] .listone-header h2 {
 
 html[data-route="league"] .listone-header__intro {
   max-width: 700px;
-  color: #66756f;
+  color: #4b5563;
   line-height: 1.55;
 }
 
@@ -208,7 +225,7 @@ html[data-route="league"] .listone-counter strong {
 html[data-route="league"] .listone-counter span {
   display: block;
   margin-top: 5px;
-  color: #66756f;
+  color: #4b5563;
   font-size: 0.72rem;
   white-space: nowrap;
 }
@@ -283,7 +300,7 @@ html[data-route="league"] .listone-empty {
   border: 1px dashed var(--primary-border);
   border-radius: 16px;
   background: var(--primary-bg);
-  color: #66756f;
+  color: #4b5563;
   text-align: center;
 }
 
@@ -716,10 +733,10 @@ html[data-route="league"] .listone-sr-only {
     padding: 7px;
     gap: 4px;
     overflow: visible;
-    border: 1px solid var(--primary-border);
-    border-radius: 15px;
-    background: rgba(255, 255, 255, .99);
-    box-shadow: 0 16px 38px rgba(17, 35, 29, .18);
+    border: 1px solid color-mix(in srgb, var(--primary-border) 60%, transparent);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.99);
+    box-shadow: 0 18px 44px color-mix(in srgb, var(--primary) 16%, rgba(17, 35, 29, 0.14));
     scroll-snap-type: none;
   }
 
@@ -745,5 +762,13 @@ html[data-route="league"] .listone-sr-only {
     border-color: transparent;
     background: var(--primary);
     color: #fff;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-route="league"] .league-tab,
+  html[data-route="league"] .league-tabs,
+  html[data-route="league"] .league-menu-toggle span {
+    transition: none;
   }
 }

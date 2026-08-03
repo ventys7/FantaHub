@@ -56,6 +56,8 @@
   background-size: 5px 5px;
   background-repeat: no-repeat;
   cursor: pointer;
+  text-align: center;
+  text-align-last: center;
 }
 
 /* ---- Empty state (nessuna rosa selezionata) ---- */

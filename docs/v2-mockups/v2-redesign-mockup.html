@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="it" data-league="fp">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>V2 · Mockup Redesign — Lineup Fanta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   TOKENS — la stessa identità, rifinita
+   Il toggle FP/PD ridefinisce solo le variabili: theming reale.
+   ============================================================ */
+:root {
+  /* lega (default: FP) */
+  --primary: #7c3aed;
+  --primary-strong: #6d28d9;
+  --primary-soft: #ede9fe;
+  --primary-tint: #f5f0ff;
+  --accent: #a7f3d0;
+  --accent-strong: #34d399;
+  --ink: #1c2430;
+  --muted: #6b7480;
+  --line: #e6e8ee;
+  --bg: #f7f8fb;
+  --card: #ffffff;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05), 0 4px 14px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 6px 24px rgba(15, 23, 42, 0.09);
+  --shadow-lg: 0 24px 60px rgba(15, 23, 42, 0.16);
+  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --font-body: "Barlow", "Helvetica Neue", sans-serif;
+  /* campo */
+  --pitch-deep: #12382e;
+  --pitch-mid: #1f5844;
+  --pitch-light: #2f7257;
+  --pitch-line: rgba(240, 255, 248, 0.32);
+  --pitch-ink: #12352b;
+}
+html[data-league="pd"] {
+  --primary: #b91c1c;
+  --primary-strong: #991b1b;
+  --primary-soft: #fee2e2;
+  --primary-tint: #fef2f2;
+  --accent: #fca5a5;
+  --accent-strong: #f87171;
+  --pitch-deep: #3a2c12;
+  --pitch-mid: #5a4520;
+  --pitch-light: #7a5f2e;
+  --pitch-ink: #33260f;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--ink);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ============ Mockup toolbar (non fa parte del prodotto) ============ */
+.mock-toolbar {
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 12px 20px;
+  background: rgba(20, 24, 28, 0.92);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  color: #e8ecef;
+  font-size: 0.9rem;
+}
+.mock-toolbar__title { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+.mock-toolbar__badge {
+  padding: 2px 8px; border-radius: 999px;
+  background: var(--accent-strong); color: #10261c;
+  font-family: var(--font-display); font-weight: 700; letter-spacing: 0.08em; font-size: 0.72rem;
+}
+.mock-toolbar__hint { color: #9aa4ad; font-size: 0.78rem; }
+.mock-toggle {
+  display: inline-flex; padding: 3px; gap: 3px;
+  border: 1px solid rgba(255,255,255,0.16); border-radius: 999px; background: rgba(255,255,255,0.06);
+}
+.mock-toggle button {
+  border: 0; padding: 6px 16px; border-radius: 999px; cursor: pointer;
+  background: transparent; color: #c3cbd2; font: 600 0.8rem var(--font-body);
+  transition: background 0.15s, color 0.15s;
+}
+.mock-toggle button.is-active { background: #fff; color: #161a1e; }
+.mock-toolbar__links { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.mock-anchor {
+  border: 1px solid rgba(255,255,255,0.14); border-radius: 8px;
+  padding: 5px 10px; color: #d6dce1; text-decoration: none; font-size: 0.76rem;
+  transition: background 0.15s, border-color 0.15s;
+}
+.mock-anchor:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3); }
+
+.mock-stage { padding: 48px 20px 64px; }
+.mock-stage--dark { background: #101313; }
+.mock-stage__label {
+  max-width: 1200px; margin: 0 auto 28px;
+  display: flex; align-items: baseline; gap: 12px;
+  color: var(--muted); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+}
+.mock-stage--dark .mock-stage__label { color: #8b9a95; }
+.mock-stage__label strong { color: var(--primary); font-family: var(--font-display); font-size: 1.05rem; letter-spacing: 0.06em; }
+.mock-stage--dark .mock-stage__label strong { color: var(--accent); }
+
+.mock-frame {
+  max-width: 1200px; margin: 0 auto;
+  border-radius: 24px; overflow: hidden;
+  background: var(--card);
+  box-shadow: var(--shadow-lg);
+  outline: 1px solid var(--line);
+}
+
+/* ============================================================
+   1) LANDING — evoluzione del look attuale (dark, radial gradient)
+   ============================================================ */
+.mock-landing {
+  min-height: 560px; padding: clamp(36px, 6vw, 72px);
+  display: grid; place-items: center;
+  background:
+    radial-gradient(circle at 12% 8%, rgba(124,58,237,0.22), transparent 36%),
+    radial-gradient(circle at 92% 92%, rgba(185,28,28,0.18), transparent 38%),
+    radial-gradient(circle at 70% 20%, rgba(167,243,208,0.06), transparent 30%),
+    #101313;
+  color: #f9fafb;
+}
+html[data-league="pd"] .mock-landing {
+  background:
+    radial-gradient(circle at 12% 8%, rgba(185,28,28,0.24), transparent 36%),
+    radial-gradient(circle at 92% 92%, rgba(124,58,237,0.16), transparent 38%),
+    radial-gradient(circle at 70% 20%, rgba(252,165,165,0.07), transparent 30%),
+    #101313;
+}
+.mock-landing__card {
+  width: min(100%, 820px);
+  padding: clamp(28px, 5vw, 60px);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 28px;
+  text-align: center;
+  background: rgba(20, 26, 26, 0.82);
+  box-shadow: 0 32px 90px rgba(0,0,0,0.4);
+  backdrop-filter: blur(6px);
+}
+.mock-landing__eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin-bottom: 18px; padding: 6px 14px;
+  border: 1px solid rgba(167,243,208,0.35); border-radius: 999px;
+  background: rgba(167,243,208,0.08);
+  color: var(--accent);
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
+}
+.mock-landing__eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px rgba(167,243,208,0.2); }
+.mock-landing h1 {
+  margin: 0;
+  font-family: var(--font-display); font-weight: 700;
+  font-size: clamp(2.6rem, 7vw, 5rem);
+  line-height: 0.98; letter-spacing: -0.01em;
+}
+.mock-landing h1 span { color: var(--accent); }
+.mock-landing__intro {
+  max-width: 500px; margin: 22px auto 0;
+  color: #c8d3ce; line-height: 1.6; font-size: 1.02rem;
+}
+.mock-landing__choices {
+  display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px;
+  margin-top: 44px;
+}
+.mock-league-card {
+  display: flex; align-items: center; gap: 16px;
+  padding: 22px 24px;
+  border: 1px solid rgba(255,255,255,0.12); border-radius: 20px;
+  text-align: left; cursor: pointer;
+  background: rgba(255,255,255,0.05);
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  font: inherit; color: inherit;
+}
+.mock-league-card:hover { transform: translateY(-3px); border-color: rgba(167,243,208,0.7); background: rgba(167,243,208,0.1); }
+.mock-league-card:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.mock-league-card__crest {
+  width: 52px; height: 52px; flex: 0 0 52px;
+  display: grid; place-items: center;
+  border-radius: 16px;
+  font-family: var(--font-display); font-weight: 800; font-size: 1.35rem;
+}
+.mock-league-card[data-league="fp"] .mock-league-card__crest { background: linear-gradient(135deg,#8b5cf6,#6d28d9); color:#fff; box-shadow: 0 8px 20px rgba(124,58,237,0.45); }
+.mock-league-card[data-league="pd"] .mock-league-card__crest { background: linear-gradient(135deg,#ef4444,#991b1b); color:#fff; box-shadow: 0 8px 20px rgba(185,28,28,0.45); }
+.mock-league-card__name { font-family: var(--font-display); font-weight: 700; font-size: 1.45rem; letter-spacing: 0.01em; }
+.mock-league-card__meta { color: #9db0a8; font-size: 0.85rem; margin-top: 2px; }
+.mock-league-card__arrow { margin-left: auto; color: var(--accent); font-size: 1.2rem; }
+
+/* ============================================================
+   2) SHELL LEGA — header, tabs, controls (evoluzione pill)
+   ============================================================ */
+.mock-league-shell {
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  position: sticky; top: 44px; z-index: 50;
+}
+.mock-league-header {
+  max-width: 1200px; margin: 0 auto;
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 24px 0;
+}
+.mock-league-header .crest {
+  width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center;
+  font-family: var(--font-display); font-weight: 800; color: #fff;
+  background: linear-gradient(135deg, var(--primary-light, #8b5cf6), var(--primary-strong));
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--primary) 45%, transparent);
+}
+.mock-league-header h1 {
+  margin: 0; font-family: var(--font-display); font-weight: 700; font-size: 1.5rem; letter-spacing: 0.01em;
+}
+.mock-league-header .sub { color: var(--muted); font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; }
+.mock-league-tabs {
+  max-width: 1200px; margin: 0 auto;
+  display: flex; gap: 4px; padding: 14px 24px 0;
+  overflow-x: auto; scrollbar-width: none;
+}
+.mock-league-tabs::-webkit-scrollbar { display: none; }
+.mock-tab {
+  flex: 0 0 auto; border: 0; cursor: pointer;
+  padding: 9px 18px; border-radius: 999px;
+  background: transparent; color: var(--muted);
+  font: 600 0.92rem var(--font-body);
+  transition: background 0.16s, color 0.16s, box-shadow 0.16s;
+}
+.mock-tab:hover { background: var(--primary-soft); color: var(--primary); }
+.mock-tab.is-active {
+  background: var(--primary); color: #fff;
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--primary) 35%, transparent);
+}
+.mock-tab:focus-visible, .mock-control:focus-visible, .mock-btn:focus-visible, .mock-fab:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+.mock-league-controls {
+  max-width: 1200px; margin: 0 auto;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+  padding: 14px 24px 16px;
+}
+.mock-control, .mock-btn {
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  background: var(--card); color: var(--ink);
+  font: 600 0.9rem var(--font-body);
+  padding: 9px 16px; cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+}
+.mock-control { min-width: 130px; }
+.mock-control:hover, .mock-btn:hover { border-color: color-mix(in srgb, var(--primary) 45%, var(--line)); box-shadow: var(--shadow-md); }
+.mock-control:active, .mock-btn:active { transform: translateY(1px); }
+.mock-btn--primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+.mock-btn--primary:hover { background: var(--primary-strong); }
+.mock-btn--ghost { background: transparent; box-shadow: none; }
+.mock-btn--icon { display: inline-flex; align-items: center; gap: 8px; }
+.mock-spacer { flex: 1; }
+.mock-counter {
+  font-family: var(--font-display); font-weight: 600; font-size: 1rem;
+  color: var(--muted); letter-spacing: 0.02em;
+}
+.mock-counter strong { color: var(--primary); font-weight: 700; }
+
+/* ============================================================
+   3) FORMAZIONE — campo + switch + panchina
+   ============================================================ */
+.mock-formation { max-width: 1200px; margin: 0 auto; padding: 28px 24px 64px; display: grid; gap: 24px; }
+.mock-formation__row { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 24px; align-items: start; }
+
+/* ---- Campo ---- */
+.mock-pitch {
+  position: relative;
+  border-radius: 20px; overflow: hidden;
+  background:
+    linear-gradient(160deg, var(--pitch-light) 0%, var(--pitch-mid) 46%, var(--pitch-deep) 100%);
+  box-shadow: inset 0 0 60px rgba(0,0,0,0.25), var(--shadow-md);
+  outline: 1px solid rgba(255,255,255,0.06);
+}
+.mock-pitch::after { /* texture sottile */
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.05;
+  background-image: repeating-linear-gradient(0deg, transparent 0 26px, rgba(255,255,255,0.5) 26px 27px);
+}
+.mock-pitch__lines { position: absolute; inset: 12px; pointer-events: none; }
+.mock-pitch__lines::before, .mock-pitch__lines::after {
+  content: ""; position: absolute; border: 1.5px solid var(--pitch-line);
+}
+.mock-pitch__lines::before { /* area */
+  left: 50%; bottom: 0; width: 30%; height: 15%; transform: translateX(-50%);
+  border-bottom: 0; border-radius: 50% 50% 0 0;
+}
+.mock-pitch__lines::after { /* centrocampo */
+  top: 50%; left: 0; right: 0; border-left: 0; border-right: 0;
+}
+.mock-pitch__center { position: absolute; top: 50%; left: 50%; width: 64px; height: 64px; transform: translate(-50%,-50%); border: 1.5px solid var(--pitch-line); border-radius: 50%; }
+.mock-pitch__center::after { content: ""; position: absolute; inset: 0; margin: auto; width: 8px; height: 8px; border-radius: 50%; background: var(--pitch-line); }
+.mock-pitch__title {
+  position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+  z-index: 2; padding: 5px 14px; border-radius: 999px;
+  background: rgba(10,26,20,0.55); color: rgba(240,255,248,0.85);
+  font-family: var(--font-display); font-weight: 600; font-size: 0.82rem; letter-spacing: 0.12em; text-transform: uppercase;
+  backdrop-filter: blur(4px);
+}
+.mock-pitch__field { position: relative; z-index: 1; display: grid; grid-template-rows: repeat(4, 1fr); gap: 18px; padding: 58px 22px 22px; min-height: 460px; }
+.mock-pitch__row { display: grid; grid-template-columns: repeat(auto-fit, minmax(78px, 1fr)); gap: 14px; justify-items: center; }
+
+/* ---- Slot giocatore (stesso concetto delle maglie attuali, rifinito) ---- */
+.mock-shirt {
+  width: 78px; cursor: pointer; border: 0; background: none; padding: 0;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  transition: transform 0.16s ease, filter 0.16s ease;
+}
+.mock-shirt:hover { transform: translateY(-4px); }
+.mock-shirt:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; border-radius: 10px; }
+.mock-shirt__photo {
+  position: relative; width: 56px; height: 56px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: rgba(255,255,255,0.14); color: #fff;
+  font-family: var(--font-display); font-weight: 700; font-size: 1.05rem;
+  border: 2px solid rgba(255,255,255,0.28);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.3);
+  overflow: hidden;
+}
+.mock-shirt__photo::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.18), transparent 42%);
+}
+.mock-shirt--gk .mock-shirt__photo { background: linear-gradient(160deg,#f6c945,#d99b1f); color: #3a2a05; border-color: rgba(255,255,255,0.5); }
+.mock-shirt__team {
+  position: absolute; bottom: -3px; left: 50%; transform: translateX(-50%);
+  width: 30px; height: 30px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: #fff; color: var(--pitch-ink);
+  font-family: var(--font-display); font-weight: 800; font-size: 0.66rem;
+  border: 2px solid var(--pitch-ink);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+}
+.mock-shirt__name {
+  max-width: 78px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: rgba(255,255,255,0.95); font-size: 0.74rem; font-weight: 600;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.45);
+}
+.mock-shirt__teamname { color: rgba(240,255,248,0.62); font-size: 0.66rem; letter-spacing: 0.04em; }
+.mock-shirt--empty .mock-shirt__photo { background: rgba(255,255,255,0.08); border-style: dashed; border-color: rgba(255,255,255,0.3); color: rgba(255,255,255,0.5); font-size: 1.5rem; box-shadow: none; }
+.mock-shirt--empty .mock-shirt__name { color: rgba(255,255,255,0.5); }
+.mock-shirt--empty .mock-shirt__team { display: none; }
+
+/* ---- Switch panel ---- */
+.mock-switch {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--shadow-sm); padding: 18px; position: sticky; top: 140px;
+}
+.mock-switch__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.mock-switch h3 { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: 1.15rem; }
+.mock-switch .eyebrow { color: var(--muted); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
+.mock-pill-toggle {
+  display: inline-flex; padding: 3px; gap: 3px; border-radius: 999px;
+  background: var(--primary-tint); border: 1px solid var(--primary-soft);
+}
+.mock-pill-toggle button {
+  border: 0; padding: 5px 14px; border-radius: 999px; cursor: pointer;
+  background: transparent; color: var(--muted); font: 600 0.8rem var(--font-body);
+  transition: background 0.15s, color 0.15s;
+}
+.mock-pill-toggle button.is-active { background: var(--primary); color: #fff; box-shadow: 0 3px 10px color-mix(in srgb, var(--primary) 35%, transparent); }
+.mock-switch__pair { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; margin-top: 14px; }
+.mock-switch__label { color: var(--muted); font-size: 0.74rem; font-weight: 600; margin-bottom: 6px; }
+.mock-switch__slot {
+  width: 100%; min-height: 74px; border-radius: var(--radius-sm);
+  border: 1.5px dashed var(--line); background: var(--bg);
+  display: grid; place-items: center;
+  font-size: 1.4rem; color: var(--muted); cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.mock-switch__slot:hover { border-color: var(--primary); background: var(--primary-tint); }
+.mock-switch__slot--filled { border-style: solid; background: var(--primary-tint); border-color: var(--primary-soft); display: flex; flex-direction: column; gap: 4px; }
+.mock-switch__slot--filled .avatar { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--primary); color: #fff; font-family: var(--font-display); font-weight: 700; font-size: 0.8rem; }
+.mock-switch__slot--filled .nm { font-size: 0.8rem; font-weight: 600; }
+.mock-switch__connector { color: var(--primary); font-size: 1.15rem; font-weight: 700; }
+.mock-switch__hint { margin: 14px 0 0; color: var(--muted); font-size: 0.78rem; line-height: 1.5; }
+
+/* ---- Panchina ---- */
+.mock-bench { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px 24px; box-shadow: var(--shadow-sm); }
+.mock-bench__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.mock-bench h2 { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: 1.15rem; }
+.mock-bench__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); gap: 12px; }
+.mock-bench-card {
+  border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--bg);
+  padding: 10px 8px; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+.mock-bench-card:hover { border-color: color-mix(in srgb, var(--primary) 45%, var(--line)); box-shadow: var(--shadow-sm); transform: translateY(-2px); }
+.mock-bench-card__photo {
+  width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--primary-soft); color: var(--primary-strong);
+  font-family: var(--font-display); font-weight: 700; font-size: 0.85rem;
+}
+.mock-bench-card__name { font-size: 0.74rem; font-weight: 600; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mock-bench-card__team { font-size: 0.66rem; color: var(--muted); }
+.mock-bench-card--empty { border-style: dashed; background: transparent; justify-content: center; color: var(--muted); font-size: 1.2rem; }
+.mock-bench-card--empty:hover { transform: none; }
+
+/* ============================================================
+   4) MOBILE — phone frame
+   ============================================================ */
+.mock-mobile-grid { max-width: 1200px; margin: 0 auto; padding: 28px 24px 64px; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 32px; justify-items: center; }
+.mock-phone {
+  width: 330px; border-radius: 40px; padding: 12px;
+  background: #171a1e; box-shadow: 0 30px 70px rgba(0,0,0,0.35);
+}
+.mock-phone__screen { border-radius: 30px; overflow: hidden; background: var(--bg); min-height: 620px; position: relative; }
+.mock-phone__status {
+  display: flex; justify-content: space-between; padding: 10px 20px 4px;
+  font-size: 0.68rem; font-weight: 700; color: var(--muted); letter-spacing: 0.04em;
+}
+.mock-phone__header {
+  display: flex; align-items: center; gap: 10px; padding: 6px 16px 10px;
+}
+.mock-phone__header .crest { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; color: #fff; font-family: var(--font-display); font-weight: 800; font-size: 0.8rem; background: linear-gradient(135deg, var(--primary-light, #8b5cf6), var(--primary-strong)); }
+.mock-phone__header h2 { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; }
+.mock-phone__header .sub { color: var(--muted); font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; }
+.mock-phone__controls { display: flex; gap: 8px; padding: 0 16px 12px; }
+.mock-phone__controls .mock-control, .mock-phone__controls .mock-btn { flex: 1; min-width: 0; padding: 8px 10px; font-size: 0.8rem; }
+.mock-phone__pitch { border-radius: 16px; margin: 0 16px; overflow: hidden; position: relative;
+  background: linear-gradient(160deg, var(--pitch-light), var(--pitch-mid) 46%, var(--pitch-deep)); }
+.mock-phone__pitch::after { content: ""; position: absolute; left: 50%; bottom: 8px; width: 55%; height: 16%; transform: translateX(-50%); border: 1.5px solid rgba(240,255,248,0.3); border-bottom: 0; border-radius: 50% 50% 0 0; pointer-events: none; }
+.mock-phone__field { display: grid; grid-template-rows: repeat(4, 1fr); gap: 10px; padding: 16px 14px; min-height: 380px; }
+.mock-phone__field .mock-shirt { width: 60px; }
+.mock-phone__field .mock-shirt__photo { width: 44px; height: 44px; font-size: 0.85rem; }
+.mock-phone__field .mock-shirt__name { font-size: 0.66rem; }
+.mock-phone__bench { padding: 12px 16px 4px; }
+.mock-phone__bench h3 { margin: 0 0 10px; font-family: var(--font-display); font-weight: 700; font-size: 1rem; }
+.mock-phone__bench-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.mock-phone__bench-card { border: 1px solid var(--line); border-radius: 10px; background: var(--card); padding: 8px 4px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.mock-phone__bench-card .p { width: 30px; height: 30px; border-radius: 50%; background: var(--primary-soft); color: var(--primary-strong); display: grid; place-items: center; font-family: var(--font-display); font-weight: 700; font-size: 0.7rem; }
+.mock-phone__bench-card .n { font-size: 0.6rem; font-weight: 600; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mock-phone__fab {
+  position: absolute; right: 20px; bottom: 20px;
+  width: 52px; height: 52px; border-radius: 50%; border: 0; cursor: pointer;
+  background: var(--primary); color: #fff; font-size: 1.25rem;
+  box-shadow: 0 10px 26px color-mix(in srgb, var(--primary) 50%, transparent);
+  transition: transform 0.15s, background 0.15s;
+}
+.mock-phone__fab:hover { transform: scale(1.06); background: var(--primary-strong); }
+
+/* ============================================================
+   5) DRAWER + MODAL
+   ============================================================ */
+.mock-drawer-demo { max-width: 1200px; margin: 0 auto; padding: 28px 24px 64px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 32px; align-items: start; }
+.mock-drawer {
+  border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden;
+  background: var(--card); box-shadow: var(--shadow-md);
+}
+.mock-drawer__head { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; border-bottom: 1px solid var(--line); }
+.mock-drawer__head h3 { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: 1.1rem; }
+.mock-drawer__close { border: 0; background: var(--bg); width: 32px; height: 32px; border-radius: 9px; cursor: pointer; color: var(--muted); font-size: 0.9rem; transition: background 0.15s, color 0.15s; }
+.mock-drawer__close:hover { background: var(--primary-tint); color: var(--primary); }
+.mock-drawer__filters { display: flex; gap: 8px; padding: 12px 18px; border-bottom: 1px solid var(--line); }
+.mock-chip {
+  border: 1px solid var(--line); background: var(--card); border-radius: 999px;
+  padding: 6px 13px; font: 600 0.76rem var(--font-body); color: var(--muted); cursor: pointer;
+  transition: all 0.15s;
+}
+.mock-chip:hover { border-color: var(--primary); color: var(--primary); }
+.mock-chip.is-active { background: var(--primary); border-color: var(--primary); color: #fff; }
+.mock-drawer__list { padding: 8px; max-height: 380px; overflow-y: auto; }
+.mock-drawer-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 10px; border-radius: var(--radius-sm); cursor: pointer;
+  transition: background 0.14s;
+}
+.mock-drawer-row:hover { background: var(--bg); }
+.mock-drawer-row__photo { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--primary-tint); color: var(--primary-strong); font-family: var(--font-display); font-weight: 700; font-size: 0.8rem; flex: 0 0 40px; }
+.mock-drawer-row__name { font-weight: 600; font-size: 0.9rem; }
+.mock-drawer-row__meta { color: var(--muted); font-size: 0.76rem; }
+.mock-drawer-row__role { margin-left: auto; font-family: var(--font-display); font-weight: 700; font-size: 0.8rem; color: var(--primary); }
+.mock-drawer-row--in { opacity: 0.55; }
+.mock-drawer-row--in .mock-drawer-row__role { color: var(--muted); }
+
+.mock-modal {
+  border: 1px solid var(--line); border-radius: 20px; overflow: hidden;
+  background: var(--card); box-shadow: var(--shadow-lg);
+  width: min(100%, 420px);
+}
+.mock-modal__head { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px; border-bottom: 1px solid var(--line); }
+.mock-modal__head h3 { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: 1.2rem; }
+.mock-modal__body { padding: 20px 22px; display: grid; gap: 12px; }
+.mock-modal textarea {
+  width: 100%; min-height: 180px; resize: none;
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  background: var(--bg); color: var(--ink);
+  font: 500 0.84rem/1.55 var(--font-body);
+  padding: 14px; outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.mock-modal textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+.mock-modal__actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.mock-modal__actions .mock-btn { text-align: center; }
+
+/* ============================================================
+   6) ADMIN
+   ============================================================ */
+.mock-admin { max-width: 1200px; margin: 0 auto; padding: 28px 24px 64px; }
+.mock-admin__card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 24px; }
+.mock-admin__card + .mock-admin__card { margin-top: 18px; }
+.mock-admin__card h2 { margin: 0 0 4px; font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; }
+.mock-admin__card .desc { margin: 0 0 18px; color: var(--muted); font-size: 0.88rem; line-height: 1.5; }
+.mock-admin__status { display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; border-radius: 999px; background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-size: 0.8rem; font-weight: 600; }
+.mock-admin__status .dot { width: 7px; height: 7px; border-radius: 50%; background: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,0.2); }
+.mock-field { display: grid; gap: 6px; margin-bottom: 14px; }
+.mock-field label { font-size: 0.8rem; font-weight: 600; color: var(--muted); }
+.mock-field input, .mock-field textarea {
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  padding: 11px 14px; font: 500 0.9rem var(--font-body); color: var(--ink);
+  background: var(--card); outline: none; transition: border-color 0.15s, box-shadow 0.15s;
+}
+.mock-field input:focus, .mock-field textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+.mock-admin__table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+.mock-admin__table th { text-align: left; padding: 10px 12px; color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid var(--line); }
+.mock-admin__table td { padding: 10px 12px; border-bottom: 1px solid var(--line); }
+.mock-admin__table tr:last-child td { border-bottom: 0; }
+.mock-admin__table .ok { color: #047857; font-weight: 600; }
+
+/* ============================================================
+   Footer mockup + animazioni leggere
+   ============================================================ */
+.mock-footer { max-width: 1200px; margin: 0 auto; padding: 8px 24px 56px; color: var(--muted); font-size: 0.8rem; line-height: 1.6; }
+.mock-footer strong { color: var(--ink); }
+
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+.mock-frame { animation: rise 0.5s ease both; }
+.mock-frame:nth-of-type(2) { animation-delay: 0.06s; }
+.mock-frame:nth-of-type(3) { animation-delay: 0.12s; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { animation: none !important; transition: none !important; }
+}
+@media (max-width: 900px) {
+  .mock-formation__row { grid-template-columns: 1fr; }
+  .mock-switch { position: static; }
+  .mock-landing__choices { grid-template-columns: 1fr; }
+  .mock-toolbar__links { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============ TOOLBAR MOCKUP (non è parte del prodotto) ============ -->
+<div class="mock-toolbar">
+  <div class="mock-toolbar__title">
+    <span class="mock-toolbar__badge">V2</span>
+    Mockup — rifinitura dell'attuale
+    <span class="mock-toolbar__hint">i dati sono finti · solo direzione visiva</span>
+  </div>
+  <div class="mock-toggle" role="group" aria-label="Anteprima lega">
+    <button type="button" data-set-league="fp" class="is-active">FP · PianginaCUP</button>
+    <button type="button" data-set-league="pd">PD · LaLigaCUP</button>
+  </div>
+  <div class="mock-toolbar__links">
+    <a class="mock-anchor" href="#landing">1 · Landing</a>
+    <a class="mock-anchor" href="#shell">2 · Shell lega</a>
+    <a class="mock-anchor" href="#formazione">3 · Formazione</a>
+    <a class="mock-anchor" href="#mobile">4 · Mobile</a>
+    <a class="mock-anchor" href="#drawer">5 · Drawer &amp; modal</a>
+    <a class="mock-anchor" href="#admin">6 · Admin</a>
+  </div>
+</div>
+
+<!-- ================================================================
+     1 · LANDING — la stessa landing, più raffinata
+     ================================================================ -->
+<section class="mock-stage mock-stage--dark" id="landing" aria-label="Mockup landing">
+  <div class="mock-stage__label"><strong>01</strong> Landing — stesso impianto (dark + gradient), più rifinita</div>
+  <div class="mock-frame">
+    <div class="mock-landing">
+      <div class="mock-landing__card">
+        <div class="mock-landing__eyebrow"><span class="dot"></span> Lineup Fanta</div>
+        <h1>La tua <span>formazione</span>.<br>Sempre a portata.</h1>
+        <p class="mock-landing__intro">Carica i CSV, allinea i titolari, gestisci switch e panchina. La stessa app di sempre, con un look che respira.</p>
+        <div class="mock-landing__choices">
+          <button class="mock-league-card" type="button" data-league="fp" data-goto-league>
+            <span class="mock-league-card__crest">FP</span>
+            <span>
+              <span class="mock-league-card__name">PianginaCUP</span><br>
+              <span class="mock-league-card__meta">Formazione · Listone · Rose · Scambi · Classifica</span>
+            </span>
+            <span class="mock-league-card__arrow">→</span>
+          </button>
+          <button class="mock-league-card" type="button" data-league="pd" data-goto-league>
+            <span class="mock-league-card__crest">PD</span>
+            <span>
+              <span class="mock-league-card__name">LaLigaCUP</span><br>
+              <span class="mock-league-card__meta">Formazione · Listone · Rose · Scambi · Classifica</span>
+            </span>
+            <span class="mock-league-card__arrow">→</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     2 · SHELL LEGA — header + tabs pill + controls
+     ================================================================ -->
+<section class="mock-stage" id="shell" aria-label="Mockup shell lega">
+  <div class="mock-stage__label"><strong>02</strong> Shell lega — header, tab pill e controlli invariati nelle funzioni, rifiniti nei dettagli</div>
+  <div class="mock-frame">
+    <div class="mock-league-shell">
+      <div class="mock-league-header">
+        <span class="crest">FP</span>
+        <div>
+          <h1>PianginaCUP</h1>
+          <span class="sub">Lineup Fanta · Stagione in corso</span>
+        </div>
+        <span class="mock-spacer"></span>
+        <span class="mock-counter">Titolari <strong id="mock-counter-starters">0</strong>/11 · Panchina <strong id="mock-counter-bench">0</strong>/11</span>
+      </div>
+      <div class="mock-league-tabs" role="tablist" aria-label="Sezioni">
+        <button class="mock-tab is-active" type="button">Formazione</button>
+        <button class="mock-tab" type="button">Listone</button>
+        <button class="mock-tab" type="button">Rose</button>
+        <button class="mock-tab" type="button">Scambi</button>
+        <button class="mock-tab" type="button">Classifica</button>
+      </div>
+      <div class="mock-league-controls">
+        <select class="mock-control" aria-label="Manager"><option>Mister Paolo</option><option>Mister Gio</option><option>Mister Ale</option></select>
+        <button class="mock-btn mock-btn--icon" type="button">👥 Rosa</button>
+        <select class="mock-control" aria-label="Modulo">
+          <option>3-4-3</option><option>3-5-2</option><option>4-3-3</option><option>4-4-2</option><option>4-5-1</option><option>5-3-2</option><option>5-4-1</option>
+        </select>
+        <span class="mock-spacer"></span>
+        <button class="mock-btn mock-btn--ghost" type="button">Reset</button>
+        <button class="mock-btn mock-btn--primary" type="button">Visualizza / Copia</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     3 · FORMAZIONE — campo + switch + panchina
+     ================================================================ -->
+<section class="mock-stage" id="formazione" aria-label="Mockup formazione desktop">
+  <div class="mock-stage__label"><strong>03</strong> Formazione — stesso campo verde e maglie, più leggibili e con micro-interazioni</div>
+  <div class="mock-frame">
+    <div class="mock-formation">
+      <div class="mock-formation__row">
+        <div class="mock-pitch">
+          <div class="mock-pitch__lines" aria-hidden="true"></div>
+          <div class="mock-pitch__center" aria-hidden="true"></div>
+          <span class="mock-pitch__title">Titolari · 3-4-3</span>
+          <div class="mock-pitch__field">
+            <div class="mock-pitch__row">
+              <button class="mock-shirt" type="button">
+                <span class="mock-shirt__photo">AR<small class="mock-shirt__team" style="background:#fff">RMA</small></span>
+                <span class="mock-shirt__name">Alisson</span>
+                <span class="mock-shirt__teamname">RMA</span>
+              </button>
+            </div>
+            <div class="mock-pitch__row">
+              <button class="mock-shirt" type="button">
+                <span class="mock-shirt__photo">RU<small class="mock-shirt__team">NAP</small></span>
+                <span class="mock-shirt__name">Rudiger</span>
+                <span class="mock-shirt__teamname">NAP</span>
+              </button>
+              <button class="mock-shirt" type="button">
+                <span class="mock-shirt__photo">BR<small class="mock-shirt__team">INT</small></span>
+                <span class="mock-shirt__name">Bastoni</span>
+                <span class="mock-shirt__teamname">INT</span>
+              </button>
+              <button class="mock-shirt" type="button">
+                <span class="mock-shirt__photo">BV<small class="mock-shirt__team">JUV</small></span>
+                <span class="mock-shirt__name">Bremer</span>
+                <span class="mock-shirt__teamname">JUV</span>
+              </button>
+            </div>
+            <div class="mock-pitch__row">
+              <button class="mock-shirt" type="button">
+                <span class="mock-shirt__photo">DI<small class="mock-shirt__team">MIL</small></span>
+                <span class="mock-shirt__name">Dimarco</span>
+                <span class="mock-shirt__teamname">MIL</span>
+              </button>
+              <button class="mock-shirt" type="button">
+                <span class="mock-shirt__photo">LO<small class="mock-shirt__team">INT</small></span>
+                <span class="mock-shirt__name">Lobotka</span>
+                <span class="mock-shirt__teamname">INT</span>
+              </button>
+              <button class="mock-shirt" type="button">
+                <span class="mock-shirt__photo">CA<small class="mock-shirt__team">JUV</small></span>
+                <span class="mock-shirt__name">Calhanoglu</span>
+                <span class="mock-shirt__teamname">JUV</span>
+              </button>
+              <button class="mock-shirt" type="button">
+                <span class="mock-shirt__photo">AN<small class="mock-shirt__team">RMA</small></span>
+                <span class="mock-shirt__name">Angelino</span>
+                <span class="mock-shirt__teamname">RMA</span>
+              </button>
+            </div>
+            <div class="mock-pitch__row">
+              <button class="mock-shirt" type="button">
+                <span class="mock-shirt__photo">LE<small class="mock-shirt__team">NAP</small></span>
+                <span class="mock-shirt__name">Leao</span>
+                <span class="mock-shirt__teamname">NAP</span>
+              </button>
+              <button class="mock-shirt" type="button">
+                <span class="mock-shirt__photo">LA<small class="mock-shirt__team">INT</small></span>
+                <span class="mock-shirt__name">Lautaro</span>
+                <span class="mock-shirt__teamname">INT</span>
+              </button>
+              <button class="mock-shirt" type="button">
+                <span class="mock-shirt__photo">CH<small class="mock-shirt__team">JUV</small></span>
+                <span class="mock-shirt__name">Chiesa</span>
+                <span class="mock-shirt__teamname">JUV</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <aside class="mock-switch" aria-label="Switch opzionale">
+          <div class="mock-switch__head">
+            <div>
+              <h3>Switch</h3>
+              <span class="eyebrow">Opzionale</span>
+            </div>
+            <div class="mock-pill-toggle">
+              <button class="is-active" type="button">Base</button>
+              <button type="button">Plus</button>
+            </div>
+          </div>
+          <div class="mock-switch__pair">
+            <div>
+              <div class="mock-switch__label">Titolare</div>
+              <button class="mock-switch__slot mock-switch__slot--filled" type="button">
+                <span class="avatar">LE</span><span class="nm">Leao</span>
+              </button>
+            </div>
+            <span class="mock-switch__connector" aria-hidden="true">↔</span>
+            <div>
+              <div class="mock-switch__label">Panchinaro</div>
+              <button class="mock-switch__slot" type="button" aria-label="Scegli panchinaro">＋</button>
+            </div>
+          </div>
+          <p class="mock-switch__hint">Il voto del titolare vale anche per il panchinaro. Il panchinaro resta in panchina per la prossima giornata.</p>
+        </aside>
+      </div>
+
+      <div class="mock-bench">
+        <div class="mock-bench__head">
+          <h2>Panchina <span class="mock-counter" style="font-size:0.9rem">(0/11)</span></h2>
+          <button class="mock-btn mock-btn--ghost" type="button" style="font-size:0.8rem">Reset</button>
+        </div>
+        <div class="mock-bench__grid">
+          <button class="mock-bench-card" type="button">
+            <span class="mock-bench-card__photo">DO</span>
+            <span class="mock-bench-card__name">Donnarumma</span>
+            <span class="mock-bench-card__team">MIL</span>
+          </button>
+          <button class="mock-bench-card" type="button">
+            <span class="mock-bench-card__photo">BE</span>
+            <span class="mock-bench-card__name">Barella</span>
+            <span class="mock-bench-card__team">INT</span>
+          </button>
+          <button class="mock-bench-card" type="button">
+            <span class="mock-bench-card__photo">ZV</span>
+            <span class="mock-bench-card__name">Zielinski</span>
+            <span class="mock-bench-card__team">NAP</span>
+          </button>
+          <button class="mock-bench-card" type="button">
+            <span class="mock-bench-card__photo">RA</span>
+            <span class="mock-bench-card__name">Raspadori</span>
+            <span class="mock-bench-card__team">NAP</span>
+          </button>
+          <button class="mock-bench-card" type="button">
+            <span class="mock-bench-card__photo">SA</span>
+            <span class="mock-bench-card__name">Saelemaekers</span>
+            <span class="mock-bench-card__team">MIL</span>
+          </button>
+          <button class="mock-bench-card" type="button">
+            <span class="mock-bench-card__photo">TA</span>
+            <span class="mock-bench-card__name">Taremi</span>
+            <span class="mock-bench-card__team">INT</span>
+          </button>
+          <button class="mock-bench-card" type="button">
+            <span class="mock-bench-card__photo">PD</span>
+            <span class="mock-bench-card__name">Pavard</span>
+            <span class="mock-bench-card__team">INT</span>
+          </button>
+          <button class="mock-bench-card mock-bench-card--empty" type="button" aria-label="Slot vuoto">＋</button>
+          <button class="mock-bench-card mock-bench-card--empty" type="button" aria-label="Slot vuoto">＋</button>
+          <button class="mock-bench-card mock-bench-card--empty" type="button" aria-label="Slot vuoto">＋</button>
+          <button class="mock-bench-card mock-bench-card--empty" type="button" aria-label="Slot vuoto">＋</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     4 · MOBILE — phone frames
+     ================================================================ -->
+<section class="mock-stage" id="mobile" aria-label="Mockup mobile">
+  <div class="mock-stage__label"><strong>04</strong> Mobile — stessa gerarchia (campo → switch → panchina), FAB invariata, dettagli curati</div>
+  <div class="mock-mobile-grid">
+    <div class="mock-phone">
+      <div class="mock-phone__screen">
+        <div class="mock-phone__status"><span>9:41</span><span>📶 🔋</span></div>
+        <div class="mock-phone__header">
+          <span class="crest">FP</span>
+          <div><h2>PianginaCUP</h2><span class="sub">3-4-3 · Mister Paolo</span></div>
+        </div>
+        <div class="mock-phone__controls">
+          <button class="mock-btn" type="button">👥 Rosa</button>
+          <button class="mock-btn mock-btn--primary" type="button">Visualizza</button>
+        </div>
+        <div class="mock-phone__pitch">
+          <div class="mock-phone__field">
+            <div class="mock-pitch__row">
+              <button class="mock-shirt" type="button"><span class="mock-shirt__photo mock-shirt--gk" style="background:linear-gradient(160deg,#f6c945,#d99b1f)">AR</span><span class="mock-shirt__name">Alisson</span></button>
+            </div>
+            <div class="mock-pitch__row">
+              <button class="mock-shirt" type="button"><span class="mock-shirt__photo">RU</span><span class="mock-shirt__name">Rudiger</span></button>
+              <button class="mock-shirt" type="button"><span class="mock-shirt__photo">BR</span><span class="mock-shirt__name">Bastoni</span></button>
+              <button class="mock-shirt" type="button"><span class="mock-shirt__photo">BV</span><span class="mock-shirt__name">Bremer</span></button>
+            </div>
+            <div class="mock-pitch__row">
+              <button class="mock-shirt" type="button"><span class="mock-shirt__photo">DI</span><span class="mock-shirt__name">Dimarco</span></button>
+              <button class="mock-shirt" type="button"><span class="mock-shirt__photo">LO</span><span class="mock-shirt__name">Lobotka</span></button>
+              <button class="mock-shirt" type="button"><span class="mock-shirt__photo">CA</span><span class="mock-shirt__name">Calha</span></button>
+              <button class="mock-shirt" type="button"><span class="mock-shirt__photo">AN</span><span class="mock-shirt__name">Angelino</span></button>
+            </div>
+            <div class="mock-pitch__row">
+              <button class="mock-shirt" type="button"><span class="mock-shirt__photo">LE</span><span class="mock-shirt__name">Leao</span></button>
+              <button class="mock-shirt" type="button"><span class="mock-shirt__photo">LA</span><span class="mock-shirt__name">Lautaro</span></button>
+              <button class="mock-shirt" type="button"><span class="mock-shirt__photo">CH</span><span class="mock-shirt__name">Chiesa</span></button>
+            </div>
+          </div>
+        </div>
+        <div class="mock-phone__bench">
+          <h3>Panchina</h3>
+          <div class="mock-phone__bench-grid">
+            <div class="mock-phone__bench-card"><span class="p">DO</span><span class="n">Donna.</span></div>
+            <div class="mock-phone__bench-card"><span class="p">BE</span><span class="n">Barella</span></div>
+            <div class="mock-phone__bench-card"><span class="p">ZV</span><span class="n">Ziel.</span></div>
+            <div class="mock-phone__bench-card"><span class="p">RA</span><span class="n">Rasp.</span></div>
+          </div>
+        </div>
+        <button class="mock-phone__fab" type="button" aria-label="Visualizza / Copia">📋</button>
+      </div>
+    </div>
+
+    <div class="mock-phone">
+      <div class="mock-phone__screen">
+        <div class="mock-phone__status"><span>9:41</span><span>📶 🔋</span></div>
+        <div class="mock-phone__header">
+          <span class="crest">FP</span>
+          <div><h2>Switch</h2><span class="sub">Opzionale · Base</span></div>
+        </div>
+        <div class="mock-switch" style="position:static;margin:12px 16px;box-shadow:none">
+          <div class="mock-switch__pair">
+            <div>
+              <div class="mock-switch__label">Titolare</div>
+              <button class="mock-switch__slot mock-switch__slot--filled" type="button">
+                <span class="avatar">LE</span><span class="nm">Leao</span>
+              </button>
+            </div>
+            <span class="mock-switch__connector" aria-hidden="true">↔</span>
+            <div>
+              <div class="mock-switch__label">Panchinaro</div>
+              <button class="mock-switch__slot" type="button" aria-label="Scegli panchinaro">＋</button>
+            </div>
+          </div>
+          <div class="mock-pill-toggle" style="margin-top:12px">
+            <button class="is-active" type="button">Base</button>
+            <button type="button">Plus</button>
+          </div>
+        </div>
+        <div class="mock-phone__bench" style="padding-top:4px">
+          <h3>Panchina</h3>
+          <div class="mock-phone__bench-grid">
+            <div class="mock-phone__bench-card"><span class="p">BE</span><span class="n">Barella</span></div>
+            <div class="mock-phone__bench-card"><span class="p">ZV</span><span class="n">Ziel.</span></div>
+            <div class="mock-phone__bench-card"><span class="p">RA</span><span class="n">Rasp.</span></div>
+            <div class="mock-phone__bench-card"><span class="p">TA</span><span class="n">Taremi</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mock-phone">
+      <div class="mock-phone__screen">
+        <div class="mock-phone__status"><span>9:41</span><span>📶 🔋</span></div>
+        <div class="mock-phone__header">
+          <span class="crest">FP</span>
+          <div><h2>La tua Rosa</h2><span class="sub">22 giocatori</span></div>
+        </div>
+        <div style="padding:0 16px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="mock-chip is-active" type="button">Tutti</button>
+          <button class="mock-chip" type="button">P</button>
+          <button class="mock-chip" type="button">D</button>
+          <button class="mock-chip" type="button">C</button>
+          <button class="mock-chip" type="button">A</button>
+          <button class="mock-chip" type="button">📌</button>
+        </div>
+        <div style="padding:10px 8px 90px">
+          <div class="mock-drawer-row"><span class="mock-drawer-row__photo">AL</span><div><div class="mock-drawer-row__name">Alisson</div><div class="mock-drawer-row__meta">RMA · Portiere</div></div><span class="mock-drawer-row__role">P</span></div>
+          <div class="mock-drawer-row mock-drawer-row--in"><span class="mock-drawer-row__photo">RU</span><div><div class="mock-drawer-row__name">Rudiger</div><div class="mock-drawer-row__meta">NAP · Difensore</div></div><span class="mock-drawer-row__role">In campo</span></div>
+          <div class="mock-drawer-row"><span class="mock-drawer-row__photo">DO</span><div><div class="mock-drawer-row__name">Donnarumma</div><div class="mock-drawer-row__meta">MIL · Portiere</div></div><span class="mock-drawer-row__role">P</span></div>
+          <div class="mock-drawer-row mock-drawer-row--in"><span class="mock-drawer-row__photo">BR</span><div><div class="mock-drawer-row__name">Bastoni</div><div class="mock-drawer-row__meta">INT · Difensore</div></div><span class="mock-drawer-row__role">In campo</span></div>
+          <div class="mock-drawer-row"><span class="mock-drawer-row__photo">BE</span><div><div class="mock-drawer-row__name">Barella</div><div class="mock-drawer-row__meta">INT · Centrocampista</div></div><span class="mock-drawer-row__role">C</span></div>
+          <div class="mock-drawer-row mock-drawer-row--in"><span class="mock-drawer-row__photo">LO</span><div><div class="mock-drawer-row__name">Lobotka</div><div class="mock-drawer-row__meta">INT · Centrocampista</div></div><span class="mock-drawer-row__role">In campo</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     5 · DRAWER DESKTOP + MODAL OUTPUT
+     ================================================================ -->
+<section class="mock-stage" id="drawer" aria-label="Mockup drawer e modali">
+  <div class="mock-stage__label"><strong>05</strong> Drawer rosa e modal output — stesse funzioni, più aria e chiarezza</div>
+  <div class="mock-drawer-demo">
+    <div class="mock-drawer">
+      <div class="mock-drawer__head">
+        <h3>La tua Rosa</h3>
+        <button class="mock-drawer__close" type="button" aria-label="Chiudi">✕</button>
+      </div>
+      <div class="mock-drawer__filters">
+        <button class="mock-chip is-active" type="button">Tutti</button>
+        <button class="mock-chip" type="button">P</button>
+        <button class="mock-chip" type="button">D</button>
+        <button class="mock-chip" type="button">C</button>
+        <button class="mock-chip" type="button">A</button>
+      </div>
+      <div class="mock-drawer__list">
+        <div class="mock-drawer-row mock-drawer-row--in"><span class="mock-drawer-row__photo">AL</span><div><div class="mock-drawer-row__name">Alisson</div><div class="mock-drawer-row__meta">RMA · Portiere</div></div><span class="mock-drawer-row__role">In campo</span></div>
+        <div class="mock-drawer-row mock-drawer-row--in"><span class="mock-drawer-row__photo">RU</span><div><div class="mock-drawer-row__name">Rudiger</div><div class="mock-drawer-row__meta">NAP · Difensore</div></div><span class="mock-drawer-row__role">In campo</span></div>
+        <div class="mock-drawer-row"><span class="mock-drawer-row__photo">DO</span><div><div class="mock-drawer-row__name">Donnarumma</div><div class="mock-drawer-row__meta">MIL · Portiere</div></div><span class="mock-drawer-row__role">P</span></div>
+        <div class="mock-drawer-row mock-drawer-row--in"><span class="mock-drawer-row__photo">BR</span><div><div class="mock-drawer-row__name">Bastoni</div><div class="mock-drawer-row__meta">INT · Difensore</div></div><span class="mock-drawer-row__role">In campo</span></div>
+        <div class="mock-drawer-row"><span class="mock-drawer-row__photo">BE</span><div><div class="mock-drawer-row__name">Barella</div><div class="mock-drawer-row__meta">INT · Centrocampista</div></div><span class="mock-drawer-row__role">C</span></div>
+        <div class="mock-drawer-row mock-drawer-row--in"><span class="mock-drawer-row__photo">LO</span><div><div class="mock-drawer-row__name">Lobotka</div><div class="mock-drawer-row__meta">INT · Centrocampista</div></div><span class="mock-drawer-row__role">In campo</span></div>
+        <div class="mock-drawer-row mock-drawer-row--in"><span class="mock-drawer-row__photo">CA</span><div><div class="mock-drawer-row__name">Calhanoglu</div><div class="mock-drawer-row__meta">JUV · Centrocampista</div></div><span class="mock-drawer-row__role">In campo</span></div>
+        <div class="mock-drawer-row"><span class="mock-drawer-row__photo">ZV</span><div><div class="mock-drawer-row__name">Zielinski</div><div class="mock-drawer-row__meta">NAP · Centrocampista</div></div><span class="mock-drawer-row__role">C</span></div>
+      </div>
+    </div>
+
+    <div class="mock-modal">
+      <div class="mock-modal__head">
+        <h3>Formazione pronta</h3>
+        <button class="mock-drawer__close" type="button" aria-label="Chiudi">✕</button>
+      </div>
+      <div class="mock-modal__body">
+        <textarea readonly aria-label="Output formazione">(1-4-3) Alisson (RMA)
+Rudiger (NAP) · Bastoni (INT) · Bremer (JUV)
+Dimarco (MIL) · Lobotka (INT) · Calhanoglu (JUV) · Angelino (RMA)
+Leao (NAP) · Lautaro (INT) · Chiesa (JUV)
+────────────────────
+Switch: Leao ⇄ (vuoto)
+Panchina: Donnarumma (MIL) · Barella (INT) · Zielinski (NAP) …</textarea>
+        <div class="mock-modal__actions">
+          <button class="mock-btn" type="button">Copia formazione</button>
+          <button class="mock-btn mock-btn--primary" type="button">Crea grafica 9:16</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     6 · ADMIN
+     ================================================================ -->
+<section class="mock-stage" id="admin" aria-label="Mockup admin">
+  <div class="mock-stage__label"><strong>06</strong> Admin Links — rifinito nello stesso linguaggio (login, URL CSV, stemmi, matching foto)</div>
+  <div class="mock-frame">
+    <div class="mock-admin">
+      <div class="mock-admin__card">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <div>
+            <h2>Area Admin</h2>
+            <p class="desc">Gestione delle fonti dati e della configurazione della lega.</p>
+          </div>
+          <span class="mock-admin__status"><span class="dot"></span> Connesso</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px">
+          <div class="mock-field">
+            <label for="mock-url-csv">URL CSV Listone</label>
+            <input id="mock-url-csv" type="url" value="https://leghe.fantacalcio.it/pianginacup/listone.csv" spellcheck="false">
+          </div>
+          <div class="mock-field">
+            <label for="mock-url-stemmi">URL CSV Stemmi</label>
+            <input id="mock-url-stemmi" type="url" value="https://leghe.fantacalcio.it/pianginacup/stemmi.csv" spellcheck="false">
+          </div>
+        </div>
+        <button class="mock-btn mock-btn--primary" type="button">Salva configurazione</button>
+      </div>
+      <div class="mock-admin__card">
+        <h2>Stato importazione</h2>
+        <p class="desc">Verifica e ritenta il caricamento dei dati.</p>
+        <table class="mock-admin__table">
+          <thead><tr><th>Fonte</th><th>Ultimo aggiornamento</th><th>Giocatori</th><th>Stato</th></tr></thead>
+          <tbody>
+            <tr><td>Listone CSV</td><td>oggi, 18:42</td><td>412</td><td class="ok">✓ Sincronizzato</td></tr>
+            <tr><td>Stemmi squadre</td><td>oggi, 18:42</td><td>20</td><td class="ok">✓ Sincronizzato</td></tr>
+            <tr><td>Foto giocatori</td><td>oggi, 18:40</td><td>398</td><td class="ok">✓ 14 senza foto</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="mock-footer">
+  <strong>Nota sul mockup:</strong> questa è solo una direzione visiva (nessun codice di prodotto). Le funzionalità restano identiche: drag &amp; drop, picker, blocco portieri, switch base/plus, output testo, grafica 9:16, persistenza locale, FAB. Cambia solo la presentazione: tipografia sportiva (Barlow Condensed per i titoli), token coerenti per lega (viola FP / rosso PD via variabili), micro-interazioni (hover/focus/ombra), aria e dettagli responsive. Il toggle in alto simula il theming per lega con le stesse variabili dell'app.
+</div>
+
+<script>
+(function () {
+  var html = document.documentElement;
+
+  document.querySelectorAll("[data-set-league]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      html.dataset.league = btn.dataset.setLeague;
+      document.querySelectorAll("[data-set-league]").forEach(function (b) {
+        b.classList.toggle("is-active", b === btn);
+      });
+    });
+  });
+
+  // Le card lega della landing simulano l'ingresso nella lega
+  document.querySelectorAll("[data-goto-league]").forEach(function (card) {
+    card.addEventListener("click", function () {
+      html.dataset.league = card.dataset.league;
+      document.querySelectorAll("[data-set-league]").forEach(function (b) {
+        b.classList.toggle("is-active", b.dataset.setLeague === card.dataset.league);
+      });
+      document.getElementById("shell").scrollIntoView({ behavior: "smooth" });
+    });
+  });
+})();
+</script>
+</body>
+</html>

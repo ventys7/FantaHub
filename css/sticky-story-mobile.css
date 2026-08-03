@@ -8,7 +8,7 @@ html[data-route="league"] .app-chrome {
   z-index: 1100 !important;
   width: 100%;
   background: var(--bg);
-  box-shadow: 0 10px 22px rgba(23, 67, 57, .10);
+  box-shadow: var(--shadow-md, 0 6px 24px rgba(15, 23, 42, .09));
 }
 
 html[data-route="league"] .app-chrome > header {
@@ -34,8 +34,8 @@ html[data-route="league"] .app-chrome > .sticky-app-chrome__controls .controls {
   z-index: auto !important;
   width: min(1200px, 100%);
   margin: 0 auto;
-  border-radius: 14px;
-  box-shadow: 0 8px 18px rgba(23, 67, 57, .08);
+  border-radius: var(--radius, 16px);
+  box-shadow: var(--shadow, 0 1px 2px rgba(15, 23, 42, .04), 0 4px 16px rgba(124, 58, 237, .07));
 }
 
 html[data-route="league"] .container {
@@ -53,7 +53,7 @@ html[data-route="league"] .content-wrapper { min-width: 0; }
   html[data-route="league"] .app-chrome > .sticky-app-chrome__controls .controls {
     gap: 6px;
     padding: 8px;
-    border-radius: 12px;
+    border-radius: var(--radius-sm, 10px);
   }
 
 }
