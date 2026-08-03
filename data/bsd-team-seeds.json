@@ -1,9 +1,9 @@
 {
-  "version": 1,
+  "version": 2,
   "fp": {},
   "pd": {
-    "alaves": { "id": "45", "name": "Deportivo Alavés" },
-    "athletic club": { "id": "51", "name": "Athletic Club" },
+    "alaves": { "id": "3884", "name": "Deportivo Alavés" },
+    "athletic club": { "id": "843", "name": "Athletic Club" },
     "atletico de madrid": { "id": "54", "name": "Atlético Madrid" },
     "barcelona": { "id": "44", "name": "FC Barcelona" },
     "celta vigo": { "id": "49", "name": "Celta Vigo" },
@@ -15,10 +15,10 @@
     "osasuna": { "id": "58", "name": "Osasuna" },
     "rayo vallecano": { "id": "40", "name": "Rayo Vallecano" },
     "real betis": { "id": "56", "name": "Real Betis" },
-    "real madrid": { "id": "57", "name": "Real Madrid" },
+    "real madrid": { "id": "926", "name": "Real Madrid" },
     "real sociedad": { "id": "48", "name": "Real Sociedad" },
     "sevilla": { "id": "52", "name": "Sevilla" },
-    "valencia": { "id": "47", "name": "Valencia" },
+    "valencia": { "id": "3885", "name": "Valencia" },
     "villarreal": { "id": "41", "name": "Villarreal" }
   }
 }
