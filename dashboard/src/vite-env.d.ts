@@ -35,6 +35,7 @@ type LineupLeague = {
 declare global {
   interface Window {
     LineupKickoffClubs?: Record<string, { name: string; teamId: string; crestUrl: string }>;
+    showToast?: (message: string, type?: "error" | "success") => void;
     LineupClubKeys?: { normalize: (value: string) => string; key: (value: string) => string };
     LineupPlayerMedia?: {
       load: (leagueId: string, assets: LeagueAsset[]) => Promise<void> | void;
