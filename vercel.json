@@ -6,7 +6,7 @@
       "has": [
         {
           "type": "host",
-          "value": "^(?:lineup-fp|fanta-pl|pianginacup)\\.vercel\\.app$"
+          "value": "lineup-fp.vercel.app"
         }
       ],
       "destination": "https://fanta-hub.vercel.app/fp/:path*",
@@ -17,7 +17,29 @@
       "has": [
         {
           "type": "host",
-          "value": "^(?:laligacup)\\.vercel\\.app$"
+          "value": "fanta-pl.vercel.app"
+        }
+      ],
+      "destination": "https://fanta-hub.vercel.app/fp/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "pianginacup.vercel.app"
+        }
+      ],
+      "destination": "https://fanta-hub.vercel.app/fp/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "laligacup.vercel.app"
         }
       ],
       "destination": "https://fanta-hub.vercel.app/pd/:path*",
