@@ -142,13 +142,15 @@ html[data-route="league"] .regolamento-placeholder {
 }
 
 @media (max-width: 767px) {
+  /* Il frame parte a 76px (header 62 + padding-top 14) e arriva al fondo
+     viewport: niente spazio morto sotto su mobile. */
   html[data-route="league"] .regolamento-shell {
-    padding: 14px 12px 24px;
+    padding: 14px 12px 0;
   }
 
   html[data-route="league"] .regolamento-frame {
-    height: calc(100vh - 150px);
-    height: calc(100dvh - 150px);
+    height: calc(100vh - 76px);
+    height: calc(100dvh - 76px);
     min-height: 380px;
     border-radius: 14px;
   }
