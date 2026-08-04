@@ -15,11 +15,9 @@
     try { url = new URL(String(rawUrl || ""), window.location.href); }
     catch { return ""; }
     if (url.hostname !== "docs.google.com") return url.toString();
-    // Gli URL di modifica non sono embeddabili: si apre la versione pubblicata.
-    url.pathname = url.pathname.replace(/\/edit(?:\/.*)?$/i, "/pub");
-    // Senza query, ?embedded=true toglie la barra "pubblicato da" di Google.
-    if (!url.search) url.search = "?embedded=true";
-    return url.toString();
+    // I doc Google passano dal proxy locale: serve il pub con immagini
+    // riscritte e CSS che le comprime (le immagini originali straripano su mobile).
+    return `/api/regolamento?league=${encodeURIComponent(window.LINEUP_FANTA?.leagueId || "")}`;
   }
 
   function showUnavailable() {
