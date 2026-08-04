@@ -123,6 +123,7 @@
       <button class="league-tab" type="button" role="tab" aria-selected="false" aria-controls="roseView" data-league-tab="rose" tabindex="-1">Rose</button>
       <button class="league-tab" type="button" role="tab" aria-selected="false" aria-controls="scambiView" data-league-tab="scambi" tabindex="-1">Scambi</button>
       <button class="league-tab" type="button" role="tab" aria-selected="false" aria-controls="classificaView" data-league-tab="classifica" tabindex="-1">Classifica</button>
+      <button class="league-tab" type="button" role="tab" aria-selected="false" aria-controls="regolamentoView" data-league-tab="regolamento" tabindex="-1">Regolamento</button>
     </div>
   </nav>
   <div id="formationControls" class="sticky-app-chrome__controls">
@@ -268,6 +269,15 @@
   <div id="league-standings-root" class="league-react-root" aria-live="polite"></div>
 </main>
 
+<main id="regolamentoView" class="league-dashboard-view" data-league-view="regolamento" role="tabpanel" hidden>
+  <div class="regolamento-shell">
+    <div class="regolamento-placeholder" id="regolamentoPlaceholder" role="status" hidden>
+      <p>Il regolamento non è ancora disponibile per questa lega.</p>
+    </div>
+    <iframe id="regolamentoFrame" class="regolamento-frame" title="Regolamento" loading="lazy" allowfullscreen></iframe>
+  </div>
+</main>
+
 
 <!-- Output Modal -->
 <div id="outputModal" class="modal" aria-hidden="true">
@@ -377,6 +387,7 @@
 <script src="js/story.js"></script>
 <script src="js/app-events.js"></script>
 <script src="js/league-dashboard.js"></script>
+<script src="js/regolamento.js"></script>
 <script type="module" id="lineup-dashboard-module-loader">
   const token = window.__LINEUP_DASHBOARD_RELOAD_TOKEN__
     || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;

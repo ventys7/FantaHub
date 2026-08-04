@@ -20,6 +20,7 @@ window.LineupRuntimeSettings = (function () {
         listoneCsvUrl: league?.csvUrl || "",
         standingsCsvUrl: league?.leagueData?.standingsCsvUrl || "",
         disciplineDocUrl: "",
+        regolamentoDocUrl: league?.leagueData?.regolamentoDocUrl || "",
         teams: {}
       };
     });

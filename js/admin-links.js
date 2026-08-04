@@ -72,7 +72,8 @@
     fields.append(
       field("CSV Listone e Rose", state.settings.listoneCsvUrl, "listoneCsvUrl"),
       field("CSV Classifica", state.settings.standingsCsvUrl, "standingsCsvUrl"),
-      field("Docs Richiami e Penalizzazioni", state.settings.disciplineDocUrl, "disciplineDocUrl")
+      field("Docs Richiami e Penalizzazioni", state.settings.disciplineDocUrl, "disciplineDocUrl"),
+      field("Docs Regolamento", state.settings.regolamentoDocUrl, "regolamentoDocUrl")
     );
     leagueSettings.append(title, fields);
   }
