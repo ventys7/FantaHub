@@ -6,12 +6,21 @@ const { normalizeSettings } = require("../lib/settings.cjs");
 
 test("runtime settings keep separate sources for FP and PD", () => {
   const settings = normalizeSettings({ leagues: {
-    fp: { listoneCsvUrl: "https://example.com/fp.csv", standingsCsvUrl: "https://example.com/fp-standings.csv", disciplineDocUrl: "https://example.com/fp-doc" },
+    fp: { listoneCsvUrl: "https://example.com/fp.csv", standingsCsvUrl: "https://example.com/fp-standings.csv", disciplineDocUrl: "https://example.com/fp-doc", regolamentoDocUrl: "https://example.com/fp-regolamento" },
     pd: { listoneCsvUrl: "https://example.com/pd.csv", standingsCsvUrl: "", disciplineDocUrl: "" }
   }});
   assert.equal(settings.leagues.fp.listoneCsvUrl, "https://example.com/fp.csv");
   assert.equal(settings.leagues.pd.listoneCsvUrl, "https://example.com/pd.csv");
   assert.equal(settings.leagues.pd.standingsCsvUrl, "");
+});
+
+test("regolamento doc URL is normalized per league and defaults to empty", () => {
+  const settings = normalizeSettings({ leagues: {
+    fp: { regolamentoDocUrl: "https://docs.google.com/document/d/e/example/pub" },
+    pd: {}
+  }});
+  assert.equal(settings.leagues.fp.regolamentoDocUrl, "https://docs.google.com/document/d/e/example/pub");
+  assert.equal(settings.leagues.pd.regolamentoDocUrl, "");
 });
 
 test("Vercel runtime blocks settings writes when Neon is unavailable", async () => {

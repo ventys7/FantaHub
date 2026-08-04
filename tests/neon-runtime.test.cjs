@@ -29,11 +29,40 @@ test("Vercel configuration is deterministic, hardened and exposes no media cron"
   assert.equal(config.functions?.["api/admin.js"]?.maxDuration, 300);
   assert.equal(config.functions?.["api/player-media.js"]?.maxDuration, 300);
   assert.match(config.installCommand, /^npm ci /);
-  const globalHeaders = config.headers?.find((entry) => entry.source === "/:path*")?.headers || [];
-  const headerMap = Object.fromEntries(globalHeaders.map((entry) => [entry.key, entry.value]));
-  assert.equal(headerMap["X-Content-Type-Options"], "nosniff");
-  assert.equal(headerMap["X-Frame-Options"], "DENY");
-  assert.equal(headerMap["Referrer-Policy"], "strict-origin-when-cross-origin");
+
+  const ruleHeaders = (pattern) => {
+    const entry = config.headers?.find((item) => item.source === pattern);
+    return entry
+      ? Object.fromEntries(entry.headers.map((header) => [header.key, header.value]))
+      : {};
+  };
+
+  // Vercel applica in merge TUTTE le regole headers che matchano la richiesta:
+  // il DENY vive nelle regole pagina e NON nel catch-all, altrimenti colpirebbe
+  // anche gli endpoint API esentati (es. /api/regolamento) e romperebbe l'iframe.
+  const globalHeaders = ruleHeaders("/:path*");
+  assert.equal(globalHeaders["X-Content-Type-Options"], "nosniff");
+  assert.equal(globalHeaders["Referrer-Policy"], "strict-origin-when-cross-origin");
+  assert.equal(globalHeaders["X-Frame-Options"], undefined);
+
+  assert.equal(ruleHeaders("/api/regolamento")["X-Frame-Options"], undefined);
+  assert.equal(ruleHeaders("/api/regolamento-img")["X-Frame-Options"], undefined);
+
+  const hardenedPages = [
+    "/", "/index.html",
+    "/fp", "/fp/", "/fp/index.html",
+    "/pd", "/pd/", "/pd/index.html",
+    "/fp/admin-links", "/fp/admin-links/", "/fp/admin-links/index.html",
+    "/pd/admin-links", "/pd/admin-links/", "/pd/admin-links/index.html",
+    "/js/:path*", "/css/:path*", "/manifests/:path*",
+    "/assets/dashboard/:path*", "/data/:path*"
+  ];
+  for (const page of hardenedPages) {
+    const headers = ruleHeaders(page);
+    assert.equal(headers["X-Frame-Options"], "DENY", `${page} deve esporre DENY`);
+    assert.equal(headers["X-Content-Type-Options"], "nosniff", `${page} deve avere nosniff`);
+    assert.equal(headers["Referrer-Policy"], "strict-origin-when-cross-origin", `${page} deve avere la referrer policy`);
+  }
 });
 
 test("team logo URLs are served by the Neon-backed API", () => {

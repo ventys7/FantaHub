@@ -79,6 +79,12 @@
     if (!window.matchMedia("(max-width: 767px)").matches) setMenuOpen(false);
   });
 
+  // Le tab senza contenuto configurato (es. Regolamento senza URL) restano nascoste
+  // e vengono escluse dalla navigazione da tastiera.
+  function visibleTabs() {
+    return tabs.filter((item) => !item.hidden);
+  }
+
   tabs.forEach((tab, index) => {
     tab.addEventListener("click", () => {
       activateSection(tab.dataset.leagueTab);
@@ -89,14 +95,17 @@
       if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
       event.preventDefault();
 
-      let nextIndex = index;
-      if (event.key === "ArrowLeft") nextIndex = (index - 1 + tabs.length) % tabs.length;
-      if (event.key === "ArrowRight") nextIndex = (index + 1) % tabs.length;
+      const visible = visibleTabs();
+      const current = visible.indexOf(tab);
+      let nextIndex = current;
+      if (event.key === "ArrowLeft") nextIndex = (current - 1 + visible.length) % visible.length;
+      if (event.key === "ArrowRight") nextIndex = (current + 1) % visible.length;
       if (event.key === "Home") nextIndex = 0;
-      if (event.key === "End") nextIndex = tabs.length - 1;
+      if (event.key === "End") nextIndex = visible.length - 1;
 
-      tabs[nextIndex].focus();
-      activateSection(tabs[nextIndex].dataset.leagueTab);
+      const nextTab = visible[nextIndex];
+      nextTab.focus();
+      activateSection(nextTab.dataset.leagueTab);
     });
   });
 
