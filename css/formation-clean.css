@@ -1242,8 +1242,17 @@ html[data-route="league"] .story-action:disabled {
   opacity: .5;
 }
 
-html[data-route="league"] .story-action--share { background: linear-gradient(135deg, #0f766e, #14b8a6); }
+html[data-route="league"] .story-action--save { background: linear-gradient(135deg, #0f766e, #14b8a6); }
 html[data-route="league"] .story-action--copy { background: linear-gradient(135deg, #2563eb, #4f46e5); }
+
+html[data-route="league"] .story-hint {
+  margin: 8px 0 0;
+  color: var(--formation-muted, #6e837b);
+  font-size: .7rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+}
 
 @media (max-width: 767px) {
   html[data-route="league"] .story-modal { padding: 12px; }

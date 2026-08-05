@@ -526,7 +526,7 @@ window.LineupStory = (function () {
   }
 
   function updateStoryActions(ready) {
-    ["shareStoryBtn", "copyStoryBtn"].forEach((id) => {
+    ["saveStoryBtn", "copyStoryBtn"].forEach((id) => {
       const button = document.getElementById(id);
       if (button) button.disabled = !ready;
     });
@@ -583,6 +583,11 @@ window.LineupStory = (function () {
       /iPhone|iPad|iPod|Android/i.test(navigator.userAgent || "");
   }
 
+  function isIOSStoryContext() {
+    return /iPhone|iPad|iPod/i.test(navigator.userAgent || "") ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  }
+
   function canShareFile(file) {
     if (!file || typeof navigator.share !== "function") return false;
 
@@ -593,7 +598,7 @@ window.LineupStory = (function () {
     }
   }
 
-  function downloadDesktop() {
+  function download() {
     if (!currentBlob) return;
     const link = document.createElement("a");
     link.href = currentUrl || URL.createObjectURL(currentBlob);
@@ -601,7 +606,12 @@ window.LineupStory = (function () {
     document.body.appendChild(link);
     link.click();
     link.remove();
-    showToast("Immagine pronta per il salvataggio", "success");
+    showToast(
+      isMobileStoryContext()
+        ? "Immagine salvata: la trovi in Galleria (album Download)"
+        : "Immagine salvata: la trovi nella cartella Download",
+      "success"
+    );
   }
 
   async function invokeNativeShare() {
@@ -622,16 +632,20 @@ window.LineupStory = (function () {
     }
   }
 
-  async function share() {
-    const shared = await invokeNativeShare();
-    if (shared) return;
-
-    if (isMobileStoryContext()) {
-      showToast("Condivisione non supportata su questo browser", "error");
+  async function save() {
+    const file = storyFile();
+    if (!file) {
+      showToast("Attendi che l’anteprima sia pronta", "error");
       return;
     }
 
-    downloadDesktop();
+    // iPhone/iPad: il pannello nativo espone "Salva immagine" (→ Foto)
+    if (isIOSStoryContext() && canShareFile(file)) {
+      const shared = await invokeNativeShare();
+      if (shared) return;
+    }
+
+    download();
   }
 
   async function copyImage() {
@@ -642,6 +656,11 @@ window.LineupStory = (function () {
 
     if (!window.isSecureContext || !navigator.clipboard?.write || typeof ClipboardItem === "undefined") {
       showToast("Copia immagine richiede HTTPS e un browser compatibile", "error");
+      return;
+    }
+
+    if (typeof ClipboardItem.supports === "function" && !ClipboardItem.supports("image/png")) {
+      showToast("Questo browser non supporta la copia di immagini", "error");
       return;
     }
 
@@ -660,7 +679,7 @@ window.LineupStory = (function () {
       }
     }
 
-    showToast("Copia immagine non disponibile: usa Condividi", "error");
+    showToast("Copia immagine non disponibile: usa Salva", "error");
   }
 
   function bind() {
@@ -668,8 +687,11 @@ window.LineupStory = (function () {
       open();
     });
     document.getElementById("closeStoryBtn")?.addEventListener("click", close);
-    document.getElementById("shareStoryBtn")?.addEventListener("click", share);
+    document.getElementById("saveStoryBtn")?.addEventListener("click", save);
     document.getElementById("copyStoryBtn")?.addEventListener("click", copyImage);
+
+    const hint = document.getElementById("storyHint");
+    if (hint) hint.hidden = !isIOSStoryContext();
 
     document.getElementById("storyModal")?.addEventListener("click", (event) => {
       if (event.target === event.currentTarget) close();
