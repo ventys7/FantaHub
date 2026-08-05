@@ -1,11 +1,5 @@
 /* SLOTS RENDER - Desktop field and bench from the shared FormationModel */
 
-/* On small screens the empty-slot hint must fit narrow shirts, so it is
-   shortened and rendered without the desktop's letter-spacing. */
-const LINEUP_EMPTY_HINT = window.matchMedia("(max-width: 767px)").matches
-  ? "Tocca"
-  : "Tocca lo slot";
-
 function createFormationSlotVisual(role, entry, { compact = false } = {}) {
   const content = document.createElement("div");
   content.className = "formation-slot__content";
@@ -51,7 +45,7 @@ function createFormationSlotVisual(role, entry, { compact = false } = {}) {
     shirt.classList.add("formation-shirt--empty");
     portrait.hidden = true;
     name.textContent = "Scegli";
-    team.textContent = compact ? "" : LINEUP_EMPTY_HINT;
+    team.textContent = compact ? "" : "Tocca lo slot";
   }
 
   shirt.append(roleBadge, portrait, name, team);

@@ -347,6 +347,14 @@ html[data-route="league"] #mobileStartersSlots .formation-shirt__team {
   backdrop-filter: blur(2px);
 }
 
+/* Mobile Safari font-boost must never stretch these tiny labels vertically. */
+html[data-route="league"] .formation-shirt__name,
+html[data-route="league"] .formation-shirt__team,
+html[data-route="league"] .formation-shirt__role {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 /* Fixed role colours: independent from FP / PD theme. */
 html[data-route="league"] .formation-shirt[data-role="P"] .formation-shirt__role {
   color: #a16207;
@@ -1023,13 +1031,19 @@ html[data-route="league"] .output-copy-output-btn {
     margin-top: 4px;
     font-size: clamp(.54rem, 1.95vw, .64rem);
     line-height: 1.05;
-    /* Safari iOS would otherwise font-boost these tiny labels, making them
-       look stretched and clipped inside the shirt. */
-    -webkit-text-size-adjust: 100%;
-    text-size-adjust: 100%;
     letter-spacing: .02em;
     padding-right: 5px;
     padding-left: 5px;
+  }
+
+  /* The full "Tocca lo slot" hint keeps its desktop wording: on narrow
+     shirts it wraps on two short lines instead of shrinking or clipping. */
+  html[data-route="league"] #mobileStartersSlots .formation-shirt--empty .formation-shirt__team {
+    white-space: normal;
+    letter-spacing: 0;
+    line-height: 1.12;
+    padding-right: 4px;
+    padding-left: 4px;
   }
 
   /* 5 across has a little less vertical mass, but its words never split
