@@ -43,7 +43,7 @@ function renderRoutePage(id, identity) {
   // replaceAll ensures every occurrence is replaced, not just the first
   return template
     .replaceAll('<html lang="it">', `<html lang="it" data-static-league-identity="${id}">`)
-    .replaceAll('<title>Lineup Fanta</title>', `<title>${identity.name} · Lineup Fanta</title>`)
+    .replaceAll('<title>FantaHub</title>', `<title>${identity.name}</title>`)
     .replaceAll('<script src="js/config.js"></script>', `${staticHead}\n<script src="js/config.js"></script>`);
 }
 

@@ -42,7 +42,7 @@
   function applyLeagueTheme() {
     if (!league) return;
 
-    document.title = `${league.name} · Lineup Fanta`;
+    document.title = league.name;
     document.documentElement.dataset.league = league.id;
     document.body.dataset.route = "league";
 
@@ -75,7 +75,7 @@
   }
 
   function renderLeaguePicker() {
-    document.title = "Lineup Fanta";
+    document.title = "FantaHub";
     delete document.documentElement.dataset.league;
     window.applyLineupIdentity?.(null);
     document.body.dataset.route = "home";
@@ -84,7 +84,7 @@
     landing.className = "league-landing";
     landing.innerHTML = `
       <section class="league-landing__hero">
-        <p class="league-landing__eyebrow">LINEUP FANTA</p>
+        <p class="league-landing__eyebrow">FANTAHUB</p>
         <h1>La tua formazione,<br><span>la tua lega.</span></h1>
         <p class="league-landing__intro">
           Scegli la competizione per accedere alla tua rosa e preparare la formazione.

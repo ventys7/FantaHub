@@ -116,7 +116,7 @@ async function checkRemovedSystems() {
 }
 
 async function main() {
-  console.log("Lineup-Fanta · diagnosi essenziale con admin e media\n");
+  console.log("FantaHub · diagnosi essenziale con admin e media\n");
   await checkRequiredFiles();
   await checkJson();
   await checkLeaguePages();

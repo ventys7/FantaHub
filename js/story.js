@@ -13,12 +13,12 @@ window.LineupStory = (function () {
 
   let currentBlob = null;
   let currentUrl = null;
-  let currentFileName = "formazione-lineup.png";
+  let currentFileName = "formazione-fantahub.png";
 
   function leagueConfig() {
     return window.LINEUP_FANTA?.league || {
-      name: "Lineup Fanta",
-      label: "Lineup Fanta",
+      name: "FantaHub",
+      label: "FantaHub",
       flag: "⚽",
       theme: { primary: "#7c3aed", primaryLight: "#a855f7" }
     };
@@ -509,9 +509,9 @@ window.LineupStory = (function () {
     ctx.fillStyle = accent;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText("LINEUP FANTA", WIDTH / 2, 86);
+    ctx.fillText("FANTAHUB", WIDTH / 2, 86);
 
-    centeredText(ctx, league.name || league.label || "Lineup Fanta", WIDTH / 2, 132, {
+    centeredText(ctx, league.name || league.label || "FantaHub", WIDTH / 2, 132, {
       size: 44,
       weight: 900,
       color: "#ffffff",
@@ -542,7 +542,7 @@ window.LineupStory = (function () {
       minute: "2-digit"
     }).format(new Date());
 
-    centeredText(ctx, "GENERATA CON LINEUP FANTA", WIDTH / 2, 1824, {
+    centeredText(ctx, "GENERATA CON FANTAHUB", WIDTH / 2, 1824, {
       size: 16,
       weight: 900,
       color: "rgba(229,255,240,.54)"
@@ -704,7 +704,7 @@ window.LineupStory = (function () {
 
     try {
       await navigator.share({
-        title: "Formazione Lineup Fanta",
+        title: "Formazione FantaHub",
         files: [file]
       });
       return true;

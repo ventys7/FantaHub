@@ -161,7 +161,7 @@ body[data-route="home"] {
 }
 
 
-/* LINEUP FANTA: hide legacy FP markup on the home route before router.js mounts the landing */
+/* FANTAHUB: hide legacy FP markup on the home route before router.js mounts the landing */
 html[data-route="home"] body > * {
   display: none !important;
 }

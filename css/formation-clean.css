@@ -1,4 +1,4 @@
-/* LINEUP FANTA — one active formation layout
+/* FANTAHUB — one active formation layout
    This replaces the stacked Step 6 CSS patches. */
 
 :root {
@@ -1023,6 +1023,13 @@ html[data-route="league"] .output-copy-output-btn {
     margin-top: 4px;
     font-size: clamp(.54rem, 1.95vw, .64rem);
     line-height: 1.05;
+    /* Safari iOS would otherwise font-boost these tiny labels, making them
+       look stretched and clipped inside the shirt. */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    letter-spacing: .02em;
+    padding-right: 5px;
+    padding-left: 5px;
   }
 
   /* 5 across has a little less vertical mass, but its words never split
@@ -1058,6 +1065,9 @@ html[data-route="league"] .output-copy-output-btn {
     margin-top: 3px;
     font-size: clamp(.46rem, 1.68vw, .55rem);
     line-height: 1.03;
+    letter-spacing: 0;
+    padding-right: 3px;
+    padding-left: 3px;
   }
 
   /* Goalkeeper keeps a normal kit width, never a full-field row. */

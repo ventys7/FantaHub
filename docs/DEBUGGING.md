@@ -1,6 +1,6 @@
 # Debug locale
 
-Lineup-Fanta è composto da pagine statiche, API serverless locali e dashboard React precompilata.
+FantaHub è composto da pagine statiche, API serverless locali e dashboard React precompilata.
 
 ## Preparazione
 

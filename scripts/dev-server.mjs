@@ -99,7 +99,7 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(port, host, () => {
-  console.log(`✓ Lineup-Fanta live: http://localhost:${port}`);
+  console.log(`✓ FantaHub live: http://localhost:${port}`);
   console.log(`✓ Admin FP: http://localhost:${port}/fp/admin-links/`);
   console.log(`✓ Admin PD: http://localhost:${port}/pd/admin-links/`);
   if (process.env.ADMIN_LINKS_PASSWORD_HASH) console.log("✓ API admin, loghi, disciplina e media attive");
