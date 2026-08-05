@@ -1046,6 +1046,15 @@ html[data-route="league"] .output-copy-output-btn {
     padding-left: 4px;
   }
 
+  /* iOS Safari renders tiny uppercase text inside a clipped pill with a
+     vertically stretched look. Let the filled team label render freely:
+     no clip, no backdrop blur — both distort glyphs at ~8px on iPhone. */
+  html[data-route="league"] #mobileStartersSlots .formation-shirt--selected .formation-shirt__team {
+    overflow: visible;
+    backdrop-filter: none;
+    text-overflow: clip;
+  }
+
   /* 5 across has a little less vertical mass, but its words never split
      in the middle. It may wrap only at a real whitespace boundary. */
   html[data-route="league"] #mobileStartersSlots .formation-row[data-count="5"] {
