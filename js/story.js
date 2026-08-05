@@ -132,6 +132,44 @@ window.LineupStory = (function () {
     });
   }
 
+  // I crest provengono da kick-off-tau.vercel.app che non risponde con header CORS:
+  // con crossOrigin="anonymous" l'immagine non caricherebbe. Il canvas ha bisogno di
+  // same-origin per save/copia, quindi passiamo dai proxy locale /api/crest (come /api/player-photo).
+  function crestSource(url) {
+    if (!url) return "";
+    const match = String(url).match(/\/api\/crest\/(\d+)\/?$/);
+    return match ? `/api/crest?id=${match[1]}` : url;
+  }
+
+  function kickoffClubsReady() {
+    return Object.keys(window.LineupKickoffClubs || {}).length > 0;
+  }
+
+  function waitForKickoffClubs(timeoutMs = 3000) {
+    return new Promise((resolve) => {
+      if (kickoffClubsReady()) return resolve();
+      const timer = window.setTimeout(() => {
+        window.removeEventListener("lineup:kickoff-clubs-ready", onReady);
+        resolve();
+      }, timeoutMs);
+      function onReady() {
+        window.clearTimeout(timer);
+        resolve();
+      }
+      window.addEventListener("lineup:kickoff-clubs-ready", onReady, { once: true });
+    });
+  }
+
+  async function resolveCrestUrl(teamName) {
+    let url = window.LineupPlayerMedia?.crest?.(teamName) || "";
+    if (!url) {
+      // kickoffClubs può non essere ancora caricato: attendiamo l'evento e riproviamo.
+      await waitForKickoffClubs();
+      url = window.LineupPlayerMedia?.crest?.(teamName) || "";
+    }
+    return crestSource(url);
+  }
+
   async function preloadPhotos(model) {
     const leagueId = window.LINEUP_FANTA?.league?.id || "";
     const players = [];
@@ -162,7 +200,7 @@ window.LineupStory = (function () {
       if (player?.isTeamLabel && player.n) crestTeams.add(player.n);
     });
     await Promise.all([...crestTeams].map(async (teamName) => {
-      const url = window.LineupPlayerMedia?.crest?.(teamName) || "";
+      const url = await resolveCrestUrl(teamName);
       const image = await loadPhoto(url);
       if (image) photos.set(`crest:${teamName}`, image);
     }));

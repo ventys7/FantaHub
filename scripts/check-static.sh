@@ -41,7 +41,7 @@ for required in (
         raise SystemExit("Dashboard React incompleta: " + required)
 
 json.loads(Path("vercel.json").read_text(encoding="utf-8"))
-for required in ("fp/admin-links/index.html", "pd/admin-links/index.html", "css/admin-links.css", "js/admin-links.js", "js/club-keys.js", "js/player-media.js", "api/player-photo.js", "lib/neon.cjs", "lib/migrate-neon.cjs", "data/settings.json"):
+for required in ("fp/admin-links/index.html", "pd/admin-links/index.html", "css/admin-links.css", "js/admin-links.js", "js/club-keys.js", "js/player-media.js", "api/player-photo.js", "api/crest.js", "lib/neon.cjs", "lib/migrate-neon.cjs", "data/settings.json"):
     if not Path(required).is_file():
         raise SystemExit("Pannello/configurazione incompleti: " + required)
 PYCHECK
