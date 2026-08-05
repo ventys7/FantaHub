@@ -153,7 +153,25 @@ window.LineupStory = (function () {
       const image = await loadPhoto(url);
       if (image) photos.set(key, image);
     }));
+
+    // Crest delle squadre per i blocchi portiere in panchina (entries team label)
+    const crestTeams = new Set();
+    model.definitions.bench.forEach((definition) => {
+      if (definition.role !== "P") return;
+      const player = window.FormationModel.getBenchDisplayEntry(model, definition)?.player;
+      if (player?.isTeamLabel && player.n) crestTeams.add(player.n);
+    });
+    await Promise.all([...crestTeams].map(async (teamName) => {
+      const url = window.LineupPlayerMedia?.crest?.(teamName) || "";
+      const image = await loadPhoto(url);
+      if (image) photos.set(`crest:${teamName}`, image);
+    }));
+
     return photos;
+  }
+
+  function crestPhoto(photos, teamName) {
+    return teamName ? photos.get(`crest:${teamName}`) || null : null;
   }
 
   function playerPhoto(photos, player) {
@@ -173,6 +191,23 @@ window.LineupStory = (function () {
     roundRect(ctx, x, y, size, size, radius);
     ctx.clip();
     ctx.drawImage(image, sourceX, sourceY, sourceSize, sourceSize, x, y, size, size);
+    ctx.restore();
+  }
+
+  function drawCrest(ctx, image, x, y, size, radius = 10) {
+    if (!image) return;
+    const sourceWidth = image.naturalWidth || image.width;
+    const sourceHeight = image.naturalHeight || image.height;
+    if (!sourceWidth || !sourceHeight) return;
+    ctx.save();
+    roundRect(ctx, x, y, size, size, radius);
+    ctx.clip();
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(x, y, size, size);
+    const scale = Math.min(size / sourceWidth, size / sourceHeight) * 0.86;
+    const width = sourceWidth * scale;
+    const height = sourceHeight * scale;
+    ctx.drawImage(image, x + (size - width) / 2, y + (size - height) / 2, width, height);
     ctx.restore();
   }
 
@@ -327,7 +362,7 @@ window.LineupStory = (function () {
     });
   }
 
-  function drawBenchCard(ctx, { x, y, width, height, role, player, photo = null }) {
+  function drawBenchCard(ctx, { x, y, width, height, role, player, photo = null, crest = null }) {
     const active = Boolean(player?.n);
     const roleStyle = ROLE_COLORS[role] || ROLE_COLORS.C;
     fillRounded(ctx, x, y, width, height, 13, active ? "rgba(255,255,255,.95)" : "rgba(209,225,218,.28)", "rgba(255,255,255,.22)", 1);
@@ -339,7 +374,9 @@ window.LineupStory = (function () {
     const portraitX = x + 47;
     const portraitY = y + 8;
     fillRounded(ctx, portraitX, portraitY, portraitSize, portraitSize, portraitSize / 2, "#edf3f0");
-    if (photo && !player?.isTeamLabel) {
+    if (player?.isTeamLabel && crest) {
+      drawCrest(ctx, crest, portraitX + 2, portraitY + 2, portraitSize - 4);
+    } else if (photo && !player?.isTeamLabel) {
       drawCoverImage(ctx, photo, portraitX + 2, portraitY + 2, portraitSize - 4);
     } else {
       centeredText(ctx, "—", portraitX + portraitSize / 2, y + height / 2, {
@@ -378,7 +415,16 @@ window.LineupStory = (function () {
     const keeperGap = 18;
     const keeperX = (WIDTH - (keeperWidth * 2 + keeperGap)) / 2;
     keepers.forEach((player, index) => {
-      drawBenchCard(ctx, { x: keeperX + index * (keeperWidth + keeperGap), y: 1494, width: keeperWidth, height: keeperHeight, role: "P", player, photo: playerPhoto(photos, player) });
+      drawBenchCard(ctx, {
+        x: keeperX + index * (keeperWidth + keeperGap),
+        y: 1494,
+        width: keeperWidth,
+        height: keeperHeight,
+        role: "P",
+        player,
+        photo: playerPhoto(photos, player),
+        crest: player?.isTeamLabel ? crestPhoto(photos, player.n) : null
+      });
     });
 
     const columns = ["D", "C", "A"];
