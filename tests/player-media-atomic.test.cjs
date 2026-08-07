@@ -149,9 +149,14 @@ test("player media uses direct BSD URLs without Blob writes", async (t) => {
     await assertNoPlayerMediaFiles();
   });
 
-  await t.test("a failed forced rebuild does not write fallback data to Blob", async () => {
+  await t.test("a failed forced rebuild degrades instead of throwing and writes no fallback data to Blob", async () => {
     mode = "team-failure";
-    await assert.rejects(media.readManifest("fp", { fresh: true }), /BSD HTTP 503/);
+    const manifest = await media.readManifest("fp", { fresh: true });
+    assert.equal(manifest.degraded, true);
+    assert.match(String(manifest.degradedMessage), /BSD HTTP 503/);
+    const saka = manifest.players["bukayo saka|arsenal"];
+    assert.equal(saka.status, "resolved", "la entry risolta prima dell'outage viene conservata");
+    assert.match(String(saka.lastRefreshError), /BSD HTTP 503/);
     await assertNoPlayerMediaFiles();
   });
 });
