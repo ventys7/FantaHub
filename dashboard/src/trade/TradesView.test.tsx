@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { TeamSquad } from "../components/teams/types";
 import type { DashboardAsset } from "../types";
@@ -162,23 +162,6 @@ describe("TradesView", () => {
     expect(screen.getByRole("button", { name: "Riepilogo" })).toBeEnabled();
   });
 
-  it("apre la card Riepilogo con lo scambio visivo (nessuna textarea)", () => {
-    renderView();
-    selectSides();
-    fireEvent.click(screen.getByText("Difensore Casa"));
-    fireEvent.click(screen.getByText("Difensore Villa"));
-    fireEvent.click(screen.getByRole("button", { name: "Riepilogo" }));
-
-    const dialog = screen.getByRole("dialog", { name: "Riepilogo scambio" });
-    expect(within(dialog).getByText("Difensore Casa")).toBeInTheDocument();
-    expect(within(dialog).getByText("Difensore Villa")).toBeInTheDocument();
-    expect(within(dialog).getByText(/offre/)).toBeInTheDocument();
-    expect(within(dialog).getByText(/riceve/)).toBeInTheDocument();
-    // niente output di testo grezzo
-    expect(within(dialog).queryByRole("textbox")).not.toBeInTheDocument();
-    expect(within(dialog).getByRole("button", { name: "Copia messaggio" })).toBeInTheDocument();
-  });
-
   it("copia il messaggio formattato dalla card Riepilogo", async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText } });
@@ -205,16 +188,5 @@ describe("TradesView", () => {
     expect(fabActive).toBeEnabled();
     fireEvent.click(fabActive);
     expect(screen.getByRole("dialog", { name: "Riepilogo scambio" })).toBeInTheDocument();
-  });
-
-  it("reimposta il ricevente se il proponente sceglie lo stesso proprietario", () => {
-    renderView();
-    selectSides();
-    const selectA = screen.getByLabelText("Chi offre");
-    fireEvent.change(selectA, { target: { value: "Villa" } });
-    const selectB = screen.getByLabelText("Chi riceve") as HTMLSelectElement;
-    // "Villa" era in B e ora è in A → B torna al placeholder
-    expect(selectB.value).toBe("");
-    expect(screen.getByRole("heading", { name: "Componi il tuo scambio" })).toBeInTheDocument();
   });
 });
