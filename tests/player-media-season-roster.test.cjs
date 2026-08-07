@@ -39,7 +39,8 @@ const SEASONS_99 = [
 const DIRECTORY = [
   { id: 5, name: "Test FC", country: "England" },
   { id: 6, name: "Failing FC", country: "England" },
-  { id: 7, name: "No Season FC", country: "England" }
+  { id: 7, name: "No Season FC", country: "England" },
+  { id: 9, name: "Star FC", country: "England" }
 ];
 
 const ROSTERS = {
@@ -52,6 +53,17 @@ const ROSTERS = {
   "7": [
     { id: 201, full_name: "Old Exit Player" },
     { id: 202, full_name: "Kept Player" }
+  ],
+  // Rosa interamente attiva (nessun transfer): 4 asset CSV -> 4/4 match
+  // automatici, squadra risolta senza margini. I giocatori fantasma del
+  // fallback ("Ghost", "Twin", "Unknown") NON sono in questo roster: per
+  // loro la ricerca nel catalogo e' l'unico percorso, senza toccare il
+  // team match di Test FC.
+  "9": [
+    { id: 901, full_name: "Star Anchor A" },
+    { id: 902, full_name: "Star Anchor B" },
+    { id: 903, full_name: "Star Anchor C" },
+    { id: 904, full_name: "Star Anchor D" }
   ]
 };
 
@@ -65,12 +77,37 @@ const TRANSFERS = {
   "201": [{ transfer_date: "2025-06-30", from_team: { id: 7, name: "No Season FC" }, to_team: { id: 999, name: "Elsewhere" } }]
 };
 
+// Per il fallback "cerca per nome nella lega": le risposte di
+// /api/players/?search= riportano il campo current_team (squadra + paese
+// dell'ultimo club) e vengono filtrate per il country della lega.
+const SEARCH_HITS = {
+  "ghost player": [
+    { id: 501, name: "Ghost Player", short_name: "Ghost", current_team: { id: 9, name: "Star FC", country: "England" } },
+    { id: 502, name: "Ghost Player", short_name: "Ghost", current_team: { id: 55, name: "France FC", country: "France" } }
+  ],
+  "twin player": [
+    { id: 601, name: "Twin Player", short_name: "Twin", current_team: { id: 9, name: "Star FC", country: "England" } },
+    { id: 602, name: "Twin Player", short_name: "Twin", current_team: { id: 9, name: "Star FC", country: "England" } }
+  ]
+};
+
 let tempRoot;
 let provider;
 let media;
 let noSeasons = false;
+let extraCsvRows = [];
 const detailFetches = {};
 const seasonRequests = [];
+
+// Righe CSV base per Star FC (4 titolari attivi): la squadra si risolve
+// 4/4 senza margini. I giocatori del fallback vengono aggiunti a Questa
+// squadra con il candidato NET esposto (mai nella rosa).
+const STAR_ROWS = [
+  "Paolo,A,Star Anchor A,Star FC,10,10",
+  "Paolo,A,Star Anchor B,Star FC,10,10",
+  "Paolo,A,Star Anchor C,Star FC,10,10",
+  "Paolo,A,Star Anchor D,Star FC,10,10"
+];
 
 async function setup() {
   tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), "lineup-season-roster-"));
@@ -85,6 +122,7 @@ async function setup() {
   process.chdir(tempRoot);
   process.env.BSD_API_KEY = "test-token";
   noSeasons = false;
+  extraCsvRows = [];
   Object.keys(detailFetches).forEach((key) => delete detailFetches[key]);
   seasonRequests.length = 0;
 
@@ -94,7 +132,8 @@ async function setup() {
       const csv = [
         "Tag,Ruolo,Nome,Squadra,Quotazione,Prezzo Acquisto",
         "Paolo,A,Arrive Player,Test FC,10,10",
-        "Paolo,A,No Transfer Player,Test FC,10,10"
+        "Paolo,A,No Transfer Player,Test FC,10,10",
+        ...extraCsvRows
       ].join("\n");
       return new Response(csv, { status: 200, headers: { "content-type": "text/csv" } });
     }
@@ -108,6 +147,11 @@ async function setup() {
       const league = String(url.searchParams.get("league") || "");
       const seasons = { "1": [SEASON_1058], "3": [SEASON_1307], "99": SEASONS_99 }[league] || [];
       return jsonResponse({ count: seasons.length, next: null, results: seasons });
+    }
+    if (url.pathname === "/api/players/" && url.searchParams.has("search")) {
+      const query = String(url.searchParams.get("search") || "").toLowerCase();
+      const hits = SEARCH_HITS[query] || [];
+      return jsonResponse({ count: hits.length, next: null, results: hits });
     }
     if (url.pathname === "/api/players/") {
       const team = url.searchParams.get("team");
@@ -277,4 +321,63 @@ test("stagione non risolvibile (0 risultati) -> nessun filtro, rosa completa", a
   assert.equal(team.season, null);
   assert.equal(detailFetches["201"] || 0, 0, "nessun fetch di dettaglio senza stagione");
   assert.equal(detailFetches["202"] || 0, 0);
+});
+
+test("fallback per nome: il giocatore assente dalla rosa attiva viene risolto cercandolo nella lega", async (t) => {
+  await setup();
+  t.after(teardown);
+
+  // "Ghost Player" non e' nella rosa di Star FC (ROSTERS["9"] = 901..904):
+  // nessun candidato in rosa -> la ricerca BSD nel catalogo lo trova con
+  // current_team Test FC (England) -> risolto come 501.
+  extraCsvRows = [...STAR_ROWS, "Paolo,A,Ghost Player,Star FC,10,10"];
+  provider.clearSeasonCache();
+  provider.clearTransferCache();
+  const manifest = await media.refreshDirectManifest("fp");
+  const entry = manifest.players["ghost player|star"];
+  assert.equal(entry.status, "resolved", `status atteso resolved, ottenuto ${entry.status} (${entry.error || ""})`);
+  assert.equal(entry.externalId, "501", "match sul candidato England, non sul Francia");
+  assert.equal(entry.photoUrl, "https://sports.bzzoiro.com/img/player/501/");
+});
+
+test("fallback per nome: il candidau dello stesso country viene preferito, l'estero scartato", async (t) => {
+  await setup();
+  t.after(teardown);
+
+  // Due hit, il primo England e il secondo France: il secondo non deve mai
+  // comparire tra i candidati (entry generata solo con il primo club).
+  // Chiamata diretta del fallback di ricerca del provider: il filtro per
+  // country deve lasciare solo il candidato England, con id come stringa.
+  const direct = await provider.searchPlayerByName("Ghost Player", "England");
+  assert.equal(direct.length, 1);
+  assert.equal(direct[0].id, "501", "id come stringa, coerente con le entry del manifest");
+});
+
+test("fallback per nome: hit multipli con lo stesso match -> da controllare, non auto", async (t) => {
+  await setup();
+  t.after(teardown);
+
+  // Due giocatori omonimi nella stessa squadra: nessun vincitore, l'entry
+  // resta unresolved con i candidati esposti (da sistemare a mano).
+  extraCsvRows = [...STAR_ROWS, "Paolo,A,Twin Player,Star FC,10,10"];
+  provider.clearSeasonCache();
+  provider.clearTransferCache();
+  const manifest = await media.refreshDirectManifest("fp");
+  const entry = manifest.players["twin player|star"];
+  assert.equal(entry.status, "unresolved");
+  assert.ok((entry.candidates || []).length >= 2, "candidati esposti per il controllo manuale");
+});
+
+test("fallback per nome: nessuna hit -> resta da controllare con l'errore di oggi", async (t) => {
+  await setup();
+  t.after(teardown);
+
+  extraCsvRows = [...STAR_ROWS, "Paolo,A,Unknown Phantom,Star FC,10,10"];
+  provider.clearSeasonCache();
+  provider.clearTransferCache();
+  const manifest = await media.refreshDirectManifest("fp");
+  const entry = manifest.players["unknown phantom|star"];
+  // Nome non coperto dalla ricerca: il fallback non deve produrre match.
+  assert.equal(entry.status, "unresolved");
+  assert.equal(entry.error, "Giocatore non trovato nella rosa BSD");
 });
