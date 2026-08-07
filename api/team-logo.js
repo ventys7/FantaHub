@@ -19,9 +19,11 @@ function decodeUpload(raw) {
 }
 
 async function knownTeamNames(id, profiles) {
-  let names = Object.keys(profiles.teams || {});
-  try { names = [...new Set([...names, ...teamNamesFromAssets((await loadLeagueAssets(id)).assets)])]; } catch {}
-  return names;
+  try {
+    return [...new Set(teamNamesFromAssets((await loadLeagueAssets(id)).assets))];
+  } catch {
+    return Object.keys(profiles.teams || {});
+  }
 }
 
 async function handleGet(req, res) {

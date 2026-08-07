@@ -1,7 +1,7 @@
 const { isAuthenticated, passwordHash, setLogin, setLogout, verifyPassword } = require("../lib/admin-auth.cjs");
 const { methodNotAllowed, noStore, readBody } = require("../lib/http.cjs");
 const { loadLeagueAssets, teamNamesFromAssets } = require("../lib/listone.cjs");
-const { resetCode } = require("../lib/logo-access.cjs");
+const { resetCode, pruneStaleLogoCodes } = require("../lib/logo-access.cjs");
 const { migrateLegacyRuntimeToNeon } = require("../lib/migrate-neon.cjs");
 const { leagueId, readSettings, readTeamProfiles, saveLeagueSettings } = require("../lib/settings.cjs");
 
@@ -9,8 +9,13 @@ async function adminState(rawLeagueId) {
   const id = leagueId(rawLeagueId);
   const settings = await readSettings();
   const profiles = await readTeamProfiles(id);
-  let names = Object.keys(profiles.teams || {});
-  try { names = [...new Set([...names, ...teamNamesFromAssets((await loadLeagueAssets(id)).assets)])]; } catch {}
+  let names;
+  try {
+    names = [...new Set(teamNamesFromAssets((await loadLeagueAssets(id)).assets))];
+    try { await pruneStaleLogoCodes(id, names); } catch {}
+  } catch {
+    names = Object.keys(profiles.teams || {});
+  }
   return {
     leagueId: id,
     settings: settings.leagues[id],
@@ -60,6 +65,14 @@ module.exports = async function handler(req, res) {
       const code = await resetCode(id, body.teamName);
       return res.status(200).json({ code, teamName: body.teamName, leagueId: id });
     }
+    if (action === "prune-logo-codes") {
+      let names = Array.isArray(body.currentTeamNames) ? body.currentTeamNames : null;
+      if (!names) {
+        try { names = [...new Set(teamNamesFromAssets((await loadLeagueAssets(id)).assets))]; } catch {}
+      }
+      const removedCount = await pruneStaleLogoCodes(id, names || []);
+      return res.status(200).json({ removedCount, leagueId: id, authenticated: true, ...(await adminState(id)) });
+    }
     if (action === "migrate-neon") {
       const migration = await migrateLegacyRuntimeToNeon();
       return res.status(200).json({ migration, authenticated: true, ...(await adminState(id)) });
@@ -70,3 +83,5 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: error.message || "Operazione non riuscita" });
   }
 };
+
+module.exports.adminState = adminState;
