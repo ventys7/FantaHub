@@ -60,6 +60,7 @@ function renderRoster() {
     const mediaUrl = player.isGkBlock
       ? window.LineupPlayerMedia?.crest(player.t)
       : window.LineupPlayerMedia?.photo(player.n, player.t);
+    const mediaLetter = (player.n || player.gkBlock || "?").trim().charAt(0).toUpperCase() || "?";
     if (mediaUrl) {
       const image = document.createElement("img");
       image.src = mediaUrl;
@@ -67,9 +68,10 @@ function renderRoster() {
       image.loading = "lazy";
       image.decoding = "async";
       if (player.isGkBlock) image.className = "is-crest";
+      window.LineupPlayerMedia?.guardPhoto?.(image, { fallbackText: mediaLetter, mediaNode: media });
       media.appendChild(image);
     } else {
-      media.textContent = (player.n || player.gkBlock || "?").trim().charAt(0).toUpperCase() || "?";
+      media.textContent = mediaLetter;
     }
 
     const badge = document.createElement("div");

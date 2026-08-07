@@ -107,6 +107,23 @@
     return /^\d+$/.test(id) ? `/api/player-photo?id=${encodeURIComponent(id)}` : "";
   }
 
+  function guardPhoto(image, { fallbackText = "", mediaNode = null, onError = null } = {}) {
+    if (!image || typeof image.addEventListener !== "function") return image;
+    let used = false;
+    image.addEventListener("error", () => {
+      if (used) return;
+      used = true;
+      image.hidden = true;
+      if (typeof onError === "function") { onError(image); return; }
+      if (mediaNode) {
+        mediaNode.hidden = false;
+        mediaNode.removeAttribute("hidden");
+        if (fallbackText) mediaNode.textContent = fallbackText;
+      }
+    });
+    return image;
+  }
+
   function crest(team) {
     const target = clubKey(team);
     if (!target) return "";
@@ -133,7 +150,7 @@
     return fallbackId ? `${KICKOFF_CREST_ORIGIN}/api/crest/${fallbackId}` : "";
   }
 
-  global.LineupPlayerMedia = Object.freeze({ clubKey, load, payload: payloadFor, photo, storyPhoto, player, playerKey, crest });
+  global.LineupPlayerMedia = Object.freeze({ clubKey, guardPhoto, load, payload: payloadFor, photo, storyPhoto, player, playerKey, crest });
 
   document.addEventListener("lineup:league-assets-ready", (event) => {
     const detail = event.detail || {};

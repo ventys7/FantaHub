@@ -6,15 +6,17 @@ function createPickerPhoto(player) {
   const url = player?.isTeamLabel
     ? window.LineupPlayerMedia?.crest(player.n)
     : window.LineupPlayerMedia?.photo(player?.n, player?.t);
+  const letter = String(player?.n || "?").trim().charAt(0).toUpperCase() || "?";
   if (url) {
     const image = document.createElement("img");
     image.src = url;
     image.alt = "";
     image.loading = "lazy";
     image.decoding = "async";
+    window.LineupPlayerMedia?.guardPhoto?.(image, { fallbackText: letter, mediaNode: portrait });
     portrait.appendChild(image);
   } else {
-    portrait.textContent = String(player?.n || "?").trim().charAt(0).toUpperCase() || "?";
+    portrait.textContent = letter;
   }
   return portrait;
 }

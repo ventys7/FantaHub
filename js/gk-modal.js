@@ -32,6 +32,7 @@ function showGkChoiceModal(blockName, { mode = "desktop" } = {}) {
       image.alt = "";
       image.loading = "lazy";
       image.decoding = "async";
+      window.LineupPlayerMedia?.guardPhoto?.(image, { fallbackText: "P", mediaNode: photo });
       photo.appendChild(image);
     } else photo.textContent = "P";
     const label = document.createElement("span");

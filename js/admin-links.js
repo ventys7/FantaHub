@@ -17,6 +17,7 @@
   const mediaStatus = document.getElementById("mediaStatus");
   const unresolvedTeams = document.getElementById("unresolvedTeams");
   const unresolvedPlayers = document.getElementById("unresolvedPlayers");
+  const DEGRADED_MEDIA_MESSAGE = "Sorgente foto (BSD) NON raggiungibile: sono mostrati i dati dell'ultima sincronizzazione riuscita";
   let state = null;
   let mediaManifest = null;
 
@@ -112,6 +113,10 @@
   }
 
   function mediaSummaryText(manifest) {
+    if (manifest?.degraded) {
+      const message = String(manifest?.degradedMessage || "").trim();
+      return message || DEGRADED_MEDIA_MESSAGE;
+    }
     const summary = manifest?.summary || {};
     const bsd = Number(summary.bsdResolved || 0);
     const unresolved = Number(summary.unresolved || 0);
@@ -145,6 +150,15 @@
     image.alt = "";
     image.loading = "lazy";
     image.decoding = "async";
+    const thumbLetter = String(candidate.name || candidate.id || "?").trim().charAt(0).toUpperCase() || "?";
+    image.addEventListener("error", () => {
+      if (image.hidden) return;
+      image.hidden = true;
+      const thumb = document.createElement("span");
+      thumb.className = "candidate-thumb-fallback";
+      thumb.textContent = thumbLetter;
+      identity.insertBefore(thumb, copy);
+    });
     const copy = document.createElement("span");
     const name = document.createElement("b");
     name.textContent = candidate.name || `ID ${candidate.id}`;
@@ -413,7 +427,9 @@
     try {
       const result = await mediaApi({ action: "refresh" });
       renderUnresolved(result);
-      message("Collegamenti BSD aggiornati. Le facce restano dirette da BSD e gli override sono salvati su Neon.");
+      message(result?.degraded
+        ? "Aggiornamento completato con i dati dell'ultima sincronizzazione riuscita (sorgente foto BSD non raggiungibile)."
+        : "Collegamenti BSD aggiornati. Le facce restano dirette da BSD e gli override sono salvati su Neon.");
     } catch (error) { message(error.message, true); }
     finally { setMediaButtonsDisabled(false); }
   }

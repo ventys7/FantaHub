@@ -34,6 +34,14 @@ function createFormationSlotVisual(role, entry, { compact = false } = {}) {
       image.loading = "lazy";
       image.decoding = "async";
       if (player.isTeamLabel) image.className = "is-crest";
+      window.LineupPlayerMedia?.guardPhoto?.(image, {
+        // Stessa resa del ramo "senza foto": nasconde il ritratto e toglie lo stato foto dallo slot.
+        onError: () => {
+          portrait.replaceChildren();
+          portrait.hidden = true;
+          shirt.classList.remove("formation-shirt--has-photo");
+        }
+      });
       portrait.appendChild(image);
       shirt.classList.add("formation-shirt--has-photo");
     } else {
