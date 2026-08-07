@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockup A · Gazzetta — Listone · FantaHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,600;0,700;0,800;1,500;1,600&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============ Gazzetta — Listone da edicola ============ */
+:root{
+  --paper:#f6f2e8; --paper-2:#efeade; --ink:#1b1a15; --ink-2:#454236; --rule:#cfc8b4;
+  --rule-strong:#9c9480; --muted:#6b6455; --primary:#7c3aed; --primary-weak:#e9defb;
+  --rP:#8a6300; --rPw:#f7e9bd; --rD:#1d4ed8; --rDw:#dbe7fb; --rC:#15803d; --rCw:#d8eedd; --rA:#b91c1c; --rAw:#f5dcdc;
+  --serif:"Spectral", Georgia, "Times New Roman", serif;
+  --sans:"Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5}
+h1,h2,h3,p{margin:0}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:2px}
+input,select{font:inherit;color:inherit}
+[hidden]{display:none!important}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* ---------- Chrome: masthead da edicola ---------- */
+.chrome{border-bottom:4px double var(--ink);padding:14px 20px 12px;position:sticky;top:0;z-index:50;background:var(--paper)}
+.mast-row{display:flex;align-items:center;gap:14px;max-width:1180px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.brand-flag{font-size:26px;line-height:1}
+.brand-text{display:flex;flex-direction:column;line-height:1.1}
+.brand-lega{font-family:var(--serif);font-weight:800;font-size:22px;letter-spacing:.02em;white-space:nowrap}
+.brand-name{font-family:var(--serif);font-style:italic;font-weight:600;font-size:12.5px;color:var(--muted);text-transform:lowercase}
+.tabs{display:flex;gap:2px;margin-left:auto}
+.tab{font-family:var(--serif);font-weight:700;font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;padding:7px 10px 5px;border:1px solid transparent;border-bottom:0;color:var(--muted)}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--paper);background:var(--ink);border-color:var(--ink)}
+.league-toggle{display:flex;border:1px solid var(--rule-strong);margin-left:4px}
+.lseg-btn{font-family:var(--serif);font-weight:700;font-size:11.5px;letter-spacing:.1em;padding:6px 10px;background:var(--paper-2);color:var(--ink-2)}
+.lseg-btn+.lseg-btn{border-left:1px solid var(--rule-strong)}
+.lseg-btn[aria-pressed="true"]{background:var(--primary);color:#fff;border-color:var(--primary)}
+/* ---------- Toolbar ---------- */
+.toolbar{max-width:1180px;margin:0 auto;padding:16px 20px 4px;display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center}
+.search{position:relative;flex:1 1 240px;max-width:380px}
+.search input{width:100%;height:44px;border:1px solid var(--rule-strong);background:var(--paper);padding:0 14px 0 40px;font-size:14.5px}
+.search input::placeholder{color:var(--muted);font-style:italic}
+.search svg{position:absolute;left:13px;top:13px;pointer-events:none}
+.pills{display:flex;gap:6px;flex-wrap:wrap}
+.pill{font-family:var(--serif);font-weight:700;font-size:12px;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--rule-strong);padding:6px 12px;color:var(--ink-2);background:var(--paper)}
+.pill:hover{border-color:var(--ink)}
+.pill[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.selects{display:flex;gap:8px;flex-wrap:wrap}
+.sel{border:1px solid var(--rule-strong);background:var(--paper);height:36px;padding:0 8px;font-size:13px;color:var(--ink-2);max-width:190px}
+.sel:hover{border-color:var(--ink)}
+.actives{display:flex;gap:12px;align-items:center;margin-left:auto}
+.cbox{display:flex;gap:7px;align-items:center;font-size:13px;color:var(--ink-2);cursor:pointer}
+.cbox input{accent-color:var(--primary);width:15px;height:15px}
+.actives .reset{font-family:var(--serif);font-style:italic;font-weight:600;font-size:13px;color:var(--muted);text-decoration:underline;text-underline-offset:3px}
+.actives .reset:hover{color:var(--ink)}
+.result-line{max-width:1180px;margin:6px auto 0;padding:0 20px;font-family:var(--serif);font-style:italic;font-size:12.5px;color:var(--muted)}
+/* ---------- Sezioni ---------- */
+.main{max-width:1180px;margin:0 auto;padding:12px 20px 60px}
+.rsection{margin-top:26px}
+.rsection-head{display:flex;align-items:baseline;gap:12px;border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rsection-title{font-family:var(--serif);font-weight:800;font-size:clamp(19px,2.6vw,24px);letter-spacing:.02em;text-transform:uppercase}
+.rsection-count{font-family:var(--serif);font-style:italic;font-weight:600;font-size:13px;color:var(--muted)}
+/* ---------- Righe desktop: tabella da giornale ---------- */
+.dhead,.drow{display:grid;grid-template-columns:4fr 2fr 2fr 2fr 2fr;gap:0;align-items:center}
+.dhead{padding:6px 12px;border-bottom:1px solid var(--rule-strong);font-family:var(--serif);font-weight:700;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.sortbtn{font-family:var(--serif);font-weight:700;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);text-align:left;padding:0;cursor:pointer;border-bottom:2px solid transparent}
+.sortbtn:hover{color:var(--ink)}
+.sortbtn[aria-pressed="true"]{color:var(--ink);border-bottom-color:var(--primary);cursor:default}
+.sortbtn::after{content:" ↕";font-size:9px;opacity:.6}
+.drow{padding:8px 12px;border-bottom:1px solid var(--rule);font-size:14px}
+.drow:nth-child(even){background:var(--paper-2)}
+.drow:hover{background:#ece5d2}
+.dcell{min-width:0}
+.d-name{display:flex;flex-direction:column;line-height:1.25}
+.d-player{font-family:var(--serif);font-weight:700;font-size:15px}
+.d-player.inactive{font-style:italic;color:var(--muted)}
+.d-player.inactive::after{content:" *"}
+.d-club{font-size:11.5px;color:var(--muted);font-weight:500;letter-spacing:.02em}
+.d-role{display:inline-block;font-family:var(--serif);font-weight:700;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;border:1px solid currentColor;padding:2px 7px;border-radius:1px}
+.d-quote{font-family:var(--sans);font-weight:800;font-size:16px;font-variant-numeric:tabular-nums}
+.d-price{font-family:var(--sans);font-weight:800;font-size:16px;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+.d-price::after{content:" M";font-size:10px;color:var(--muted)}
+.d-owner{font-family:var(--serif);font-style:italic;font-weight:600;font-size:12.5px;color:var(--ink-2)}
+.d-owner::before{content:"di ";color:var(--muted);font-weight:500}
+.d-owner.inactive{color:var(--muted)}
+.dgrid{display:none}
+/* ---------- Blocco portiere ---------- */
+.gkrow{grid-column:1/-1;display:grid;grid-template-columns:1fr;border:1px solid var(--rule-strong);background:var(--paper);margin:10px 0 2px}
+.gkhead{display:grid;grid-template-columns:4fr 2fr 2fr 2fr 2fr;align-items:center;padding:10px 12px;cursor:pointer;gap:0}
+.gkhead:hover{background:#ece5d2}
+.gk-id{display:flex;align-items:center;gap:10px}
+.gk-monogram{width:34px;height:34px;border:1px solid var(--ink);display:grid;place-items:center;font-family:var(--serif);font-weight:800;font-size:13px;background:var(--paper-2)}
+.gk-name{font-family:var(--serif);font-weight:800;font-size:15px}
+.gk-sub{font-family:var(--serif);font-style:italic;font-size:11.5px;color:var(--muted)}
+.gk-q{font-family:var(--sans);font-weight:800;font-size:15px;font-variant-numeric:tabular-nums}
+.gk-p{font-family:var(--sans);font-weight:800;font-size:15px;font-variant-numeric:tabular-nums}
+.gk-o{font-family:var(--serif);font-style:italic;font-weight:600;font-size:12.5px}
+.gk-o::before{content:"di ";color:var(--muted)}
+.gk-chev{width:18px;height:18px;transition:transform .2s}
+.gkrow.open .gk-chev{transform:rotate(180deg)}
+.gkbody{display:none;border-top:1px dashed var(--rule-strong)}
+.gkrow.open .gkbody{display:block}
+.gkbody .gkline{display:grid;grid-template-columns:4fr 2fr 2fr 2fr 2fr;padding:7px 12px;align-items:center;font-size:13.5px}
+.gkbody .gkline:nth-child(even){background:var(--paper-2)}
+.gkbody .gkline .d-player{font-size:13.5px}
+.gkbody .gkline .gk-ind{font-family:var(--serif);font-style:italic;font-size:11.5px;color:var(--muted)}
+/* ---------- Card mobile ---------- */
+.mgrid{display:none;gap:10px;flex-direction:column}
+.mcard{border:1px solid var(--rule-strong);background:var(--paper);padding:12px 14px}
+.mcard-top{display:flex;gap:12px;align-items:center}
+.mcard-avatar{width:42px;height:42px;border:1px solid var(--ink);display:grid;place-items:center;font-family:var(--serif);font-weight:800;font-size:14px;background:var(--paper-2);flex:none}
+.mcard-info{min-width:0;flex:1}
+.mcard-name{font-family:var(--serif);font-weight:700;font-size:15.5px;line-height:1.2}
+.mcard-name.inactive{font-style:italic;color:var(--muted)}
+.mcard-name.inactive::after{content:" *"}
+.mcard-club{font-size:11.5px;color:var(--muted)}
+.mcard-nums{text-align:right;flex:none}
+.mcard-q{font-family:var(--sans);font-weight:800;font-size:17px;font-variant-numeric:tabular-nums}
+.mcard-p{font-family:var(--sans);font-weight:700;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.mcard-p::after{content:" M";font-size:9.5px}
+.mcard-owner{margin-top:8px;padding-top:7px;border-top:1px dashed var(--rule-strong);font-family:var(--serif);font-style:italic;font-weight:600;font-size:12px;color:var(--ink-2)}
+.mcard-owner::before{content:"di ";color:var(--muted)}
+.mcard-role{display:inline-block;font-family:var(--serif);font-weight:700;font-size:10px;letter-spacing:.1em;border:1px solid currentColor;padding:1px 6px;margin-top:5px}
+.mcard.inactive{opacity:.85}
+.mcard .gkline{margin-top:8px;padding-top:7px;border-top:1px dashed var(--rule-strong);display:flex;justify-content:space-between;font-size:13px}
+.mcard .gkline .d-player{font-family:var(--serif);font-weight:700;font-size:13.5px}
+.empty{font-family:var(--serif);font-style:italic;font-size:15px;color:var(--muted);padding:34px 10px;text-align:center;border:1px dashed var(--rule-strong)}
+/* ---------- Rose: pagine squadra ---------- */
+.page-head{display:flex;align-items:baseline;gap:12px;border-bottom:2px solid var(--ink);padding-bottom:4px;margin-top:6px}
+.page-head h2{font-family:var(--serif);font-weight:800;font-size:clamp(19px,2.6vw,24px);text-transform:uppercase}
+.page-head span{font-family:var(--serif);font-style:italic;font-weight:600;font-size:13px;color:var(--muted)}
+.rose-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-top:18px}
+.rcard{border:1px solid var(--rule-strong);background:var(--paper)}
+.rcard-head{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--rule-strong);background:var(--paper-2)}
+.rmark{width:44px;height:44px;border:1px solid var(--ink);display:grid;place-items:center;font-family:var(--serif);font-weight:800;font-size:15px;background:var(--paper);flex:none}
+.rname{font-family:var(--serif);font-weight:800;font-size:16.5px;line-height:1.2}
+.rcredits{margin-left:auto;text-align:right;font-family:var(--serif);font-style:italic;font-weight:600;font-size:12px;color:var(--muted)}
+.rcredits b{display:block;font-family:var(--sans);font-style:normal;font-weight:800;font-size:15px;color:var(--ink)}
+.rtargets{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:10px 14px;border-bottom:1px dashed var(--rule)}
+.rtarget{font-family:var(--serif);font-weight:700;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.rtarget b{display:block;font-family:var(--sans);font-weight:800;font-size:14px;color:var(--ink);letter-spacing:0}
+.rtarget.miss b{color:var(--rA)}
+.rroster{padding:6px 14px 10px}
+.rrole{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dotted var(--rule);font-size:13.5px}
+.rrole-name{font-family:var(--serif);font-weight:700;font-size:13.5px}
+.rrole-q{font-family:var(--sans);font-weight:700;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.rrole-q::after{content:" Q"}
+.rrole.inactive .rrole-name{font-style:italic;color:var(--muted)}
+.rbench{margin-top:8px;font-size:12px;color:var(--muted);font-family:var(--serif);font-style:italic}
+.rbench b{font-style:normal;font-weight:700;text-transform:uppercase;font-size:10.5px;letter-spacing:.1em;font-family:var(--serif)}
+/* ---------- Classifica ---------- */
+.stab{display:flex;gap:2px;border-bottom:2px solid var(--ink);margin-top:6px}
+.sbtn{font-family:var(--serif);font-weight:700;font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;padding:8px 16px 6px;color:var(--muted);border:1px solid transparent;border-bottom:0}
+.sbtn[aria-selected="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.sgrid{width:100%;border-collapse:collapse;margin-top:14px;font-size:14px}
+.sgrid th{font-family:var(--serif);font-weight:700;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:1px solid var(--rule-strong)}
+.sgrid td{padding:9px 10px;border-bottom:1px solid var(--rule);font-variant-numeric:tabular-nums;vertical-align:middle}
+.sgrid td.num{text-align:right;font-family:var(--sans);font-weight:700}
+.sgrid td.pts{text-align:right;font-family:var(--sans);font-weight:800;font-size:15px}
+.sgrid tr:hover td{background:#ece5d2}
+.sgrid tr.top1 td{background:var(--primary-weak)}
+.sgrid tr.top2 td{background:#f0ead8}
+.sgrid tr.top3 td{background:#f0ead8}
+.sgrid tr.top2 td,.sgrid tr.top3 td{border-top:1px solid var(--rule-strong)}
+.st-mark{display:inline-flex;align-items:center;gap:9px}
+.st-initial{width:26px;height:26px;border:1px solid var(--rule-strong);display:inline-grid;place-items:center;font-family:var(--serif);font-weight:800;font-size:10px;background:var(--paper-2)}
+.st-pos{font-family:var(--serif);font-weight:800;font-size:13px;color:var(--muted)}
+.spen{display:inline-block;font-family:var(--sans);font-weight:700;font-size:10.5px;color:#fff;background:var(--rA);border-radius:1px;padding:1px 5px;margin-left:7px;vertical-align:1px}
+.demo-note{display:flex;align-items:center;gap:9px;margin-top:14px;padding:9px 12px;border:1px dashed var(--rule-strong);font-family:var(--serif);font-style:italic;font-size:12.5px;color:var(--muted)}
+.demo-dot{width:8px;height:8px;border-radius:50%;background:var(--primary);flex:none}
+/* ---------- Footer ---------- */
+.foot{border-top:1px solid var(--rule-strong);padding:14px 20px;font-family:var(--serif);font-style:italic;font-size:12px;color:var(--muted);max-width:1180px;margin:0 auto;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+/* ---------- Responsive ---------- */
+@media (max-width:860px){
+  .chrome{padding:10px 14px 8px}
+  .mast-row{flex-wrap:wrap;gap:8px}
+  .brand-flag{font-size:22px}
+  .brand-lega{font-size:18px}
+  .tabs{order:3;width:100%;margin-left:0;display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--rule);padding-top:6px}
+  .tab{text-align:center;padding:7px 4px;font-size:11.5px}
+  .league-toggle{margin-left:auto}
+  .toolbar{padding:12px 14px 2px}
+  .result-line{padding:0 14px}
+  .main{padding:8px 14px 50px}
+  .dgrid{display:none!important}
+  .mgrid{display:flex}
+  .rose-grid{grid-template-columns:1fr;gap:14px}
+  .gkhead{grid-template-columns:1fr auto;grid-auto-rows:auto;gap:4px 10px}
+  .gkhead .gk-q{display:none}
+  .gkhead .gk-p{display:none}
+  .gkhead .gk-o{grid-column:1;font-size:11.5px}
+  .gkhead .gk-chev{grid-column:2;grid-row:1}
+  .gkbody .gkline{grid-template-columns:2fr 1fr;padding:7px 14px}
+  .gkbody .gkline .gk-ind{display:none}
+  .dhead{display:none}
+  .sgrid{font-size:13px;min-width:600px}
+  .s-wrap{overflow-x:auto}
+}
+@media (max-width:480px){
+  .actives{margin-left:0;width:100%}
+  .search{max-width:none}
+  .toolbar .selects{width:100%}
+  .sel{flex:1}
+  body{font-size:14px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}
+}
+</style>
+</head>
+<body data-league="fp">
+<div class="chrome">
+  <div class="mast-row">
+    <div class="brand">
+      <span class="brand-flag" id="brandFlag">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span>
+      <div class="brand-text">
+        <span class="brand-lega" id="brandLega">PianginaCUP</span>
+        <span class="brand-name" id="brandName">edizione Fanta Premier</span>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Sezioni">
+      <button class="tab" role="tab" aria-selected="true" data-tab="listone">Listone</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="rose">Rose</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="classifica">Classifica</button>
+    </nav>
+    <div class="league-toggle" role="group" aria-label="Lega">
+      <button class="lseg-btn" aria-pressed="true" data-league="fp">FP</button>
+      <button class="lseg-btn" aria-pressed="false" data-league="pd">PD</button>
+    </div>
+  </div>
+</div>
+
+<main class="main">
+  <section id="view-listone" aria-label="Listone giocatori">
+    <div class="toolbar">
+      <div class="search">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b6455" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
+        <input id="searchInput" type="search" placeholder="cerca un calciatore o una squadra…" aria-label="Cerca giocatore">
+      </div>
+      <div class="pills" role="group" aria-label="Filtra per ruolo">
+        <button class="pill" aria-pressed="true" data-role="ALL">Tutti</button>
+        <button class="pill" aria-pressed="false" data-role="P">P</button>
+        <button class="pill" aria-pressed="false" data-role="D">D</button>
+        <button class="pill" aria-pressed="false" data-role="C">C</button>
+        <button class="pill" aria-pressed="false" data-role="A">A</button>
+      </div>
+      <div class="selects">
+        <select class="sel" id="clubSel" aria-label="Filtra squadra">
+          <option value="ALL">Squadra · tutte</option>
+        </select>
+        <select class="sel" id="ownerSel" aria-label="Filtra proprietario">
+          <option value="ALL">Proprietario · tutti</option>
+        </select>
+        <select class="sel" id="sortSel" aria-label="Ordina per">
+          <option value="q">Ordina · quotazione</option>
+          <option value="p">Ordina · prezzo</option>
+        </select>
+      </div>
+      <div class="actives">
+        <label class="cbox"><input type="checkbox" id="freeChk"><span>solo svincolati</span></label>
+        <button class="reset" id="resetBtn">azzera filtri</button>
+      </div>
+    </div>
+    <p class="result-line" id="resultLine" role="status" aria-live="polite"></p>
+
+    <div class="rsection">
+      <div class="rsection-head"><h1 class="rsection-title">Listone</h1><span class="rsection-count">quotazioni ufficiali · giornata 34</span></div>
+    </div>
+
+    <div class="dgrid" id="dgrid" aria-label="Elenco giocatori">
+      <div class="dhead">
+        <span>Giocatore</span><span>Ruolo</span>
+        <button class="sortbtn" data-sort="q" aria-pressed="true">Quot.</button>
+        <button class="sortbtn" data-sort="p" aria-pressed="false">Prezzo</button>
+        <span>Proprietario</span>
+      </div>
+      <div id="drows"></div>
+    </div>
+
+    <div class="mgrid" id="mgrid" aria-label="Elenco giocatori"></div>
+    <div class="empty" id="emptyState" hidden>Nessun calciatore corrisponde ai filtri.</div>
+  </section>
+
+  <section id="view-rose" aria-label="Rose" hidden>
+    <div class="page-head"><h2>Le Rose</h2><span id="roseSub">otto squadre · fanta rosa</span></div>
+    <div class="rose-grid" id="roseGrid"></div>
+  </section>
+
+  <section id="view-classifica" aria-label="Classifica" hidden>
+    <div class="page-head"><h2>Classifica</h2><span>stagione in corso</span></div>
+    <div class="stab" role="tablist" aria-label="Vista classifica">
+      <button class="sbtn" role="tab" aria-selected="true" data-stab="league">Classifica</button>
+      <button class="sbtn" role="tab" aria-selected="false" data-stab="fantasy">Fanta punti</button>
+    </div>
+    <div class="s-wrap">
+      <table class="sgrid" id="standTable">
+        <thead><tr id="standHead"></tr></thead>
+        <tbody id="standBody"></tbody>
+      </table>
+    </div>
+    <div class="demo-note" id="demoNote" hidden><span class="demo-dot"></span><span>Dati dimostrativi: la classifica di questa lega non è ancora disponibile.</span></div>
+  </section>
+</main>
+
+<footer class="foot">
+  <span>Mockup A · Gazzetta — listone da edicola</span>
+  <span>demo con dati sintetici · FantaHub</span>
+</footer>
+
+<script>
+"use strict";
+/* ================= DATI ================= */
+const LEAGUES = {
+  fp:{name:"Fanta Premier", lega:"PianginaCUP", flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"},
+  pd:{name:"Fanta Liga", lega:"LaLigaCUP", flag:"🇪🇸"}
+};
+const TEAMS = ["Nicolò - Gabriele","Pietro - Nick","Attilio","Sebastian","Paolo","Edoardo","Chris - Luca","Edis"];
+const ROLE_LABEL = {P:"Portieri",D:"Difensori",C:"Centrocampisti",A:"Attaccanti"};
+const ROLE_ORDER = ["P","D","C","A"];
+
+const PLAYERS = {
+  fp:[
+    {n:"Ederson",t:"Man City",r:"P",q:45,p:92,o:"Attilio"},
+    {n:"Raya",t:"Arsenal",r:"P",q:42,p:88,o:"Nicolò - Gabriele"},
+    {n:"Vicario",t:"Tottenham",r:"P",q:38,p:75,o:"Paolo"},
+    {n:"Onana",t:"Man Utd",r:"P",q:36,p:70,o:"Edis",a:false},
+    {n:"Van Dijk",t:"Liverpool",r:"D",q:62,p:118,o:"Nicolò - Gabriele"},
+    {n:"Saliba",t:"Arsenal",r:"D",q:58,p:112,o:"Pietro - Nick"},
+    {n:"Gabriel",t:"Arsenal",r:"D",q:54,p:105,o:"Attilio"},
+    {n:"Gvardiol",t:"Man City",r:"D",q:48,p:92,o:"Pietro - Nick"},
+    {n:"Trippier",t:"Newcastle",r:"D",q:44,p:82,o:"Sebastian"},
+    {n:"Romero",t:"Tottenham",r:"D",q:42,p:78,o:"Edoardo"},
+    {n:"Walker",t:"Man City",r:"D",q:34,p:62,o:"Chris - Luca",a:false},
+    {n:"Guehi",t:"Crystal Palace",r:"D",q:32,p:58,o:"Edis"},
+    {n:"Burn",t:"Newcastle",r:"D",q:30,p:55,o:"Paolo",a:false},
+    {n:"Rodri",t:"Man City",r:"C",q:78,p:150,o:"Nicolò - Gabriele"},
+    {n:"Odegaard",t:"Arsenal",r:"C",q:74,p:142,o:"Attilio"},
+    {n:"Saka",t:"Arsenal",r:"C",q:72,p:138,o:"Paolo"},
+    {n:"Son",t:"Tottenham",r:"C",q:68,p:132,o:"Edis"},
+    {n:"Bruno Fernandes",t:"Man Utd",r:"C",q:66,p:128,o:"Edoardo"},
+    {n:"Palmer",t:"Chelsea",r:"C",q:64,p:124,o:"Sebastian"},
+    {n:"De Bruyne",t:"Man City",r:"C",q:62,p:120,o:"Chris - Luca"},
+    {n:"Rice",t:"Arsenal",r:"C",q:58,p:112,o:"Pietro - Nick"},
+    {n:"Mac Allister",t:"Liverpool",r:"C",q:50,p:96,o:"Attilio"},
+    {n:"Gordon",t:"Newcastle",r:"C",q:44,p:84,o:"Nicolò - Gabriele"},
+    {n:"Haaland",t:"Man City",r:"A",q:92,p:180,o:"Nicolò - Gabriele"},
+    {n:"Salah",t:"Liverpool",r:"A",q:88,p:172,o:"Pietro - Nick"},
+    {n:"Isak",t:"Newcastle",r:"A",q:76,p:148,o:"Sebastian"},
+    {n:"Foden",t:"Man City",r:"A",q:70,p:136,o:"Paolo"},
+    {n:"Watkins",t:"Aston Villa",r:"A",q:66,p:128,o:"Attilio"},
+    {n:"Jackson",t:"Chelsea",r:"A",q:52,p:100,o:"Chris - Luca"},
+    {n:"Solanke",t:"Tottenham",r:"A",q:46,p:90,o:"Edoardo"},
+    {n:"Mateta",t:"Crystal Palace",r:"A",q:38,p:72,o:"Edis"}
+  ],
+  pd:[
+    {n:"Courtois",t:"Real Madrid",r:"P",q:55,p:108,o:"Pietro - Nick"},
+    {n:"Unai Simón",t:"Athletic Club",r:"P",q:40,p:78,o:"Paolo"},
+    {n:"Oblak",t:"Atlético Madrid",r:"P",q:42,p:80,o:"Edis"},
+    {n:"Carvajal",t:"Real Madrid",r:"D",q:40,p:76,o:"Nicolò - Gabriele"},
+    {n:"Rüdiger",t:"Real Madrid",r:"D",q:56,p:108,o:"Pietro - Nick"},
+    {n:"Araújo",t:"Barcellona",r:"D",q:58,p:112,o:"Attilio"},
+    {n:"Koundé",t:"Barcellona",r:"D",q:48,p:92,o:"Sebastian"},
+    {n:"Le Normand",t:"Atlético Madrid",r:"D",q:38,p:72,o:"Paolo"},
+    {n:"Balde",t:"Barcellona",r:"D",q:46,p:88,o:"Edoardo"},
+    {n:"Mendy",t:"Real Madrid",r:"D",q:34,p:64,o:"Chris - Luca"},
+    {n:"Vivian",t:"Athletic Club",r:"D",q:30,p:56,o:"Edis"},
+    {n:"Yeray",t:"Athletic Club",r:"D",q:28,p:52,o:"Nicolò - Gabriele",a:false},
+    {n:"Bellingham",t:"Real Madrid",r:"C",q:82,p:158,o:"Nicolò - Gabriele"},
+    {n:"Pedri",t:"Barcellona",r:"C",q:76,p:146,o:"Attilio"},
+    {n:"Lamine Yamal",t:"Barcellona",r:"C",q:78,p:152,o:"Paolo"},
+    {n:"Gavi",t:"Barcellona",r:"C",q:54,p:104,o:"Edoardo"},
+    {n:"Valverde",t:"Real Madrid",r:"C",q:68,p:132,o:"Pietro - Nick"},
+    {n:"Griezmann",t:"Atlético Madrid",r:"C",q:60,p:116,o:"Chris - Luca"},
+    {n:"Nico Williams",t:"Athletic Club",r:"C",q:70,p:136,o:"Sebastian"},
+    {n:"Rodrygo",t:"Real Madrid",r:"C",q:66,p:128,o:"Edis"},
+    {n:"Modrić",t:"Real Madrid",r:"C",q:32,p:58,o:"Attilio"},
+    {n:"Oyarzabal",t:"Real Sociedad",r:"C",q:44,p:84,o:"Nicolò - Gabriele"},
+    {n:"Mbappé",t:"Real Madrid",r:"A",q:94,p:185,o:"Nicolò - Gabriele"},
+    {n:"Vinícius",t:"Real Madrid",r:"A",q:84,p:165,o:"Pietro - Nick"},
+    {n:"Lewandowski",t:"Barcellona",r:"A",q:72,p:140,o:"Attilio"},
+    {n:"Julián Álvarez",t:"Atlético Madrid",r:"A",q:58,p:112,o:"Sebastian"},
+    {n:"Morata",t:"Atlético Madrid",r:"A",q:50,p:96,o:"Edoardo"},
+    {n:"Dovbyk",t:"Girona",r:"A",q:46,p:90,o:"Chris - Luca"},
+    {n:"Sørloth",t:"Atlético Madrid",r:"A",q:52,p:100,o:"Paolo"},
+    {n:"Iñaki Williams",t:"Athletic Club",r:"A",q:48,p:92,o:"Edis"}
+  ]
+};
+const BLOCKS = {
+  fp:[{name:"Blocco Liverpool",club:"Liverpool",gk:[{n:"Alisson",q:42},{n:"Kelleher",q:22}],q:64,p:130,o:"Sebastian"}],
+  pd:[{name:"Blocco Barcellona",club:"Barcellona",gk:[{n:"Ter Stegen",q:34},{n:"Iñaki Peña",q:22}],q:56,p:108,o:"Attilio"}]
+};
+const FREE = {
+  fp:[{n:"Sterling",t:"Chelsea",r:"A",q:30,p:58},{n:"Chilwell",t:"Chelsea",r:"D",q:26,p:50}],
+  pd:[{n:"Sergi Roberto",t:"Barcellona",r:"C",q:30,p:56},{n:"Rafa Mir",t:"Valencia",r:"A",q:28,p:54}]
+};
+const STAND = {
+  fp:{
+    league:[
+      {pos:1,team:"Nicolò - Gabriele",pts:69,v:20,n:9,p:7,gf:99,gs:81,dr:18,fp:2850},
+      {pos:2,team:"Pietro - Nick",pts:59,v:17,n:8,p:11,gf:101,gs:90,dr:11,fp:2871},
+      {pos:3,team:"Attilio",pts:53,v:14,n:11,p:11,gf:89,gs:82,dr:7,fp:2831.5},
+      {pos:4,team:"Sebastian",pts:50,v:14,n:8,p:14,gf:85,gs:86,dr:-1,fp:2743},
+      {pos:5,team:"Paolo",pts:46,v:12,n:10,p:14,gf:85,gs:91,dr:-6,fp:2772},
+      {pos:6,team:"Edoardo",pts:42,pen:3,v:11,n:12,p:13,gf:79,gs:83,dr:-4,fp:2732.5},
+      {pos:7,team:"Chris - Luca",pts:38,v:10,n:8,p:18,gf:78,gs:91,dr:-13,fp:2745},
+      {pos:8,team:"Edis",pts:31,pen:3,v:8,n:10,p:18,gf:76,gs:88,dr:-12,fp:2652}
+    ],
+    fantasy:[
+      {pos:1,team:"Pietro - Nick",fp:2871},{pos:2,team:"Nicolò - Gabriele",fp:2850},
+      {pos:3,team:"Attilio",fp:2831.5},{pos:4,team:"Paolo",fp:2772},
+      {pos:5,team:"Chris - Luca",fp:2745},{pos:6,team:"Sebastian",fp:2743},
+      {pos:7,team:"Edoardo",fp:2732.5},{pos:8,team:"Edis",fp:2652}
+    ]
+  },
+  pd:{
+    league:[
+      {pos:1,team:"Nicolò - Gabriele",pts:52,v:15,n:7,p:10,gf:88,gs:72,dr:16,fp:2612},
+      {pos:2,team:"Pietro - Nick",pts:49,v:14,n:7,p:11,gf:90,gs:80,dr:10,fp:2598},
+      {pos:3,team:"Attilio",pts:47,v:13,n:8,p:11,gf:82,gs:76,dr:6,fp:2560},
+      {pos:4,team:"Sebastian",pts:44,v:12,n:8,p:12,gf:79,gs:78,dr:1,fp:2534},
+      {pos:5,team:"Paolo",pts:41,v:11,n:8,p:13,gf:74,gs:80,dr:-6,fp:2501},
+      {pos:6,team:"Edoardo",pts:39,pen:3,v:10,n:9,p:13,gf:71,gs:77,dr:-6,fp:2472},
+      {pos:7,team:"Chris - Luca",pts:36,v:9,n:9,p:14,gf:70,gs:81,dr:-11,fp:2440},
+      {pos:8,team:"Edis",pts:33,v:8,n:9,p:15,gf:66,gs:82,dr:-16,fp:2405}
+    ],
+    fantasy:[
+      {pos:1,team:"Nicolò - Gabriele",fp:2612},{pos:2,team:"Pietro - Nick",fp:2598},
+      {pos:3,team:"Attilio",fp:2560},{pos:4,team:"Sebastian",fp:2534},
+      {pos:5,team:"Paolo",fp:2501},{pos:6,team:"Edoardo",fp:2472},
+      {pos:7,team:"Chris - Luca",fp:2440},{pos:8,team:"Edis",fp:2405}
+    ]
+  }
+};
+const ROSE = {
+  fp:{
+    "Nicolò - Gabriele":{credits:105,bench:["Eriksen","Zirkzee"]},
+    "Pietro - Nick":{credits:98,bench:["Ugarte","Højlund"]},
+    "Attilio":{credits:112,bench:["Szoboszlai","Núñez"]},
+    "Sebastian":{credits:96,bench:["Wilson","Barnes"]},
+    "Paolo":{credits:88,bench:["Werner","Bentancur"]},
+    "Edoardo":{credits:91,bench:["Højbjerg","Richarlison"]},
+    "Chris - Luca":{credits:84,bench:["Garnacho","Mount"]},
+    "Edis":{credits:79,bench:["Souček","Antony"]}
+  },
+  pd:{
+    "Nicolò - Gabriele":{credits:103,bench:["Tchouaméni","Brahim Díaz"]},
+    "Pietro - Nick":{credits:101,bench:["Camavinga","Endrick"]},
+    "Attilio":{credits:108,bench:["Fermín","Ferran Torres"]},
+    "Sebastian":{credits:94,bench:["Berenguer","Sancet"]},
+    "Paolo":{credits:92,bench:["Frenkie de Jong","Raphinha"]},
+    "Edoardo":{credits:87,bench:["Isco","Bakambu"]},
+    "Chris - Luca":{credits:83,bench:["Koke","Correa"]},
+    "Edis":{credits:78,bench:["Barrenetxea","M. Gómez"]}
+  }
+};
+const TARGET = {P:2,D:8,C:8,A:6};
+/* ================= STATO ================= */
+const S = {league:"fp",tab:"listone",stab:"league",role:"ALL",club:"ALL",owner:"ALL",sort:"q",free:false,search:"",gk:new Set()};
+const $ = id => document.getElementById(id);
+const fmt = n => String(n).replace(".",",");
+const init = name => name.split(" ").slice(0,2).map(w=>w[0]).join("").toUpperCase();
+const roleColor = r => ({P:"var(--rP)",D:"var(--rD)",C:"var(--rC)",A:"var(--rA)"}[r]);
+const activeList = lg => PLAYERS[lg].filter(p=>p.a!==false);
+
+/* ================= RENDER LISTONE ================= */
+function rowDesktop(p){
+  return `<div class="drow" role="row">
+    <div class="dcell d-name"><span class="d-player${p.a===false?" inactive":""}">${p.n}</span><span class="d-club">${p.t}</span></div>
+    <div class="dcell"><span class="d-role" style="color:${roleColor(p.r)}">${p.r}</span></div>
+    <div class="dcell"><span class="d-quote">${fmt(p.q)}</span></div>
+    <div class="dcell"><span class="d-price">${fmt(p.p)}</span></div>
+    <div class="dcell"><span class="d-owner${p.a===false?" inactive":""}">${p.o||"svincolato"}</span></div>
+  </div>`;
+}
+function cardMobile(p){
+  return `<div class="mcard${p.a===false?" inactive":""}">
+    <div class="mcard-top">
+      <span class="mcard-avatar" aria-hidden="true">${p.o?init(p.n):"?"}</span>
+      <div class="mcard-info">
+        <span class="mcard-name${p.a===false?" inactive":""}">${p.n}</span>
+        <span class="mcard-club">${p.t}</span>
+        <span class="mcard-role" style="color:${roleColor(p.r)}">${p.r}</span>
+      </div>
+      <div class="mcard-nums"><div class="mcard-q">${fmt(p.q)}</div><div class="mcard-p">${fmt(p.p)}</div></div>
+    </div>
+    <div class="mcard-owner">${p.o||"svincolato"}</div>
+  </div>`;
+}
+function gkDesktop(b){
+  const open = S.gk.has(b.name);
+  const lines = b.gk.map(g=>`<div class="gkline"><div><span class="d-player">${g.n}</span> <span class="gk-ind">(${g.q} quot.)</span></div></div>`).join("");
+  return `<div class="gkrow${open?" open":""}" data-gk="${b.name}">
+    <div class="gkhead" role="button" tabindex="0" aria-expanded="${open}">
+      <div class="gk-id"><span class="gk-monogram" aria-hidden="true">${init(b.name)}</span>
+        <div><div class="gk-name">${b.name}</div><div class="gk-sub">${b.gk.length} portieri · ${b.club}</div></div></div>
+      <span class="gk-q">${fmt(b.q)}</span><span class="gk-p">${fmt(b.p)}</span>
+      <span class="gk-o">${b.o}</span>
+      <svg class="gk-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+    </div>
+    <div class="gkbody">${lines}</div>
+  </div>`;
+}
+function gkMobile(b){
+  const open = S.gk.has(b.name);
+  const lines = b.gk.map(g=>`<div class="gkline"><span class="d-player">${g.n}</span><span>${g.q} Q</span></div>`).join("");
+  return `<div class="mcard gk-card" data-gk="${b.name}">
+    <div class="mcard-top" role="button" tabindex="0" aria-expanded="${open}">
+      <span class="mcard-avatar" aria-hidden="true">${init(b.name)}</span>
+      <div class="mcard-info">
+        <span class="mcard-name">${b.name}</span>
+        <span class="mcard-club">${b.gk.length} portieri · ${b.club}</span>
+      </div>
+      <div class="mcard-nums"><div class="mcard-q">${fmt(b.q)}</div><div class="mcard-p">${fmt(b.p)}</div></div>
+    </div>
+    <div class="mcard-owner">${b.o} <svg class="gk-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="transition:transform .2s;${open?"transform:rotate(180deg)":""}"><path d="m6 9 6 6 6-6"/></svg></div>
+    ${open?lines:""}
+  </div>`;
+}
+function renderListone(){
+  const lg = S.league;
+  const list = S.free ? [...FREE[lg]] : activeList(lg);
+  if(S.role!=="ALL") list = list.filter(p=>p.r===S.role);
+  if(S.club!=="ALL") list = list.filter(p=>p.t===S.club);
+  if(S.owner!=="ALL") list = list.filter(p=>p.o===S.owner);
+  const q = S.search.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+  if(q) list = list.filter(p=>(p.n+" "+p.t).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").includes(q));
+  list.sort((a,b)=> S.sort==="q" ? b.q-a.q : b.p-a.p);
+  const blocks = S.role==="ALL"||S.role==="P" ? BLOCKS[lg] : [];
+  const byRole = {};
+  ROLE_ORDER.forEach(r=>byRole[r]=[]);
+  list.forEach(p=>byRole[p.r].push(p));
+  $("resultLine").textContent = list.length + " calciatori · ordinati per " + (S.sort==="q"?"quotazione":"prezzo") + (S.free?" · svincolati":"");
+  let html = "";
+  ROLE_ORDER.forEach(r=>{
+    const rows = byRole[r].map(rowDesktop).join("");
+    const blk = r==="P" ? blocks.map(gkDesktop).join("") : "";
+    if(!rows && !blk) return;
+    html += `<div class="rsection">
+      <div class="rsection-head"><h2 class="rsection-title" style="color:${roleColor(r)}">${ROLE_LABEL[r]}</h2><span class="rsection-count">${byRole[r].length} giocatori${r==="P"&&blocks.length?" · 1 blocco":""}</span></div>
+      ${blk}${rows}
+    </div>`;
+  });
+  $("drows").innerHTML = html;
+  let mhtml = "";
+  ROLE_ORDER.forEach(r=>{
+    const cards = byRole[r].map(cardMobile).join("");
+    const blk = r==="P" ? blocks.map(gkMobile).join("") : "";
+    if(!cards && !blk) return;
+    mhtml += `<div class="rsection">
+      <div class="rsection-head"><h2 class="rsection-title" style="color:${roleColor(r)}">${ROLE_LABEL[r]}</h2><span class="rsection-count">${byRole[r].length}</span></div>
+      ${blk}${cards}
+    </div>`;
+  });
+  $("mgrid").innerHTML = mhtml;
+  $("emptyState").hidden = !!html;
+  $("dgrid").style.display = html ? "" : "none";
+}
+/* ================= RENDER ROSE ================= */
+function renderRose(){
+  const lg = S.league;
+  const owned = PLAYERS[lg].concat(BLOCKS[lg]);
+  const byTeam = {};
+  TEAMS.forEach(t=>byTeam[t]=[]);
+  owned.forEach(p=>{ if(p.o && byTeam[p.o]) byTeam[p.o].push(p); });
+  const cards = TEAMS.map(t=>{
+    const ro = ROSE[lg][t];
+    const roster = byTeam[t];
+    const counts = {P:0,D:0,C:0,A:0};
+    roster.forEach(p=>{ if(!p.gk) counts[p.r]++; });
+    const marks = Object.entries(counts).map(([r,c])=>`<span class="rtarget${c<TARGET[r]?" miss":""}">${r} <b>${c}/${TARGET[r]}</b></span>`).join("");
+    const sections = ROLE_ORDER.map(r=>{
+      const ps = roster.filter(p=>!p.gk&&p.r===r);
+      if(!ps.length) return "";
+      return ps.map(p=>`<div class="rrole${p.a===false?" inactive":""}"><span class="rrole-name">${p.n}</span><span class="rrole-q">${fmt(p.q)}</span></div>`).join("");
+    }).join("");
+    const bench = ro.bench.join(" · ");
+    return `<article class="rcard">
+      <div class="rcard-head">
+        <span class="rmark" aria-hidden="true">${init(t)}</span>
+        <div><div class="rname">${t}</div><div class="rcredits" style="font-style:normal">crediti</div></div>
+        <div class="rcredits"><b>${fmt(ro.credits)}</b>M</div>
+      </div>
+      <div class="rtargets">${marks}</div>
+      <div class="rroster">${sections}
+        <div class="rbench"><b>Panchina: </b>${bench}</div>
+      </div>
+    </article>`;
+  }).join("");
+  $("roseGrid").innerHTML = cards;
+  $("roseSub").textContent = "otto squadre · " + (S.league==="fp"?"fanta rosa Premier":"fanta rosa Liga");
+}
+/* ================= RENDER CLASSIFICA ================= */
+function renderClassifica(){
+  const lg = S.league;
+  const st = STAND[lg];
+  const demo = lg==="pd";
+  $("demoNote").hidden = !demo;
+  const head = S.stab==="league"
+    ? `<tr><th>Pos</th><th>Squadra</th><th>G</th><th>V</th><th>N</th><th>P</th><th>GF</th><th>GS</th><th>DR</th><th>Punti</th></tr>`
+    : `<tr><th>Pos</th><th>Squadra</th><th>Fanta punti</th></tr>`;
+  const body = S.stab==="league" ? st.league.map(r=>{
+    const pene = r.pen ? `<span class="spen">pen. −${r.pen}</span>` : "";
+    return `<tr class="top${r.pos<=3?r.pos:""}">
+      <td><span class="st-pos">${r.pos}.</span></td>
+      <td><span class="st-mark"><span class="st-initial" aria-hidden="true">${init(r.team)}</span>${r.team}</span></td>
+      <td>${r.v+r.n+r.p}</td><td>${r.v}</td><td>${r.n}</td><td>${r.p}</td>
+      <td>${r.gf}</td><td>${r.gs}</td><td>${r.dr>0?"+"+r.dr:r.dr}</td>
+      <td class="pts">${r.pts}${pene}</td>
+    </tr>`;
+  }).join("") : st.fantasy.map(r=>`
+    <tr class="top${r.pos<=3?r.pos:""}">
+      <td><span class="st-pos">${r.pos}.</span></td>
+      <td><span class="st-mark"><span class="st-initial" aria-hidden="true">${init(r.team)}</span>${r.team}</span></td>
+      <td class="pts">${fmt(r.fp)}</td>
+    </tr>`).join("");
+  $("standHead").innerHTML = head;
+  $("standBody").innerHTML = body;
+}
+/* ================= CHROME ================= */
+function renderChrome(){
+  const lg = LEAGUES[S.league];
+  $("brandFlag").textContent = lg.flag;
+  $("brandLega").textContent = lg.lega;
+  $("brandName").textContent = "edizione " + lg.name;
+  document.body.dataset.league = S.league;
+  document.querySelectorAll(".lseg-btn").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.league===S.league)));
+  document.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.tab===S.tab)));
+  $("view-listone").hidden = S.tab!=="listone";
+  $("view-rose").hidden = S.tab!=="rose";
+  $("view-classifica").hidden = S.tab!=="classifica";
+  document.querySelectorAll(".sbtn").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.stab===S.stab)));
+}
+function refresh(){ renderChrome(); renderListone(); renderRose(); renderClassifica();
+  document.querySelectorAll("[data-sort]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.sort===S.sort)));
+}
+/* ================= EVENTI ================= */
+document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{ S.tab=b.dataset.tab; refresh(); }));
+document.querySelectorAll(".lseg-btn").forEach(b=>b.addEventListener("click",()=>{ S.league=b.dataset.league; S.club="ALL"; S.owner="ALL"; S.search=""; $("searchInput").value=""; refresh(); }));
+document.querySelectorAll(".sbtn").forEach(b=>b.addEventListener("click",()=>{ S.stab=b.dataset.stab; refresh(); }));
+document.querySelectorAll(".pill").forEach(b=>b.addEventListener("click",()=>{
+  S.role=b.dataset.role;
+  document.querySelectorAll(".pill").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
+  refresh();
+}));
+$("clubSel").addEventListener("change",e=>{ S.club=e.target.value; refresh(); });
+$("ownerSel").addEventListener("change",e=>{ S.owner=e.target.value; refresh(); });
+$("freeChk").addEventListener("change",e=>{ S.free=e.target.checked; refresh(); });
+$("resetBtn").addEventListener("click",()=>{
+  S.role="ALL"; S.club="ALL"; S.owner="ALL"; S.free=false; S.search=""; S.sort="q";
+  $("searchInput").value=""; $("freeChk").checked=false; $("sortSel").value="q";
+  document.querySelectorAll(".pill").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.role==="ALL")));
+  refresh();
+});
+$("sortSel").addEventListener("change",e=>{ S.sort=e.target.value; refresh(); });
+$("searchInput").addEventListener("input",e=>{ S.search=e.target.value; refresh(); });
+$("drows").addEventListener("click",e=>{ const h=e.target.closest("[data-gk]"); if(h){ S.gk.has(h.dataset.gk)?S.gk.delete(h.dataset.gk):S.gk.add(h.dataset.gk); refresh(); } });
+$("drows").addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ const h=e.target.closest("[data-gk]"); if(h){ e.preventDefault(); S.gk.has(h.dataset.gk)?S.gk.delete(h.dataset.gk):S.gk.add(h.dataset.gk); refresh(); } } });
+$("mgrid").addEventListener("click",e=>{ const h=e.target.closest("[data-gk]"); if(h){ S.gk.has(h.dataset.gk)?S.gk.delete(h.dataset.gk):S.gk.add(h.dataset.gk); refresh(); } });
+/* header sort: click su Quot./Prezzo */
+$("dgrid").addEventListener("click",e=>{
+  const b=e.target.closest("[data-sort]");
+  if(b){
+    S.sort=b.dataset.sort;
+    document.querySelectorAll("[data-sort]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.sort===S.sort)));
+    $("sortSel").value=S.sort;
+    refresh();
+  }
+});
+/* popola select */
+function fillSelects(){
+  const lg=S.league;
+  const clubs=[...new Set(PLAYERS[lg].map(p=>p.t))].sort();
+  $("clubSel").innerHTML = `<option value="ALL">Squadra · tutte</option>` + clubs.map(c=>`<option value="${c}">${c}</option>`).join("");
+  $("ownerSel").innerHTML = `<option value="ALL">Proprietario · tutti</option>` + TEAMS.map(t=>`<option value="${t}">${t}</option>`).join("");
+  $("clubSel").value=S.club; $("ownerSel").value=S.owner;
+}
+fillSelects();
+refresh();
+</script>
+</body>
+</html>
