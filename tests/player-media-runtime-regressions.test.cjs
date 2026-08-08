@@ -44,7 +44,7 @@ test("public media responses and browser refreshes cannot keep manual Neon overr
   const keys = source("js/club-keys.js");
 
   assert.match(api, /no-store, max-age=0, must-revalidate/);
-  assert.match(browser, /const CACHE_VERSION = 12/);
+  assert.match(browser, /const CACHE_VERSION = 13/);
   assert.match(browser, /cache: "no-store"/);
   assert.match(state, /Neon is the shared source of truth across serverless instances/);
   assert.match(state, /DIRECT_STATE_VERSION = 2/);

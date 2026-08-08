@@ -53,6 +53,7 @@ test("direct BSD photos are current while legacy Blob photos remain readable", (
     resolved: 2,
     bsdResolved: 1,
     legacyResolved: 1,
+    fallbackResolved: 0,
     unresolved: 1,
     refreshPending: false
   });

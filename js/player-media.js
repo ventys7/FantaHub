@@ -1,7 +1,7 @@
 (function exposePlayerMedia(global) {
   "use strict";
 
-  const CACHE_VERSION = 12;
+  const CACHE_VERSION = 13;
   const KICKOFF_CREST_ORIGIN = "https://kick-off-tau.vercel.app";
   const KICKOFF_TEAM_ID_FALLBACKS = Object.freeze({ "nottm forest": "351" });
   const memory = new Map();
@@ -98,7 +98,8 @@
   }
 
   function photo(name, team, leagueId = currentLeague) {
-    return player(name, team, leagueId)?.photoUrl || "";
+    const entry = player(name, team, leagueId);
+    return entry?.photoUrl || entry?.fallbackPhotoUrl || "";
   }
 
   function storyPhoto(name, team, leagueId = currentLeague) {
