@@ -56,7 +56,7 @@ test("admin media status handles a degraded player-media payload", () => {
 
 test("admin refresh stays JSON/200 driven and never leaves the button spinning on degraded response", () => {
   const admin = source("js/admin-links.js");
-  assert.match(admin, /result\?\.degraded/);
+  assert.match(admin, /result\?\.manifest\?\.degraded/);
   assert.match(admin, /setMediaButtonsDisabled\(false\)/);
   assert.match(admin, /DEGRADED_MEDIA_MESSAGE/);
 });

@@ -8,6 +8,7 @@ const {
   publicManifest,
   directReadManifest,
   refreshDirectManifest,
+  refreshDirectStep,
   directSearchProvider,
   directSearchProviderTeams
 } = require("../lib/player-media.cjs");
@@ -43,7 +44,17 @@ module.exports = async function handler(req, res) {
     const body = readBody(req);
     const id = leagueId(body.leagueId);
 
-    if (["refresh", "sync-missing", "full-sync", "continue-sync", "continue-full-sync"].includes(body.action)) {
+    // "refresh" azzera il checkpoint e parte un refresh a step nuovo;
+    // "continue-sync" riprende il checkpoint corrente (o lo inizializza se
+    // non esiste). "full-sync" e "sync-missing" restano il percorso storico
+    // one-shot per chi lo invoca ancora (tool di diagnostica).
+    if (body.action === "refresh") {
+      return res.status(200).json(await refreshDirectStep(id, { reset: true }));
+    }
+    if (body.action === "continue-sync") {
+      return res.status(200).json(await refreshDirectStep(id, {}));
+    }
+    if (["sync-missing", "full-sync", "continue-full-sync"].includes(body.action)) {
       return res.status(200).json(publicManifest(await refreshDirectManifest(id)));
     }
     if (body.action === "search") {

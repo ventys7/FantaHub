@@ -425,9 +425,22 @@
     setMediaButtonsDisabled(true);
     message("Ricalcolo i collegamenti BSD e aggiorno la cache Neon…");
     try {
-      const result = await mediaApi({ action: "refresh" });
-      renderUnresolved(result);
-      message(result?.degraded
+      // Il backend azzera il checkpoint a "refresh" e prosegue a "continue-sync"
+      // finche' gli step (serverless-safe) non raggiungono il terminale.
+      let result = await mediaApi({ action: "refresh" });
+      let guard = 0;
+      while (result?.pending && guard < 60) {
+        guard += 1;
+        const progress = result.progress || {};
+        if (result.phase === "teams") message(`Carico le squadre BSD… (${progress.clubsDone || 0}/${progress.clubs || 0})`);
+        else if (result.phase === "search") message(`Ricerca per nome… (${progress.searchDone || 0}/${progress.total || "?"})`);
+        else message(`Foto fallback… (${result.phase || "?"})`);
+        result = await mediaApi({ action: "continue-sync" });
+      }
+      if (result?.pending) throw new Error("L'aggiornamento non è terminato in tempo massimo.");
+      if (!result?.manifest) throw new Error("Terminali senza manifest restituito.");
+      renderUnresolved(result.manifest);
+      message(result?.manifest?.degraded
         ? "Aggiornamento completato con i dati dell'ultima sincronizzazione riuscita (sorgente foto BSD non raggiungibile)."
         : "Collegamenti BSD aggiornati. Le facce restano dirette da BSD e gli override sono salvati su Neon.");
     } catch (error) { message(error.message, true); }
