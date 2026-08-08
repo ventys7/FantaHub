@@ -88,6 +88,30 @@ const SEARCH_HITS = {
   "twin player": [
     { id: 601, name: "Twin Player", short_name: "Twin", current_team: { id: 9, name: "Star FC", country: "England" } },
     { id: 602, name: "Twin Player", short_name: "Twin", current_team: { id: 9, name: "Star FC", country: "England" } }
+  ],
+  // La ricerca BSD e' accent-sensitive: il mock serve solo chiavi esatte
+  // minuscole, quindi "gyokeres" (Listone) non trova Gyökeres se non tramite
+  // la variante accentata, mentre "garcia" (cognome senza accenti) trova
+  // comunque "Andrés García" come nel catalogo reale.
+  "gyökeres": [
+    { id: 456, name: "Viktor Gyökeres", short_name: "Gyökeres", current_team: { id: 9, name: "Star FC", country: "England" } }
+  ],
+  "garcia": [
+    { id: 701, name: "Andrés García", short_name: "Andres Garcia", current_team: { id: 9, name: "Star FC", country: "England" } }
+  ],
+  // Unico candidato con current_team all'estero: il filtro England lo scarta,
+  // ma il fallback cross-country deve comunque esporlo come candidato.
+  "abroad player": [
+    { id: 801, name: "Abroad Player", short_name: "Abroad", current_team: { id: 55, name: "France FC", country: "France" } }
+  ],
+  // Omonimo "senza accento" trovato per primo dalla query base, giocatore
+  // giusto raggiungibile solo con la variante accentata: il best-chunk deve
+  // preferire quest'ultima anche se la prima trova gia' risultati.
+  "hincapie": [
+    { id: 74430, name: "Juan Felipe Hincapie Gomez", short_name: "Hincapie", current_team: { id: 9, name: "Star FC", country: "England" } }
+  ],
+  "hincapié": [
+    { id: 74304, name: "Felipe Hincapié", short_name: "Hincapie", current_team: { id: 9, name: "Star FC", country: "England" } }
   ]
 };
 
@@ -366,6 +390,59 @@ test("fallback per nome: hit multipli con lo stesso match -> da controllare, non
   const entry = manifest.players["twin player|star"];
   assert.equal(entry.status, "unresolved");
   assert.ok((entry.candidates || []).length >= 2, "candidati esposti per il controllo manuale");
+});
+
+test("fallback per nome: query senza accenti trova il giocatore accentato nel catalogo", async (t) => {
+  await setup();
+  t.after(teardown);
+
+  // Il Listone scrive "Gyokeres", BSD cerca "Gyökeres": la query base da 0,
+  // la variante accentata recupera il match (come nel probe reale).
+  extraCsvRows = [...STAR_ROWS, "Paolo,A,Gyokeres,Star FC,10,10"];
+  provider.clearSeasonCache();
+  provider.clearTransferCache();
+  const manifest = await media.refreshDirectManifest("fp");
+  const entry = manifest.players["gyokeres|star"];
+  assert.equal(entry.status, "resolved", `status atteso resolved, ottenuto ${entry.status} (${entry.error || ""})`);
+  assert.equal(entry.externalId, "456", "match sulla variante accentata");
+});
+
+test("fallback: nome con accenti recuperato tramite il solo cognome", async (t) => {
+  await setup();
+  t.after(teardown);
+
+  // "Andres Garcia" non matcha "Andrés García" nemmeno con una variante
+  // accentata (servirebbero due accenti in due parole): il fallback sul
+  // cognome "garcia" trova il candidato e normalize() fa il match esatto.
+  const direct = await provider.searchPlayerByName("Andres Garcia", "");
+  assert.equal(direct.length, 1, "cognome senza accenti trova il candidato");
+  assert.equal(direct[0].id, "701");
+});
+
+test("fallback: la variante accentata vince su un omonimo trovato prima", async (t) => {
+  await setup();
+  t.after(teardown);
+
+  // La query base trova gia' "Juan Felipe Hincapie Gomez", ma il chunk
+  // accentato "hincapié" contiene il match esatto di normalize() ("felipe
+  // hincapie" urlato? no: nameScore li parifica, quindi vince l'ultimo chunk
+  // a parita' < 84) -> i candidati giusti sono quelli accentati.
+  const direct = await provider.searchPlayerByName("Hincapie", "");
+  assert.equal(direct.length, 1, "un solo chunk scelto, non la somma");
+  assert.equal(direct[0].id, "74304", "variante accentata preferita sull'omonimo base");
+});
+
+test("fallback: filtro country vuoto espone comunque i candidati esteri", async (t) => {
+  await setup();
+  t.after(teardown);
+
+  // Unico candidato con current_team all'estero (France): il filtro England
+  // non deve trasformare il caso in "non trovato" -- lo scoring decidera'
+  // (sameClub/nameScore) se risolvere o lasciare da controllare.
+  const direct = await provider.searchPlayerByName("Abroad Player", "England");
+  assert.equal(direct.length, 1);
+  assert.equal(direct[0].id, "801");
+  assert.equal(direct[0].country, "France");
 });
 
 test("fallback per nome: nessuna hit -> resta da controllare con l'errore di oggi", async (t) => {
