@@ -1,92 +1,84 @@
 import { useMemo, useState } from "react";
-import type { FormationPlayer, FormationRole } from "./formationTypes";
-import { ROLE_LABELS } from "./formationTypes";
+import type { FormationPlayer } from "./formationTypes";
 
-function normalize(text: string): string {
-  return text
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase();
+interface PlayerOption {
+  player: FormationPlayer;
+  index: number;
 }
 
+const ROLE_ORDER = ["P", "D", "C", "A"];
+const ROLE_LABEL: Record<string, string> = { P: "Portieri", D: "Difensori", C: "Centrocampisti", A: "Attaccanti" };
+
 export function PlayerPicker({
+  title,
+  players,
   role,
-  team,
-  currentIndex,
-  onSelect,
-  onRemove,
+  exclude,
+  onPick,
   onClose
 }: {
-  role: FormationRole;
-  team: FormationPlayer[];
-  currentIndex: number | null;
-  onSelect: (index: number) => void;
-  onRemove?: () => void;
+  title: string;
+  players: PlayerOption[];
+  role: string | null;
+  exclude?: number[];
+  onPick: (index: number) => void;
   onClose: () => void;
 }) {
   const [query, setQuery] = useState("");
 
-  const candidates = useMemo(() => {
-    const q = normalize(query.trim());
-    return team
-      .map((player, index) => ({ player, index }))
-      .filter(({ player }) => player.r === role)
-      .filter(({ player }) =>
-        q ? normalize(`${player.n} ${player.t ?? ""}`).includes(q) : true
-      )
-      .sort((a, b) => a.player.n.localeCompare(b.player.n, "it"));
-  }, [team, role, query]);
-
-  const current = currentIndex != null ? team[currentIndex] : null;
+  const grouped = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const excludeSet = exclude ? new Set(exclude) : null;
+    const filtered = players.filter(({ player, index }) => {
+      if (excludeSet && excludeSet.has(index)) return false;
+      if (role && player.r !== role) return false;
+      if (q && !player.n.toLowerCase().includes(q)) return false;
+      return true;
+    });
+    const byRole = new Map<string, PlayerOption[]>();
+    filtered.forEach((opt) => {
+      const list = byRole.get(opt.player.r) ?? [];
+      list.push(opt);
+      byRole.set(opt.player.r, list);
+    });
+    return ROLE_ORDER.filter((r) => byRole.has(r)).map((r) => ({ role: r, label: ROLE_LABEL[r], items: byRole.get(r)! }));
+  }, [players, role, query]);
 
   return (
-    <div className="modal lf-picker-modal" role="dialog" aria-modal="true" aria-label={`Scegli ${ROLE_LABELS[role]}`}>
-      <div className="output-modal-content lf-picker-content">
-        <div className="output-modal-header lf-picker-header">
-          <h3>Scegli {ROLE_LABELS[role].toLowerCase()}</h3>
-          <button type="button" className="output-close-btn" aria-label="Chiudi" onClick={onClose}>
+    <div className="lf-picker-overlay" onClick={onClose}>
+      <div className="lf-picker-modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+        <div className="lf-picker-header">
+          <h3 className="lf-picker-title">{title}</h3>
+          <input
+            className="lf-picker-search"
+            type="search"
+            placeholder="Cerca giocatore…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            autoFocus
+          />
+          <button type="button" className="lf-picker-close" aria-label="Chiudi" onClick={onClose}>
             ✕
           </button>
         </div>
-
-        {current && (
-          <div className="lf-picker-current">
-            <span>
-              Selezionato: <strong>{current.n}</strong> {current.t ? `(${current.t})` : ""}
-            </span>
-            {onRemove && (
-              <button type="button" className="lf-picker-remove" onClick={onRemove}>
-                Rimuovi
-              </button>
-            )}
-          </div>
-        )}
-
-        <div className="lf-picker-search">
-          <input
-            type="search"
-            autoFocus
-            placeholder={`Cerca tra ${candidates.length} ${ROLE_LABELS[role].toLowerCase()}...`}
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-          />
-        </div>
-
-        <div className="lf-picker-list" role="listbox">
-          {candidates.length === 0 && <p className="lf-picker-empty">Nessun giocatore disponibile.</p>}
-          {candidates.map(({ player, index }) => (
-            <button
-              key={index}
-              type="button"
-              role="option"
-              aria-selected={index === currentIndex}
-              className={`lf-picker-item${index === currentIndex ? " is-current" : ""}`}
-              onClick={() => onSelect(index)}
-            >
-              <span className="lf-picker-item-name">{player.n}</span>
-              {player.t && <span className="lf-picker-item-team">{player.t}</span>}
-              {player.gkBlock && <span className="lf-picker-item-block">Blocco {player.gkBlock}</span>}
-            </button>
+        <div className="lf-picker-body">
+          {grouped.length === 0 && <p className="lf-picker-empty">Nessun giocatore disponibile.</p>}
+          {grouped.map((group) => (
+            <div key={group.role} className="lf-picker-group">
+              <div className="lf-picker-group__label">{group.label}</div>
+              {group.items.map(({ player, index }) => (
+                <button
+                  key={index}
+                  type="button"
+                  className="lf-picker-item"
+                  onClick={() => onPick(index)}
+                >
+                  <span className="lf-picker-item__role">{player.r}</span>
+                  <span className="lf-picker-item__name">{player.n}</span>
+                  <span className="lf-picker-item__team">{player.t}</span>
+                </button>
+              ))}
+            </div>
           ))}
         </div>
       </div>

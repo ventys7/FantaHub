@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLeagueAssets } from "../hooks";
 import type { FormationModel, FormationPlayer, FormationState, SlotAssignments } from "./formationTypes";
 import { buildFormationModel, getAllDefinitions, getAllowedModules, getManagers, getTeamForManager } from "./formationModel";
@@ -77,34 +77,51 @@ export function useFormation() {
   const [formation, setFormation] = useState<FormationState>(EMPTY_STATE);
   const [seeded, setSeeded] = useState(false);
 
-  const seededRef = useRef(false);
-  const seed = useCallback(() => {
-    if (seededRef.current) return;
+  const seed = useCallback((): boolean => {
     const managers = getManagers();
-    if (managers.length === 0) return; // CSV not loaded yet
+    if (managers.length === 0) return false; // CSV not loaded yet
     const vanilla = readVanillaState();
     const manager = vanilla.manager && managers.includes(vanilla.manager) ? vanilla.manager : managers[0];
     const select = document.getElementById("moduleSelect") as HTMLSelectElement | null;
     const allowed = getAllowedModules();
     const module =
       vanilla.module || (select && allowed.includes(select.value) ? select.value : allowed[0] ?? "433");
-    setFormation({
-      ...EMPTY_STATE,
+    setFormation((prev) => ({
+      ...prev,
       manager,
       module,
       selectedPlayers: vanilla.selectedPlayers || [],
       slotAssignments: vanilla.slotAssignments || {},
       ...syncSwitchState()
-    });
-    seededRef.current = true;
-    setSeeded(true);
+    }));
+    return true;
   }, []);
 
   useEffect(() => {
-    seed();
-    const onMediaReady = () => seed();
+    const trySeed = () => {
+      if (seed()) setSeeded(true);
+    };
+    trySeed();
+    const onMediaReady = () => trySeed();
+    const onAssets = () => trySeed();
     window.addEventListener("lineup:player-media-ready", onMediaReady);
-    return () => window.removeEventListener("lineup:player-media-ready", onMediaReady);
+    window.addEventListener("lineup:league-assets-ready", onAssets);
+    // Race-proof: vanilla restoreAfterCsv may populate the globals AFTER React
+    // mounts, so the first seed can read an empty draft. Poll until managers are
+    // present and any saved draft has been restored (or we hit a safe timeout).
+    let tries = 0;
+    const poll = window.setInterval(() => {
+      tries += 1;
+      const ok = seed();
+      if (ok) setSeeded(true);
+      const hasData = (readVanillaState().selectedPlayers || []).length > 0;
+      if ((ok && (hasData || tries >= 24)) || tries >= 24) window.clearInterval(poll);
+    }, 300);
+    return () => {
+      window.removeEventListener("lineup:player-media-ready", onMediaReady);
+      window.removeEventListener("lineup:league-assets-ready", onAssets);
+      window.clearInterval(poll);
+    };
   }, [seed]);
 
   const team = useMemo<FormationPlayer[]>(
