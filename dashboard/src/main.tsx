@@ -5,6 +5,7 @@ import RoseApp from "./RoseApp";
 import StandingsApp from "./StandingsApp";
 import TradeApp from "./trade/TradeApp";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { ThemeProvider } from "./theme/ThemeProvider";
 import { createLogger } from "./debug/logger";
 import { installPressFeedback } from "./utils/pressFeedback";
 import "./styles/runtime.css";
@@ -24,7 +25,9 @@ function mount(rootId: string, name: string, app: React.ReactNode): void {
 
   ReactDOM.createRoot(root).render(
     <React.StrictMode>
-      <ErrorBoundary name={name}>{app}</ErrorBoundary>
+      <ErrorBoundary name={name}>
+        <ThemeProvider>{app}</ThemeProvider>
+      </ErrorBoundary>
     </React.StrictMode>
   );
   log.debug("mounted", { rootId, name });
