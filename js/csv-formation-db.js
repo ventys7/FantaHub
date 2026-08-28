@@ -36,5 +36,8 @@
     return db;
   }
 
-  global.LineupFormationDb = Object.freeze({ buildFormationDb });
-})(window);
+  const api = Object.freeze({ buildFormationDb });
+
+  if (typeof module === "object" && module.exports) module.exports = api;
+  if (typeof window !== "undefined") window.LineupFormationDb = api;
+})(typeof window !== "undefined" ? window : globalThis);
