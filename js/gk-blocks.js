@@ -1,6 +1,6 @@
 /* GK BLOCKS - One logical goalkeeper block, one selected goalkeeper */
 
-const api = (function () {
+const gkBlocksApi = (function () {
   function getTeam() {
     return currentManager && db[currentManager]?.players
       ? db[currentManager].players
@@ -161,5 +161,5 @@ const api = (function () {
   });
 })();
 
-if (typeof module === "object" && module.exports) module.exports = api;
-if (typeof window !== "undefined") window.GkBlocks = api;
+if (typeof module === "object" && module.exports) module.exports = gkBlocksApi;
+if (typeof window !== "undefined") window.GkBlocks = gkBlocksApi;

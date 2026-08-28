@@ -1,6 +1,6 @@
 /* FORMATION MODEL - One source of truth for field, bench, output and Switch */
 
-const api = (function () {
+const formationModelApi = (function () {
   const ROLE_ORDER = Object.freeze({ P: 0, D: 1, C: 2, A: 3 });
   const BENCH_CAPACITY = Object.freeze({ P: 2, D: 3, C: 3, A: 3 });
 
@@ -219,5 +219,5 @@ const api = (function () {
   });
 })();
 
-if (typeof module === "object" && module.exports) module.exports = api;
-if (typeof window !== "undefined") window.FormationModel = api;
+if (typeof module === "object" && module.exports) module.exports = formationModelApi;
+if (typeof window !== "undefined") window.FormationModel = formationModelApi;
