@@ -1,7 +1,10 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+import App from "./App";
+import RoseApp from "./RoseApp";
+import StandingsApp from "./StandingsApp";
+import TradeApp from "./trade/TradeApp";
 import { ErrorBoundary } from "./components/ErrorBoundary";
-import { LeagueApp } from "./LeagueApp";
 import { createLogger } from "./debug/logger";
 import { installPressFeedback } from "./utils/pressFeedback";
 import "./styles/runtime.css";
@@ -12,24 +15,51 @@ import "./styles/trades.css";
 
 const log = createLogger("bootstrap");
 
-window.addEventListener("error", (e) => {
-  log.error("Errore non gestito", e.error ?? e.message);
-});
-window.addEventListener("unhandledrejection", (e) => {
-  log.error("Promise rifiutata", (e as PromiseRejectionEvent).reason);
-});
+function mount(rootId: string, name: string, app: React.ReactNode): void {
+  const root = document.getElementById(rootId);
+  if (!root) {
+    log.debug("root not present", { rootId, name });
+    return;
+  }
 
-installPressFeedback();
-
-const rootEl = document.getElementById("league-react-root");
-if (rootEl) {
-  ReactDOM.createRoot(rootEl).render(
+  ReactDOM.createRoot(root).render(
     <React.StrictMode>
-      <ErrorBoundary name="LeagueApp">
-        <LeagueApp />
-      </ErrorBoundary>
+      <ErrorBoundary name={name}>{app}</ErrorBoundary>
     </React.StrictMode>
   );
-} else {
-  log.error("league-react-root mancante");
+  log.debug("mounted", { rootId, name });
 }
+
+// Rose, Scambi e Classifica vengono montate solo al primo accesso alla
+// sezione: l'avvio monta solo il Listone, il cambio tab non deve più pagare
+// il render iniziale delle altre app (e i successivi cambi sono immediati).
+const mountedSections = new Set<string>();
+function mountSectionOnce(section: string): void {
+  if (mountedSections.has(section)) return;
+  mountedSections.add(section);
+  if (section === "rose") mount("league-rose-root", "Rose", <RoseApp />);
+  else if (section === "scambi") mount("league-trades-root", "Scambi", <TradeApp />);
+  else if (section === "classifica") mount("league-standings-root", "Classifica", <StandingsApp />);
+}
+
+window.addEventListener("lineup:league-section-change", (event) => {
+  const detail = (event as CustomEvent<{ section?: string }>).detail;
+  if (detail?.section) mountSectionOnce(detail.section);
+});
+
+window.addEventListener("error", (event) => {
+  log.error("unhandled window error", event.error ?? event.message);
+});
+
+window.addEventListener("unhandledrejection", (event) => {
+  log.error("unhandled promise rejection", event.reason);
+});
+
+// Feedback di pressione touch/pointer per i controlli del listone (vedi pressFeedback.ts).
+installPressFeedback();
+
+// Il Listone è sempre montato; Rose, Scambi e Classifica vengono montate al
+// primo accesso alla sezione (evento) oppure subito se la pagina è già aperta su di esse.
+mount("league-dashboard-root", "Listone", <App />);
+const initialSection = document.documentElement.dataset.leagueSection;
+if (initialSection === "rose" || initialSection === "scambi" || initialSection === "classifica") mountSectionOnce(initialSection);

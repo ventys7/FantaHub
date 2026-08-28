@@ -820,13 +820,7 @@ html[data-route="league"] .listone-sr-only {
   }
 }
 
-/* React-owned league chrome (Fase C / Step 15).
-   When React mounts it adds body.lf-react-chrome, which hides the shell's
-   static header + tab bar; formationControls (vanilla) stays visible. */
-body.lf-react-chrome .app-chrome > header,
-body.lf-react-chrome #leagueSectionMenu {
-  display: none;
-}
+
 
 .lf-app-shell {
   display: flex;
