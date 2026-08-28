@@ -28,11 +28,11 @@ type ThemeProviderProps = {
   children: React.ReactNode;
 };
 
-// Applies the league theme CSS variables on documentElement (mirroring
-// js/router.js) and exposes the tokens via useTheme(). Wrapping each mounted
-// React root with this provider keeps theme application idempotent: all roots
-// share the same document and the same league, so the last write wins with
-// identical values.
+// Applies the league theme CSS variables on documentElement (mirroring the
+// pre-hydration inline script in index.html) and exposes the tokens via
+// useTheme(). Wrapping each mounted React root with this provider keeps theme
+// application idempotent: all roots share the same document and the same
+// league, so the last write wins with identical values.
 export function ThemeProvider({ leagueId, children }: ThemeProviderProps): React.ReactElement {
   const id = resolveLeagueId(leagueId);
 

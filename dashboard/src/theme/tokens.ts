@@ -1,8 +1,9 @@
 // Single source of truth for league theme tokens on the React side.
-// Mirrors the FP/PD palettes defined in js/config.js (league.theme) so the
-// React tree can apply the same CSS custom properties that js/router.js
-// injects on documentElement. Kept in sync with config.js until phase 8, when
-// js/router.js will consume this module as the unique source.
+// Mirrors the FP/PD palettes defined in js/config.js (league.theme), which is
+// the unique source for the theme. The pre-hydration inline script
+// (lineup-prepaint-router) in index.html applies these tokens before first
+// paint; the React ThemeProvider applies them at runtime. js/router.js was
+// deleted in Fase C/Step 16.
 
 export type LeagueId = "fp" | "pd";
 

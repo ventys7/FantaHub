@@ -48,10 +48,28 @@
     }
 
     window.applyLineupIdentity = applyIdentity;
+
+    // Pre-hydration bridge (Fase C/Step 16): expose the league to the dashboard
+    // + csv modules and apply the theme tokens before first paint. Single source
+    // of truth for the theme is js/config.js (league.theme); the React
+    // ThemeProvider mirrors these same tokens at runtime. This replaces the old
+    // js/router.js, which is now deleted.
+    window.LINEUP_FANTA = Object.freeze({
+      route: league ? "league" : "home",
+      leagueId,
+      league
+    });
+
     document.documentElement.dataset.route = league ? "league" : "home";
 
     if (league) {
+      const theme = league.theme;
       document.documentElement.dataset.league = league.id;
+      document.documentElement.style.setProperty("--primary", theme.primary);
+      document.documentElement.style.setProperty("--primary-light", theme.primaryLight);
+      document.documentElement.style.setProperty("--primary-bg", theme.primaryBg);
+      document.documentElement.style.setProperty("--primary-border", theme.primaryBorder);
+      document.documentElement.style.setProperty("--bg", theme.background);
       document.title = league.name;
       applyIdentity(league.identity);
     } else {
@@ -59,6 +77,42 @@
       document.title = "FantaHub";
       applyIdentity(null);
     }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      if (!league) {
+        // Home landing (vanilla until the landing is migrated to React, phase 8).
+        const isLocalStaticServer = ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
+        const leagueHref = (id) => (isLocalStaticServer ? `/?league=${id}` : `/${id}`);
+        const card = (id) => {
+          const item = window.LINEUP_LEAGUES[id];
+          return `<a class="league-choice league-choice--${id}" href="${leagueHref(id)}">
+            <span class="league-choice__flag">${item.flag}</span>
+            <span class="league-choice__content"><strong>${item.label}</strong><small>${item.name}</small></span>
+            <span class="league-choice__arrow" aria-hidden="true">→</span></a>`;
+        };
+        const landing = document.createElement("main");
+        landing.className = "league-landing";
+        landing.innerHTML = `
+          <section class="league-landing__hero">
+            <p class="league-landing__eyebrow">FANTAHUB</p>
+            <h1>La tua formazione,<br><span>la tua lega.</span></h1>
+            <p class="league-landing__intro">Scegli la competizione per accedere alla tua rosa e preparare la formazione.</p>
+          </section>
+          <section class="league-choices" aria-label="Scegli la lega">${card("fp")}${card("pd")}</section>`;
+        document.body.replaceChildren(landing);
+        applyIdentity(null);
+        return;
+      }
+
+      const logo = document.getElementById("leagueLogo");
+      if (logo) {
+        logo.src = league.identity.logo;
+        logo.alt = `Logo ${league.name}`;
+        logo.hidden = false;
+      }
+      const title = document.querySelector("header h1");
+      if (title) title.textContent = league.name;
+    });
   })();
 </script>
 <link rel="stylesheet" href="css/style.css">
@@ -362,7 +416,6 @@
 <div id="toastContainer" aria-hidden="true"></div>
 
 <script src="js/runtime-settings.js"></script>
-<script src="js/router.js"></script>
 <script src="js/debug.js"></script>
 <script src="js/formation-constants.js"></script>
 <script src="js/club-keys.js"></script>
