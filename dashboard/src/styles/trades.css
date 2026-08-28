@@ -270,8 +270,9 @@
 }
 
 .lf-trade-submit:hover:not(:disabled) {
-  background: #6d28d9;
-  border-color: #6d28d9;
+  background: var(--primary);
+  border-color: var(--primary);
+  filter: brightness(.93);
   transform: translateY(-1px);
 }
 
@@ -293,19 +294,19 @@
   padding: 14px 20px;
   border: 0;
   border-radius: 999px;
-  background: linear-gradient(135deg, var(--primary), #8b5cf6);
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
   color: #ffffff;
   font: inherit;
   font-size: 0.95rem;
   font-weight: 800;
-  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.35);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--primary) 35%, transparent);
   cursor: pointer;
   transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
 }
 
 .lf-trade-fab:hover:not(:disabled) {
   transform: scale(1.05);
-  box-shadow: 0 12px 32px rgba(124, 58, 237, 0.45);
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--primary) 45%, transparent);
 }
 
 .lf-trade-fab.is-disabled {
@@ -343,8 +344,8 @@
 
 .lf-squad-item.is-selected,
 .lf-squad-item__select.is-selected {
-  background: rgba(124, 58, 237, 0.08);
-  box-shadow: inset 0 0 0 1px rgba(124, 58, 237, 0.4);
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primary) 40%, transparent);
 }
 
 .lf-squad-item.is-selected .lf-squad-check {
@@ -443,7 +444,7 @@
   align-items: center;
   justify-content: center;
   border-radius: 8px;
-  background: rgba(124, 58, 237, 0.1);
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
   color: var(--primary);
   font-size: 12px;
 }
@@ -489,7 +490,7 @@
   padding: 10px 12px;
   border: 1px solid var(--primary-border);
   border-radius: 12px;
-  background: rgba(124, 58, 237, 0.06);
+  background: color-mix(in srgb, var(--primary) 6%, transparent);
   color: #4c1d95;
   font-size: 13px;
   font-weight: 800;
@@ -513,8 +514,9 @@
 }
 
 .lf-trade-copy:hover:not(:disabled) {
-  background: #6d28d9;
-  border-color: #6d28d9;
+  background: var(--primary);
+  border-color: var(--primary);
+  filter: brightness(.93);
 }
 
 .lf-trade-copy:disabled {
