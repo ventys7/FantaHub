@@ -7,13 +7,14 @@ import { loadRuntimeLeagueSettings } from "./runtimeSettings";
 import { getCachedDiscipline, loadDiscipline, type DisciplineData } from "./discipline";
 import { DisciplineBoard } from "./components/DisciplineBoard";
 import { loadTeamProfiles, type TeamProfiles } from "./teamProfiles";
+import { useLeagueAssets } from "./hooks";
 
 const EMPTY_DATA: StandingsData = { league: [], fantasy: [] };
 const EMPTY_DISCIPLINE: DisciplineData = { recalls: [], penalties: [], configured: false };
 const log = createLogger("standings");
 
 export default function StandingsApp() {
-  const league = window.LINEUP_FANTA?.league;
+  const { league } = useLeagueAssets();
   const leagueId = league?.id ?? "";
   const fallbackUrl = league?.leagueData?.standingsFallbackUrl ?? "";
 

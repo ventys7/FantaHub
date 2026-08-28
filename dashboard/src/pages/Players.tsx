@@ -10,6 +10,7 @@ import { PlayerFilters } from "../components/PlayerFilters";
 import { PlayerListHeader } from "../components/PlayerListHeader";
 import { PlayerMobileCard } from "../components/PlayerMobileCard";
 import { loadTeamProfiles, normalizeTeamName, type TeamProfiles } from "../teamProfiles";
+import { useLeagueAssets } from "../hooks";
 
 function normalizeText(value: string) {
   return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/Ø/g, "O").replace(/ø/g, "o").toLowerCase();
@@ -53,7 +54,7 @@ function useChromeOffset(rootRef: RefObject<HTMLDivElement | null>) {
 export function Players({ assets }: { assets: DashboardAsset[] }) {
   const rootRef = useRef<HTMLDivElement>(null);
   useChromeOffset(rootRef);
-  const league = window.LINEUP_FANTA?.league;
+  const { league } = useLeagueAssets();
   const leagueId = league?.id ?? "";
   const media = usePlayerMedia(assets, leagueId);
   const [teamProfiles, setTeamProfiles] = useState<TeamProfiles>({});
