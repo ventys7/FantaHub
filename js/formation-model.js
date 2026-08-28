@@ -3,6 +3,7 @@
 const formationModelApi = (function () {
   const ROLE_ORDER = Object.freeze({ P: 0, D: 1, C: 2, A: 3 });
   const BENCH_CAPACITY = Object.freeze({ P: 2, D: 3, C: 3, A: 3 });
+  const STANDARD_MODULES = Object.freeze(["343", "352", "433", "442", "451", "532", "541"]);
 
   function getModuleValue() {
     const module = document.getElementById("moduleSelect")?.value || "433";
@@ -215,6 +216,7 @@ const formationModelApi = (function () {
     getSlotEntry,
     getBenchDisplayEntry,
     getSwitchLineup,
+    allowedModules: typeof ALLOWED_MODULES !== "undefined" ? ALLOWED_MODULES : STANDARD_MODULES,
     roleOrder: ROLE_ORDER
   });
 })();

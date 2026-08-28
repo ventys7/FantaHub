@@ -19,3 +19,36 @@ function setModalOpen(open){
 
 /* Blocked GK blocks */
 let disabledBlocks = new Set();
+
+// React-owned formation writes the shared lexical state so vanilla
+// output/copy/persistence/switch modules keep working against the same source.
+window.LineupState = Object.freeze({
+  setCurrentManager(name) {
+    currentManager = name || "";
+  },
+  setSelectedPlayers(list) {
+    selectedPlayers = Array.isArray(list) ? list.slice() : [];
+  },
+  setSlotAssignments(map) {
+    slotAssignments = map && typeof map === "object" ? { ...map } : {};
+  },
+  setModule(value) {
+    const el = document.getElementById("moduleSelect");
+    if (el && typeof value === "string") el.value = value;
+  },
+  syncDisabledBlocks() {
+    window.GkBlocks?.syncDisabledBlocks?.();
+  },
+  getCurrentManager() {
+    return currentManager || "";
+  },
+  getSelectedPlayers() {
+    return selectedPlayers.slice();
+  },
+  getSlotAssignments() {
+    return { ...slotAssignments };
+  },
+  getModule() {
+    return document.getElementById("moduleSelect")?.value || "433";
+  }
+});

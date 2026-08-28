@@ -4,6 +4,7 @@ import App from "./App";
 import RoseApp from "./RoseApp";
 import StandingsApp from "./StandingsApp";
 import TradeApp from "./trade/TradeApp";
+import FormationApp from "./FormationApp";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { createLogger } from "./debug/logger";
 import { installPressFeedback } from "./utils/pressFeedback";
@@ -60,6 +61,9 @@ installPressFeedback();
 
 // Il Listone è sempre montato; Rose, Scambi e Classifica vengono montate al
 // primo accesso alla sezione (evento) oppure subito se la pagina è già aperta su di esse.
+// La Formazione è sempre montata (come il Listone): il tab Formazione nasconde la UI
+// vanilla e deve essere riempito da React non appena i dati CSV sono pronti.
 mount("league-dashboard-root", "Listone", <App />);
+mount("league-formation-root", "Formazione", <FormationApp />);
 const initialSection = document.documentElement.dataset.leagueSection;
 if (initialSection === "rose" || initialSection === "scambi" || initialSection === "classifica") mountSectionOnce(initialSection);

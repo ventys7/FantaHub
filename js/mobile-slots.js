@@ -88,6 +88,7 @@ function updateMobileCounters(model) {
 }
 
 function renderMobileSlots() {
+  if (window.__REACT_FORMATION_OWNED__) return;
   const startersContainer = document.getElementById("mobileStartersSlots");
   const benchContainer = document.getElementById("mobileBenchSlots");
   if (!startersContainer || !benchContainer) return;

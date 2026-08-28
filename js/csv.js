@@ -13,6 +13,9 @@ window.LineupLeagueData = Object.freeze({
   refresh: () => loadCSV({ silent: true })
 });
 
+// React-owned formation reads the shared team DB (lexical `db` is not on window).
+window.LineupDb = Object.freeze({ get: () => db });
+
 function updateLeagueCsvState(status, error = null) {
   leagueCsvState = Object.freeze({
     status,

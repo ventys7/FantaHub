@@ -1,6 +1,7 @@
 /* ROSTER - Roster rendering and player toggle */
 
 function renderRoster() {
+  if (window.__REACT_FORMATION_OWNED__) return;
   const container = document.getElementById("roster");
   container.innerHTML = "";
   if (!currentManager) return;

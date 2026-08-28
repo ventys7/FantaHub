@@ -892,3 +892,10 @@ html[data-route="league"] .listone-sr-only {
 .lf-league-section {
   padding: 16px;
 }
+
+/* React-owned formation: hide the vanilla formation UI (desktop + roster drawer + mobile) */
+html[data-react-formation="1"] #formationView > .content-wrapper,
+html[data-react-formation="1"] #formationView > #rosterDrawer,
+html[data-react-formation="1"] #formationView > #mobileLayout {
+  display: none !important;
+}
