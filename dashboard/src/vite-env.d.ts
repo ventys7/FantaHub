@@ -25,6 +25,11 @@ type LineupLeague = {
   name: string;
   label: string;
   csvUrl: string;
+  identity?: {
+    logo?: string;
+    flag?: string;
+    color?: string;
+  };
   leagueData?: {
     teamProfilesUrl?: string;
     standingsCsvUrl?: string;
