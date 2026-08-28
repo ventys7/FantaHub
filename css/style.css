@@ -135,11 +135,12 @@ button:active { transform: translateY(0); }
   background: linear-gradient(135deg, var(--primary), var(--primary-light));
   color: #fff;
   border: none;
-  box-shadow: 0 4px 14px rgba(124,58,237,0.25);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--primary) 25%, transparent);
 }
 #openModalBtn:hover {
-  background: linear-gradient(135deg, #6d28d9, #9333ea);
-  box-shadow: 0 10px 26px rgba(124,58,237,0.38);
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  filter: brightness(.94);
+  box-shadow: 0 10px 26px color-mix(in srgb, var(--primary) 32%, transparent);
 }
 
 .reset-btn-small {
