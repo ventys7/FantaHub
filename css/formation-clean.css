@@ -1157,24 +1157,24 @@ html[data-route="league"] .output-copy-output-btn {
 }
 
 /* 9:16 STORY EXPORT */
-html[data-route="league"] .output-story-btn {
-  width: 100%;
-  min-height: 46px;
-  border: 0;
-  border-radius: 12px;
-  color: #fff;
-  background: linear-gradient(135deg, #7c3aed, #a855f7);
-  font-size: .9rem;
-  font-weight: 850;
-  box-shadow: 0 8px 18px rgba(124,58,237,.22);
-}
+  html[data-route="league"] .output-story-btn {
+    width: 100%;
+    min-height: 46px;
+    border: 0;
+    border-radius: 12px;
+    color: #fff;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    font-size: .9rem;
+    font-weight: 850;
+    box-shadow: 0 8px 18px color-mix(in srgb, var(--primary) 22%, transparent);
+  }
 
-html[data-route="league"] .output-story-btn:hover,
-html[data-route="league"] .output-story-btn:active {
-  transform: none;
-  filter: none;
-  background: linear-gradient(135deg, #6d28d9, #9333ea);
-}
+  html[data-route="league"] .output-story-btn:hover,
+  html[data-route="league"] .output-story-btn:active {
+    transform: none;
+    filter: brightness(.94);
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  }
 
 html[data-route="league"] .story-modal {
   padding: 18px;

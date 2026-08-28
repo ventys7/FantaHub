@@ -16,12 +16,21 @@ window.LineupStory = (function () {
   let currentFileName = "formazione-fantahub.png";
 
   function leagueConfig() {
-    return window.LINEUP_FANTA?.league || {
+    return window.LINEUP_FANTA?.league || window.LINEUP_LEAGUES?.fp || {
       name: "FantaHub",
       label: "FantaHub",
       flag: "⚽",
-      theme: { primary: "#7c3aed", primaryLight: "#a855f7" }
+      theme: {}
     };
+  }
+
+  function hexToRgba(hex, alpha) {
+    const h = String(hex || "#7c3aed").replace("#", "");
+    const full = h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
+    const r = parseInt(full.slice(0, 2), 16);
+    const g = parseInt(full.slice(2, 4), 16);
+    const b = parseInt(full.slice(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }
 
   function storyModel() {
@@ -291,9 +300,10 @@ window.LineupStory = (function () {
     const roleStyle = ROLE_COLORS[role] || ROLE_COLORS.C;
 
     ctx.save();
+    const league = leagueConfig();
     const kitGradient = ctx.createLinearGradient(x, y, x + width, y + height);
-    kitGradient.addColorStop(0, "rgba(151, 92, 246, .96)");
-    kitGradient.addColorStop(1, "rgba(92, 45, 167, .96)");
+    kitGradient.addColorStop(0, hexToRgba(league.theme?.primary || "#7c3aed", .96));
+    kitGradient.addColorStop(1, hexToRgba(league.theme?.primaryLight || "#a855f7", .96));
 
     fillRounded(
       ctx,

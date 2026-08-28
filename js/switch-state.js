@@ -4,7 +4,7 @@ let switchStarterIndex = null;
 let switchBenchIndex = null;
 let switchPlus = false;
 
-window.LineupSwitch = (function () {
+const switchStateApi = (function () {
   function getTeam() {
     return currentManager && db[currentManager]?.players
       ? db[currentManager].players
@@ -262,3 +262,6 @@ window.LineupSwitch = (function () {
     reconcile
   });
 })();
+
+if (typeof module === "object" && module.exports) module.exports = switchStateApi;
+if (typeof window !== "undefined") window.LineupSwitch = switchStateApi;

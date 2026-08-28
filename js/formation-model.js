@@ -1,6 +1,6 @@
 /* FORMATION MODEL - One source of truth for field, bench, output and Switch */
 
-window.FormationModel = (function () {
+const formationModelApi = (function () {
   const ROLE_ORDER = Object.freeze({ P: 0, D: 1, C: 2, A: 3 });
   const BENCH_CAPACITY = Object.freeze({ P: 2, D: 3, C: 3, A: 3 });
 
@@ -78,14 +78,22 @@ window.FormationModel = (function () {
     return labels;
   }
 
-  function build() {
-    if (!currentManager || !db[currentManager]?.players) return null;
+  function build(input = {}) {
+    const { team: teamArg, module: moduleArg, selectedPlayers: selectedArg, slotAssignments: assignmentsArg } = input;
+    const team = teamArg || (typeof currentManager !== "undefined" && currentManager && db[currentManager]?.players) || null;
+    if (!team) return null;
 
-    const team = db[currentManager].players;
-    const moduleRaw = getModuleValue();
+    const moduleRaw = moduleArg || getModuleValue();
     const definitions = getSlotDefinitions(moduleRaw);
+    const selectedList = selectedArg != null
+      ? selectedArg
+      : (typeof selectedPlayers !== "undefined" ? selectedPlayers : []);
+    const assignments = assignmentsArg != null
+      ? assignmentsArg
+      : (typeof slotAssignments !== "undefined" ? slotAssignments : {});
+
     const selectedSet = new Set(
-      selectedPlayers.filter((index) => Number.isInteger(index) && team[index])
+      selectedList.filter((index) => Number.isInteger(index) && team[index])
     );
     const selectedIndices = [...selectedSet];
     const allDefinitions = [...definitions.starter, ...definitions.bench];
@@ -95,12 +103,12 @@ window.FormationModel = (function () {
 
     // Honour manual positions first. A duplicate only survives in the first valid slot.
     allDefinitions.forEach((definition) => {
-      const playerIndex = slotAssignments[definition.key];
+      const playerIndex = assignments[definition.key];
       const entry = entryForIndex(playerIndex, team);
 
       if (!selectedSet.has(playerIndex) || !roleMatches(definition, entry) || usedIndices.has(playerIndex)) {
-        if (slotAssignments[definition.key] !== undefined) {
-          delete slotAssignments[definition.key];
+        if (assignments[definition.key] !== undefined) {
+          delete assignments[definition.key];
           didCleanAssignments = true;
         }
         return;
@@ -148,7 +156,7 @@ window.FormationModel = (function () {
     }).length;
 
     const model = {
-      manager: currentManager,
+      manager: (typeof currentManager !== "undefined" ? currentManager : null),
       moduleRaw,
       module: [...moduleRaw].join("-"),
       team,
@@ -210,3 +218,6 @@ window.FormationModel = (function () {
     roleOrder: ROLE_ORDER
   });
 })();
+
+if (typeof module === "object" && module.exports) module.exports = formationModelApi;
+if (typeof window !== "undefined") window.FormationModel = formationModelApi;

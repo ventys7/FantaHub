@@ -819,3 +819,76 @@ html[data-route="league"] .listone-sr-only {
     transition: none;
   }
 }
+
+
+
+.lf-app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.lf-app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  background: var(--primary-bg, #f5f0ff);
+  border-bottom: 1px solid var(--primary-border, #ede9fe);
+}
+
+.lf-app-header__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.lf-app-header__logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.lf-app-header__title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--primary, #7c3aed);
+}
+
+.lf-app-shell__main {
+  flex: 1;
+  padding: 16px;
+}
+
+.lf-league-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--bg, #f8f7ff);
+  border-bottom: 1px solid var(--primary-border, #ede9fe);
+  overflow-x: auto;
+}
+
+.lf-league-tab {
+  appearance: none;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--primary, #7c3aed);
+  font: inherit;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.lf-league-tab.is-active {
+  background: var(--primary, #7c3aed);
+  color: #fff;
+}
+
+.lf-league-section {
+  padding: 16px;
+}

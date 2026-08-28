@@ -1,6 +1,6 @@
 /* GK BLOCKS - One logical goalkeeper block, one selected goalkeeper */
 
-window.GkBlocks = (function () {
+const gkBlocksApi = (function () {
   function getTeam() {
     return currentManager && db[currentManager]?.players
       ? db[currentManager].players
@@ -22,8 +22,8 @@ window.GkBlocks = (function () {
     return Number.isInteger(index) ? team[index] ?? null : null;
   }
 
-  function getGroups() {
-    const team = getTeam();
+  function getGroups(teamArg = null) {
+    const team = teamArg || getTeam();
     const groups = new Map();
 
     team.forEach((player, index) => {
@@ -53,6 +53,18 @@ window.GkBlocks = (function () {
     return getGoalkeeperIndices().find(
       (index) => team[index]?.gkBlock === blockName
     ) ?? null;
+  }
+
+  function resolve(team, selectedPlayers) {
+    const groups = getGroups(team);
+    const selectedIndex = (selectedPlayers || []).find((index) => team[index]?.r === "P") ?? null;
+    const selectedPlayer = Number.isInteger(selectedIndex) ? team[selectedIndex] : null;
+    const selectedBlock = selectedPlayer?.gkBlock || null;
+    const disabledBlocks = selectedBlock
+      ? groups.filter((group) => group.blockName && group.blockName !== selectedBlock).map((group) => group.blockName)
+      : [];
+
+    return { groups, selectedIndex, selectedPlayer, selectedBlock, disabledBlocks };
   }
 
   function isBlockDisabled(blockName) {
@@ -136,6 +148,7 @@ window.GkBlocks = (function () {
   return Object.freeze({
     getGroups,
     getGroup,
+    resolve,
     getSelectedIndex,
     getSelectedPlayer,
     getSelectedIndexForBlock,
@@ -147,3 +160,6 @@ window.GkBlocks = (function () {
     reset
   });
 })();
+
+if (typeof module === "object" && module.exports) module.exports = gkBlocksApi;
+if (typeof window !== "undefined") window.GkBlocks = gkBlocksApi;
