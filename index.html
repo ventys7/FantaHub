@@ -83,24 +83,36 @@
     document.addEventListener("DOMContentLoaded", () => {
       if (!league) {
         // Home landing (vanilla until the landing is migrated to React, phase 8).
+        document.body.dataset.route = "home";
         const isLocalStaticServer = ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
         const leagueHref = (id) => (isLocalStaticServer ? `/?league=${id}` : `/${id}`);
         const card = (id) => {
           const item = window.LINEUP_LEAGUES[id];
           return `<a class="league-choice league-choice--${id}" href="${leagueHref(id)}">
             <span class="league-choice__flag">${item.flag}</span>
-            <span class="league-choice__content"><strong>${item.label}</strong><small>${item.name}</small></span>
-            <span class="league-choice__arrow" aria-hidden="true">→</span></a>`;
+            <span class="league-choice__body">
+              <strong class="league-choice__label">${item.label}</strong>
+              <small class="league-choice__name">${item.name}</small>
+            </span>
+            <span class="league-choice__cta">Entra <span class="league-choice__arrow" aria-hidden="true">→</span></span>
+          </a>`;
         };
         const landing = document.createElement("main");
         landing.className = "league-landing";
         landing.innerHTML = `
-          <section class="league-landing__hero">
-            <p class="league-landing__eyebrow">FANTAHUB</p>
-            <h1>La tua formazione,<br><span>la tua lega.</span></h1>
-            <p class="league-landing__intro">Scegli la competizione per accedere alla tua rosa e preparare la formazione.</p>
-          </section>
-          <section class="league-choices" aria-label="Scegli la lega">${card("fp")}${card("pd")}</section>`;
+          <div class="league-landing__brand">
+            <span class="league-landing__mark">FANTAHUB</span>
+            <span class="league-landing__mark-dot" aria-hidden="true"></span>
+          </div>
+          <div class="league-landing__grid">
+            <section class="league-landing__hero">
+              <p class="league-landing__eyebrow">Il tuo fantacalcio</p>
+              <h1>Scegli la lega.<br><span class="accent">Schiera i tuoi.</span></h1>
+              <p class="league-landing__intro">Sfida i tuoi amici, giornata dopo giornata.</p>
+            </section>
+            <section class="league-choices" aria-label="Scegli la lega">${card("fp")}${card("pd")}</section>
+          </div>
+          <footer class="league-landing__foot">FantaHub · la tua lega, sempre a portata di tap.</footer>`;
         document.body.replaceChildren(landing);
         applyIdentity(null);
         return;
