@@ -1,238 +1,96 @@
-import { useMemo, useState } from "react";
-import { Controls } from "./formation/Controls";
-import { SwitchSection, MobileSwitchSection } from "./formation/SwitchSection";
-import { PlayerPicker } from "./formation/PlayerPicker";
-import {
-  StartersGrid,
-  BenchGrid,
-  MobileStartersGrid,
-  MobileBenchGrid,
-  type ActiveSlot,
-  type SlotSide
-} from "./formation/SlotGrid";
-import { GkModal } from "./formation/GkModal";
-import { OutputModal } from "./formation/OutputModal";
-import { useFormation } from "./formation/useFormation";
-import { getAllowedModules } from "./formation/formationModel";
-import type { FormationPlayer } from "./formation/formationTypes";
+import { useEffect } from "react";
+
+/**
+ * FormationApp — 1:1 vanilla delegation (v2.1)
+ *
+ * The dashboard's root `index.html` already ships the COMPLETE vanilla
+ * formation shell (controls, desktop/mobile grids, switch, roster drawer, all
+ * modals, fab, toast) together with every vanilla script
+ * (app-events, output, switch, picker, slots-render, mobile-slots, roster,
+ * csv…). Those scripts wire the controls themselves and attach the
+ * slot/picker/GK handlers during render, so this React component intentionally
+ * renders NOTHING into `#league-formation-root` and simply drives the vanilla
+ * engine that is already on the page:
+ *
+ *   1. wait for the league assets to be ready (window.LineupDb),
+ *   2. populate `#managerSelect` if vanilla csv.js didn't already,
+ *   3. delegate the initial render to the vanilla `loadTeam()` (which sets the
+ *      current manager, clears the selection and calls renderFormation /
+ *      renderMobileSlots / renderRoster / updateSwitchUI).
+ *
+ * We do NOT set `window.__REACT_FORMATION_OWNED__` — that flag would make the
+ * vanilla render functions bail out early, defeating the delegation.
+ *
+ * All further interactions (slot picker, GK blocks, switch, output/copy, reset,
+ * roster drawer, viewport switching) are handled 1:1 by the vanilla code, exact
+ * to the original fp/index.html behaviour.
+ */
 
 export default function FormationApp() {
-  const f = useFormation();
-  const [activeSlot, setActiveSlot] = useState<ActiveSlot | null>(null);
-  const [activeSwitch, setActiveSwitch] = useState<"starter" | "bench" | null>(null);
-  const [rosterOpen, setRosterOpen] = useState(false);
-  const [gkOpen, setGkOpen] = useState(false);
-  const [outputOpen, setOutputOpen] = useState(false);
+  useEffect(() => {
+    const w = window as unknown as {
+      LineupDb?: { get?: () => Record<string, unknown> };
+      loadTeam?: () => void;
+      __REACT_FORMATION_OWNED__?: boolean;
+    };
 
-  const modules = useMemo(() => getAllowedModules(), []);
-  const teamOptions = useMemo(
-    () => f.team.map((player, index) => ({ player, index })),
-    [f.team]
-  );
+    // The host page (index.html) sets `data-react-formation="1"` and
+    // `window.__REACT_FORMATION_OWNED__ = true` to hand the formation UI over to
+    // a React implementation. Because this component delegates 1:1 to the
+    // existing vanilla engine, we must RELEASE those flags:
+    //   - removing the attribute un-hides the vanilla shell (#formationControls,
+    //     .content-wrapper, #rosterDrawer, #mobileLayout) that the attribute's
+    //     CSS rules hide;
+    //   - clearing the boolean lets renderFormation / renderMobileSlots /
+    //     renderRoster actually paint instead of early-returning.
+    document.documentElement.removeAttribute("data-react-formation");
+    w.__REACT_FORMATION_OWNED__ = false;
 
-  if (!f.ready || !f.model) {
-    return <div className="league-react-empty">Caricamento formazione…</div>;
-  }
+    let raf = 0;
 
-  const model = f.model;
-  const counts = model.counts;
-  const switchStarterPlayer: FormationPlayer | null =
-    f.switch.starterIndex != null ? f.team[f.switch.starterIndex] ?? null : null;
-  const switchBenchPlayer: FormationPlayer | null =
-    f.switch.benchIndex != null ? f.team[f.switch.benchIndex] ?? null : null;
+    const tick = () => {
+      const db = w.LineupDb?.get?.();
+      const managers = db ? Object.keys(db) : [];
+      const ms = document.getElementById("managerSelect") as HTMLSelectElement | null;
+      if (!ms || managers.length === 0) {
+        raf = window.requestAnimationFrame(tick);
+        return;
+      }
 
-  const closeAll = () => {
-    setActiveSlot(null);
-    setActiveSwitch(null);
-    setRosterOpen(false);
-    setGkOpen(false);
-  };
+      // Populate #managerSelect only if vanilla csv.js left it empty/placeholder.
+      const needsPopulation =
+        ms.options.length <= 1 ||
+        ms.value === "" ||
+        ms.value === "Caricamento…";
+      if (needsPopulation) {
+        ms.innerHTML = "";
+        const placeholder = document.createElement("option");
+        placeholder.value = "";
+        placeholder.textContent = "Seleziona squadra…";
+        ms.appendChild(placeholder);
+        for (const name of managers) {
+          const opt = document.createElement("option");
+          opt.value = name;
+          opt.textContent = name;
+          ms.appendChild(opt);
+        }
+      }
 
-  const handleSlotClick = (side: SlotSide, defId: string, role: string) => {
-    setActiveSwitch(null);
-    setRosterOpen(false);
-    if (role === "P") {
-      setGkOpen(true);
-      return;
-    }
-    setActiveSlot({ side, defId, role });
-  };
+      // Wire the change handler (idempotent single-handler assignment; matches
+      // vanilla csv.js behaviour of delegating to loadTeam).
+      ms.onchange = () => w.loadTeam?.();
 
-  const openPickerForSwitch = (target: "starter" | "bench") => {
-    setActiveSlot(null);
-    setRosterOpen(false);
-    setActiveSwitch(target);
-  };
+      if (!ms.value || ms.value === "Seleziona squadra…") {
+        ms.value = managers[0];
+      }
 
-  const handlePick = (index: number) => {
-    if (activeSlot) {
-      f.actions.assignSlot(activeSlot.defId, index);
-      setActiveSlot(null);
-    } else if (activeSwitch === "starter") {
-      f.actions.setSwitchStarter(index);
-      setActiveSwitch(null);
-    } else if (activeSwitch === "bench") {
-      f.actions.setSwitchBench(index);
-      setActiveSwitch(null);
-    }
-  };
+      // Initial render via the vanilla engine (idempotent).
+      w.loadTeam?.();
+    };
 
-  const handleReset = () => {
-    if (f.manager) f.actions.setManager(f.manager);
-    closeAll();
-  };
+    tick();
+    return () => window.cancelAnimationFrame(raf);
+  }, []);
 
-  const firstEmptyStarterKey = (role: string): string | null => {
-    const def = model.definitions.starter.find((d) => d.role === role && !model.slots.starter[d.id]);
-    return def ? def.key : null;
-  };
-
-  const handleRosterPick = (index: number) => {
-    const player = f.team[index];
-    if (!player) return;
-    const key = activeSlot && activeSlot.role === player.r ? activeSlot.defId : firstEmptyStarterKey(player.r);
-    if (!key) return;
-    f.actions.assignSlot(key, index);
-    setRosterOpen(false);
-  };
-
-  const unassigned = teamOptions.filter(({ index }) => !f.selectedPlayers.includes(index));
-
-  const pickerOpen = activeSlot !== null || activeSwitch !== null;
-  const pickerRole = activeSlot ? activeSlot.role : null;
-  const pickerTitle =
-    activeSwitch === "starter"
-      ? "Scegli titolare per Switch"
-      : activeSwitch === "bench"
-        ? "Scegli panchinaro per Switch"
-        : `Titolare · ${activeSlot?.role ?? ""}`;
-
-  return (
-    <>
-      <Controls
-        manager={f.manager}
-        managers={f.managers}
-        module={f.module}
-        modules={modules}
-        onManagerChange={f.actions.setManager}
-        onModuleChange={f.actions.setModule}
-        onReset={handleReset}
-        onToggleRoster={() => setRosterOpen((o) => !o)}
-        onOpenOutput={() => setOutputOpen(true)}
-      />
-
-      <div className="content-wrapper">
-        <div className="grid">
-          <section className="column">
-            <div className="desktop-formation-layout">
-              <div className="desktop-formation-main">
-                <div className="section-title-row">
-                  <span className="mt-8 font-600">
-                    Titolari <span id="starterCount" style={{ color: "var(--muted)" }}>({counts.starters}/11)</span>
-                  </span>
-                  <button id="resetBtn" className="reset-btn-small" onClick={handleReset}>
-                    Reset
-                  </button>
-                </div>
-
-                <StartersGrid model={model} selected={activeSlot} onSlotClick={handleSlotClick} />
-
-                <SwitchSection
-                  plus={f.switch.plus}
-                  starterPlayer={switchStarterPlayer}
-                  benchPlayer={switchBenchPlayer}
-                  onTogglePlus={() => f.actions.setSwitchPlus(!f.switch.plus)}
-                  onPickSwitch={openPickerForSwitch}
-                />
-
-                <div className="mt-12 font-600">
-                  Panchina <span id="benchCount" style={{ color: "var(--muted)" }}>({counts.bench}/11)</span>
-                </div>
-
-                <BenchGrid model={model} selected={activeSlot} onSlotClick={handleSlotClick} />
-              </div>
-            </div>
-          </section>
-        </div>
-
-        {/* Mobile-only layout (mirrors the vanilla #mobileLayout) */}
-        <div id="mobileLayout" className="mobile-formation-root">
-          <section className="mobile-section">
-            <div className="mobile-title-row">
-              <span className="mobile-title">Titolari</span>
-              <span id="mobileStarterCount" className="mobile-count">
-                ({counts.starters}/11)
-              </span>
-            </div>
-            <MobileStartersGrid model={model} selected={activeSlot} onSlotClick={handleSlotClick} />
-          </section>
-
-          <MobileSwitchSection
-            plus={f.switch.plus}
-            starterPlayer={switchStarterPlayer}
-            benchPlayer={switchBenchPlayer}
-            onTogglePlus={() => f.actions.setSwitchPlus(!f.switch.plus)}
-            onPickSwitch={openPickerForSwitch}
-          />
-
-          <section className="mobile-section">
-            <div className="mobile-title-row">
-              <span className="mobile-title">Panchina</span>
-              <span id="mobileBenchCount" className="mobile-count">
-                ({counts.bench}/11)
-              </span>
-            </div>
-            <MobileBenchGrid model={model} selected={activeSlot} onSlotClick={handleSlotClick} />
-          </section>
-
-          <button id="resetBtnMobile" className="reset-btn-mobile" onClick={handleReset}>
-            Reset
-          </button>
-        </div>
-
-        {rosterOpen && (
-          <div className="roster-drawer is-open">
-            <div className="roster-drawer-header">
-              <h2>La tua Rosa</h2>
-              <button className="close-roster-btn" aria-label="Chiudi" onClick={() => setRosterOpen(false)}>
-                ✕
-              </button>
-            </div>
-            <div className="roster-drawer-inner">
-              <div className="roster-list">
-                {unassigned.length === 0 && <p className="lf-picker-empty">Tutti i giocatori sono in formazione.</p>}
-                {unassigned.map(({ player, index }) => (
-                  <button key={index} type="button" className="roster-item" onClick={() => handleRosterPick(index)}>
-                    <span className="roster-item__role">{player.r}</span>
-                    <span className="roster-item__name">{player.n}</span>
-                    <span className="roster-item__team">{player.t}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {pickerOpen && (
-        <PlayerPicker
-          title={pickerTitle}
-          players={teamOptions}
-          role={pickerRole}
-          exclude={f.selectedPlayers}
-          onPick={handlePick}
-          onClose={() => {
-            setActiveSlot(null);
-            setActiveSwitch(null);
-          }}
-        />
-      )}
-
-      {gkOpen && <GkModal onClose={() => setGkOpen(false)} onConfirm={(index) => { f.actions.confirmGk(index); setGkOpen(false); }} />}
-
-      {outputOpen && (
-        <OutputModal model={model} manager={f.manager || ""} onClose={() => setOutputOpen(false)} />
-      )}
-    </>
-  );
+  return null;
 }
