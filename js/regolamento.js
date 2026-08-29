@@ -11,8 +11,10 @@
   if (!frame || !placeholder || !tab) return;
 
   function embedUrl(rawUrl) {
+    const value = String(rawUrl || "");
+    if (!value) return "";
     let url;
-    try { url = new URL(String(rawUrl || ""), window.location.href); }
+    try { url = new URL(value, window.location.href); }
     catch { return ""; }
     if (url.hostname !== "docs.google.com") return url.toString();
     // I doc Google passano dal proxy locale: serve il pub con immagini

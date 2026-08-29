@@ -902,6 +902,10 @@ html[data-react-formation="1"] #formationControls {
   display: none !important;
 }
 
+/* La formazione è vanilla: il root React è vuoto su questa tab e non deve
+   riservare i suoi 360px di skeleton (spinge #mobileLayout / kick-off card). */
+#formationView #league-formation-root { min-height: 0; }
+
 /* React-owned formation: the mobile layout is rendered inside #league-formation-root
    (not a direct child of #formationView), so show it only on mobile and hide the
    desktop layout there. */
