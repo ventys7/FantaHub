@@ -91,3 +91,74 @@ export function SwitchSection({
     </aside>
   );
 }
+
+export function MobileSwitchSection({
+  plus,
+  starterPlayer,
+  benchPlayer,
+  onTogglePlus,
+  onPickSwitch
+}: {
+  plus: boolean;
+  starterPlayer: FormationPlayer | null;
+  benchPlayer: FormationPlayer | null;
+  onTogglePlus: () => void;
+  onPickSwitch: (target: "starter" | "bench") => void;
+}) {
+  return (
+    <section className="switch-section switch-section--mobile" id="mobileSwitchSection">
+      <button
+        id="switchPlusBtnMobile"
+        className="switch-mode-toggle"
+        type="button"
+        aria-pressed={plus}
+        title="Passa allo Switch Plus"
+        onClick={onTogglePlus}
+      >
+        <span>Base</span>
+        <span>Plus</span>
+      </button>
+      <div className="switch-pair">
+        <div className="switch-picker-wrapper">
+          <span className="switch-picker-label">Titolare</span>
+          <button
+            type="button"
+            className="switch-slot"
+            id="switchStarterSlotMobile"
+            aria-label="Scegli titolare per Switch"
+            onClick={() => onPickSwitch("starter")}
+          >
+            <span className="switch-slot-content">
+              {starterPlayer ? (
+                <SwitchSlotContent player={starterPlayer} />
+              ) : (
+                <span className="switch-slot-placeholder">＋</span>
+              )}
+            </span>
+          </button>
+        </div>
+        <div className="switch-connector" aria-hidden="true">
+          <span>↔</span>
+        </div>
+        <div className="switch-picker-wrapper">
+          <span className="switch-picker-label">Panchinaro</span>
+          <button
+            type="button"
+            className="switch-slot"
+            id="switchBenchSlotMobile"
+            aria-label="Scegli panchinaro per Switch"
+            onClick={() => onPickSwitch("bench")}
+          >
+            <span className="switch-slot-content">
+              {benchPlayer ? (
+                <SwitchSlotContent player={benchPlayer} />
+              ) : (
+                <span className="switch-slot-placeholder">＋</span>
+              )}
+            </span>
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}

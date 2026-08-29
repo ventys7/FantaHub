@@ -1,8 +1,17 @@
 import { useMemo, useState } from "react";
 import { Controls } from "./formation/Controls";
-import { SwitchSection } from "./formation/SwitchSection";
+import { SwitchSection, MobileSwitchSection } from "./formation/SwitchSection";
 import { PlayerPicker } from "./formation/PlayerPicker";
-import { StartersGrid, BenchGrid, type ActiveSlot, type SlotSide } from "./formation/SlotGrid";
+import {
+  StartersGrid,
+  BenchGrid,
+  MobileStartersGrid,
+  MobileBenchGrid,
+  type ActiveSlot,
+  type SlotSide
+} from "./formation/SlotGrid";
+import { GkModal } from "./formation/GkModal";
+import { OutputModal } from "./formation/OutputModal";
 import { useFormation } from "./formation/useFormation";
 import { getAllowedModules } from "./formation/formationModel";
 import type { FormationPlayer } from "./formation/formationTypes";
@@ -12,6 +21,8 @@ export default function FormationApp() {
   const [activeSlot, setActiveSlot] = useState<ActiveSlot | null>(null);
   const [activeSwitch, setActiveSwitch] = useState<"starter" | "bench" | null>(null);
   const [rosterOpen, setRosterOpen] = useState(false);
+  const [gkOpen, setGkOpen] = useState(false);
+  const [outputOpen, setOutputOpen] = useState(false);
 
   const modules = useMemo(() => getAllowedModules(), []);
   const teamOptions = useMemo(
@@ -30,9 +41,20 @@ export default function FormationApp() {
   const switchBenchPlayer: FormationPlayer | null =
     f.switch.benchIndex != null ? f.team[f.switch.benchIndex] ?? null : null;
 
-  const openPickerForSlot = (side: SlotSide, defId: string, role: string) => {
+  const closeAll = () => {
+    setActiveSlot(null);
     setActiveSwitch(null);
     setRosterOpen(false);
+    setGkOpen(false);
+  };
+
+  const handleSlotClick = (side: SlotSide, defId: string, role: string) => {
+    setActiveSwitch(null);
+    setRosterOpen(false);
+    if (role === "P") {
+      setGkOpen(true);
+      return;
+    }
     setActiveSlot({ side, defId, role });
   };
 
@@ -57,14 +79,11 @@ export default function FormationApp() {
 
   const handleReset = () => {
     if (f.manager) f.actions.setManager(f.manager);
-    setActiveSlot(null);
-    setActiveSwitch(null);
+    closeAll();
   };
 
   const firstEmptyStarterKey = (role: string): string | null => {
-    const def = model.definitions.starter.find(
-      (d) => d.role === role && !model.slots.starter[d.id]
-    );
+    const def = model.definitions.starter.find((d) => d.role === role && !model.slots.starter[d.id]);
     return def ? def.key : null;
   };
 
@@ -81,7 +100,12 @@ export default function FormationApp() {
 
   const pickerOpen = activeSlot !== null || activeSwitch !== null;
   const pickerRole = activeSlot ? activeSlot.role : null;
-  const pickerTitle = activeSwitch === "starter" ? "Scegli titolare per Switch" : activeSwitch === "bench" ? "Scegli panchinaro per Switch" : `Titolare · ${activeSlot?.role ?? ""}`;
+  const pickerTitle =
+    activeSwitch === "starter"
+      ? "Scegli titolare per Switch"
+      : activeSwitch === "bench"
+        ? "Scegli panchinaro per Switch"
+        : `Titolare · ${activeSlot?.role ?? ""}`;
 
   return (
     <>
@@ -94,6 +118,7 @@ export default function FormationApp() {
         onModuleChange={f.actions.setModule}
         onReset={handleReset}
         onToggleRoster={() => setRosterOpen((o) => !o)}
+        onOpenOutput={() => setOutputOpen(true)}
       />
 
       <div className="content-wrapper">
@@ -110,7 +135,7 @@ export default function FormationApp() {
                   </button>
                 </div>
 
-                <StartersGrid model={model} selected={activeSlot} onSlotClick={openPickerForSlot} />
+                <StartersGrid model={model} selected={activeSlot} onSlotClick={handleSlotClick} />
 
                 <SwitchSection
                   plus={f.switch.plus}
@@ -124,10 +149,45 @@ export default function FormationApp() {
                   Panchina <span id="benchCount" style={{ color: "var(--muted)" }}>({counts.bench}/11)</span>
                 </div>
 
-                <BenchGrid model={model} selected={activeSlot} onSlotClick={openPickerForSlot} />
+                <BenchGrid model={model} selected={activeSlot} onSlotClick={handleSlotClick} />
               </div>
             </div>
           </section>
+        </div>
+
+        {/* Mobile-only layout (mirrors the vanilla #mobileLayout) */}
+        <div id="mobileLayout" className="mobile-formation-root">
+          <section className="mobile-section">
+            <div className="mobile-title-row">
+              <span className="mobile-title">Titolari</span>
+              <span id="mobileStarterCount" className="mobile-count">
+                ({counts.starters}/11)
+              </span>
+            </div>
+            <MobileStartersGrid model={model} selected={activeSlot} onSlotClick={handleSlotClick} />
+          </section>
+
+          <MobileSwitchSection
+            plus={f.switch.plus}
+            starterPlayer={switchStarterPlayer}
+            benchPlayer={switchBenchPlayer}
+            onTogglePlus={() => f.actions.setSwitchPlus(!f.switch.plus)}
+            onPickSwitch={openPickerForSwitch}
+          />
+
+          <section className="mobile-section">
+            <div className="mobile-title-row">
+              <span className="mobile-title">Panchina</span>
+              <span id="mobileBenchCount" className="mobile-count">
+                ({counts.bench}/11)
+              </span>
+            </div>
+            <MobileBenchGrid model={model} selected={activeSlot} onSlotClick={handleSlotClick} />
+          </section>
+
+          <button id="resetBtnMobile" className="reset-btn-mobile" onClick={handleReset}>
+            Reset
+          </button>
         </div>
 
         {rosterOpen && (
@@ -142,12 +202,7 @@ export default function FormationApp() {
               <div className="roster-list">
                 {unassigned.length === 0 && <p className="lf-picker-empty">Tutti i giocatori sono in formazione.</p>}
                 {unassigned.map(({ player, index }) => (
-                  <button
-                    key={index}
-                    type="button"
-                    className="roster-item"
-                    onClick={() => handleRosterPick(index)}
-                  >
+                  <button key={index} type="button" className="roster-item" onClick={() => handleRosterPick(index)}>
                     <span className="roster-item__role">{player.r}</span>
                     <span className="roster-item__name">{player.n}</span>
                     <span className="roster-item__team">{player.t}</span>
@@ -171,6 +226,12 @@ export default function FormationApp() {
             setActiveSwitch(null);
           }}
         />
+      )}
+
+      {gkOpen && <GkModal onClose={() => setGkOpen(false)} onConfirm={(index) => { f.actions.confirmGk(index); setGkOpen(false); }} />}
+
+      {outputOpen && (
+        <OutputModal model={model} manager={f.manager || ""} onClose={() => setOutputOpen(false)} />
       )}
     </>
   );

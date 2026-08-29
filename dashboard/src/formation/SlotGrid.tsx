@@ -62,15 +62,16 @@ interface SlotProps {
   entry: SlotEntryLike | null;
   selected: boolean;
   onSlotClick: (side: SlotSide, defId: string, role: string) => void;
+  mobile?: boolean;
 }
 
-function Slot({ side, def, entry, selected, onSlotClick }: SlotProps) {
+function Slot({ side, def, entry, selected, onSlotClick, mobile = false }: SlotProps) {
   const player = entry?.player ?? null;
   return (
     <button
       type="button"
-      className={`slot formation-slot formation-slot--${side}${player ? "" : " empty"}${selected ? " selected" : ""}`}
-      id={`${side}-${def.id}`}
+      className={`slot formation-slot ${mobile ? "formation-slot--mobile" : `formation-slot--${side}`}${player ? "" : " empty"}${selected ? " selected" : ""}`}
+      id={mobile ? `mobile-${side}-${def.id}` : `${side}-${def.id}`}
       data-role={def.role}
       data-slot-key={def.key}
       aria-label={`${def.label}: ${player?.n || "vuoto"}`}
@@ -79,6 +80,53 @@ function Slot({ side, def, entry, selected, onSlotClick }: SlotProps) {
       <SlotVisual role={def.role} player={player} />
     </button>
   );
+}
+
+interface MobileGridProps {
+  model: FormationModel;
+  selected: ActiveSlot | null;
+  onSlotClick: (side: SlotSide, defId: string, role: string) => void;
+  starter?: boolean;
+}
+
+function MobileGrid({ model, selected, onSlotClick, starter }: MobileGridProps) {
+  const defs = starter ? model.definitions.starter : model.definitions.bench;
+  const slots = starter ? model.slots.starter : model.slots.bench;
+  const groups = groupByRole(defs);
+  return (
+    <div className="slot-grid" id={starter ? "mobileStartersSlots" : "mobileBenchSlots"}>
+      {groups.map((g) => (
+        <div
+          key={g.role}
+          className={`formation-row formation-row--${g.role}`}
+          data-count={g.defs.length}
+          style={{ ["--row-count" as string]: g.defs.length } as CSSProperties}
+        >
+          {g.defs.map((def) => (
+            <Slot
+              key={def.id}
+              mobile
+              side={starter ? "starter" : "bench"}
+              def={def}
+              entry={starter ? slots[def.id] || null : getBenchDisplayEntry(model, def)}
+              selected={
+                selected?.side === (starter ? "starter" : "bench") && selected.defId === def.key
+              }
+              onSlotClick={onSlotClick}
+            />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function MobileStartersGrid(props: MobileGridProps) {
+  return <MobileGrid {...props} starter />;
+}
+
+export function MobileBenchGrid(props: MobileGridProps) {
+  return <MobileGrid {...props} starter={false} />;
 }
 
 export function StartersGrid({

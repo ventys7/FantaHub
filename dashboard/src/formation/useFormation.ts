@@ -216,6 +216,35 @@ export function useFormation() {
     setFormation((prev) => ({ ...prev, ...syncSwitchState() }));
   }, []);
 
+  const refreshFromVanilla = useCallback(() => {
+    setFormation((prev) => {
+      const vanilla = readVanillaState();
+      const merged: FormationState = {
+        ...prev,
+        selectedPlayers: vanilla.selectedPlayers || prev.selectedPlayers,
+        slotAssignments: vanilla.slotAssignments || prev.slotAssignments,
+        ...syncSwitchState()
+      };
+      mirrorFormation(merged);
+      return merged;
+    });
+  }, []);
+
+  const confirmGk = useCallback(
+    (index: number) => {
+      const gk = (window as unknown as { GkBlocks?: { select?: (i: number) => boolean } }).GkBlocks;
+      gk?.select?.(index);
+      refreshFromVanilla();
+    },
+    [refreshFromVanilla]
+  );
+
+  const removeGk = useCallback(() => {
+    const gk = (window as unknown as { GkBlocks?: { remove?: (i?: number | null) => boolean } }).GkBlocks;
+    gk?.remove?.();
+    refreshFromVanilla();
+  }, [refreshFromVanilla]);
+
   return {
     ready: seeded,
     status: state.status,
@@ -232,6 +261,6 @@ export function useFormation() {
       benchIndex: formation.switchBenchIndex,
       plus: formation.switchPlus
     },
-    actions: { assignSlot, removeSlot, setModule, setManager, setSwitchStarter, setSwitchBench, setSwitchPlus }
+    actions: { assignSlot, removeSlot, setModule, setManager, setSwitchStarter, setSwitchBench, setSwitchPlus, confirmGk, removeGk }
   };
 }

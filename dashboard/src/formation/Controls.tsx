@@ -6,7 +6,8 @@ export function Controls({
   onManagerChange,
   onModuleChange,
   onReset,
-  onToggleRoster
+  onToggleRoster,
+  onOpenOutput
 }: {
   manager: string | null;
   managers: string[];
@@ -16,6 +17,7 @@ export function Controls({
   onModuleChange: (m: string) => void;
   onReset: () => void;
   onToggleRoster: () => void;
+  onOpenOutput: () => void;
 }) {
   const formatModule = (m: string) => [...m].join("-");
   return (
@@ -49,6 +51,9 @@ export function Controls({
       </select>
       <button type="button" className="reset-btn-small" onClick={onReset}>
         Reset
+      </button>
+      <button type="button" className="open-modal-btn" id="openModalBtn" onClick={onOpenOutput}>
+        Visualizza / Copia
       </button>
     </div>
   );

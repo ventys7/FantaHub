@@ -902,6 +902,49 @@ html[data-react-formation="1"] #formationControls {
   display: none !important;
 }
 
+/* React-owned formation: the mobile layout is rendered inside #league-formation-root
+   (not a direct child of #formationView), so show it only on mobile and hide the
+   desktop layout there. */
+html[data-react-formation="1"] .mobile-formation-root { display: none; }
+
+@media (max-width: 767px) {
+  html[data-react-formation="1"] .desktop-formation-layout { display: none !important; }
+  html[data-react-formation="1"] .mobile-formation-root {
+    display: flex;
+    flex-direction: column;
+  }
+  html[data-react-formation="1"] .mobile-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 4px;
+  }
+  html[data-react-formation="1"] .mobile-title {
+    color: var(--formation-ink, #1f1b34);
+    font-size: 0.82rem;
+    font-weight: 850;
+    letter-spacing: 0.08em;
+    text-align: center;
+  }
+  html[data-react-formation="1"] .mobile-count {
+    font-size: 0.78rem;
+    color: var(--muted, #8a86a0);
+    font-weight: 700;
+  }
+  html[data-react-formation="1"] .reset-btn-mobile {
+    align-self: center;
+    margin: 18px auto 0;
+    padding: 9px 22px;
+    border-radius: 12px;
+    border: 1px solid var(--border, #ece9f5);
+    background: var(--surface, #fff);
+    color: var(--formation-ink, #1f1b34);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+}
+
 /* React formation picker (slot / switch selection) */
 .lf-picker-overlay {
   position: fixed;
