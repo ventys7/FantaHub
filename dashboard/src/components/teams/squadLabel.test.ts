@@ -8,11 +8,11 @@ describe("formatSquadLabel", () => {
     expect(formatSquadLabel("Partecipante Uno", "   ")).toBe("Partecipante Uno");
   });
 
-  it("formats participant - fantasy name when set", () => {
-    expect(formatSquadLabel("Partecipante Uno", "Squadra Test")).toBe("Partecipante Uno - Squadra Test");
+  it("formats participant (fantasy name) when set", () => {
+    expect(formatSquadLabel("Partecipante Uno", "Squadra Test")).toBe("Partecipante Uno (Squadra Test)");
   });
 
   it("trims the fantasy name", () => {
-    expect(formatSquadLabel("Partecipante Uno", "  Squadra Test  ")).toBe("Partecipante Uno - Squadra Test");
+    expect(formatSquadLabel("Partecipante Uno", "  Squadra Test  ")).toBe("Partecipante Uno (Squadra Test)");
   });
 });
