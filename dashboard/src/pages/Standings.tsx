@@ -15,14 +15,17 @@ interface StandingsProps {
   data: StandingsData;
   leagueName: string;
   teamLogos?: Record<string, string>;
+  teamNames?: Record<string, string>;
 }
 
 function normalizeTeamName(value: string) {
   return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]+/g, " ").trim().toLowerCase();
 }
 
-function TeamCell({ team, teamLogos = {}, penalty = 0 }: { team: string; teamLogos?: Record<string, string>; penalty?: number }) {
-  const initial = team.trim().charAt(0).toUpperCase() || "?";
+function TeamCell({ team, teamLogos = {}, teamNames = {}, penalty = 0 }: { team: string; teamLogos?: Record<string, string>; teamNames?: Record<string, string>; penalty?: number }) {
+  const displayName = teamNames[normalizeTeamName(team)] || "";
+  const shownName = displayName || team;
+  const initial = shownName.trim().charAt(0).toUpperCase() || "?";
   const logoUrl = teamLogos[normalizeTeamName(team)] || "";
 
   return (
@@ -30,7 +33,10 @@ function TeamCell({ team, teamLogos = {}, penalty = 0 }: { team: string; teamLog
       <span className={`lf-standings-team-mark ${logoUrl ? "has-logo" : ""}`} aria-hidden="true">
         {logoUrl ? <img src={logoUrl} alt="" loading="lazy" referrerPolicy="no-referrer" /> : initial}
       </span>
-      <strong>{team}</strong>
+      <span className="lf-standings-team-names">
+        <strong>{shownName}</strong>
+        {displayName && <small className="lf-standings-team-sub">{team}</small>}
+      </span>
       {penalty > 0 && <span className="lf-standings-penalty" title={`${penalty} ${penalty === 1 ? "punto" : "punti"} di penalizzazione`}>−{penalty}</span>}
     </div>
   );
@@ -85,7 +91,7 @@ function SortableHeader({
   );
 }
 
-export function Standings({ data, leagueName, teamLogos = {} }: StandingsProps) {
+export function Standings({ data, leagueName, teamLogos = {}, teamNames = {} }: StandingsProps) {
   const [mode, setMode] = useState<StandingsMode>("league");
   const [sort, setSort] = useState<SortState>(null);
 
@@ -169,7 +175,7 @@ export function Standings({ data, leagueName, teamLogos = {} }: StandingsProps) 
                   return (
                     <tr key={row.team} className={displayedPosition <= 3 ? `is-top-${displayedPosition}` : ""}>
                       <td className="lf-standings-rank-col"><b>{displayedPosition}</b></td>
-                      <td className="lf-standings-team-col"><TeamCell team={row.team} teamLogos={teamLogos} penalty={row.penalty} /></td>
+                      <td className="lf-standings-team-col"><TeamCell team={row.team} teamLogos={teamLogos} teamNames={teamNames} penalty={row.penalty} /></td>
                       <td className="is-points"><strong>{row.points}</strong></td>
                       <td>{row.played}</td>
                       <td>{row.wins}</td>
@@ -202,7 +208,7 @@ export function Standings({ data, leagueName, teamLogos = {} }: StandingsProps) 
                 {data.fantasy.map((row) => (
                   <tr key={row.team} className={row.position <= 3 ? `is-top-${row.position}` : ""}>
                     <td><b>{row.position}</b></td>
-                    <td><TeamCell team={row.team} teamLogos={teamLogos} /></td>
+                    <td><TeamCell team={row.team} teamLogos={teamLogos} teamNames={teamNames} /></td>
                     <td className="is-fantasy-points"><strong>{formatStandingsNumber(row.fantasyPoints)}</strong></td>
                   </tr>
                 ))}

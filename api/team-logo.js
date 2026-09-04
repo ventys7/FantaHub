@@ -26,6 +26,30 @@ async function knownTeamNames(id, profiles) {
   }
 }
 
+const MAX_DISPLAY_NAME = 24;
+
+function normName(value) {
+  return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
+}
+
+// Nome fantasquadra: "" = nessun alias (mostra il partecipante).
+// undefined = campo assente, conserva il valore esistente.
+function resolveDisplayName(profiles, teamName, raw) {
+  if (raw === undefined) return undefined;
+  const value = String(raw ?? "").trim();
+  if (!value) return "";
+  if (value.length > MAX_DISPLAY_NAME) throw new Error("Nome fantasquadra troppo lungo: massimo 24 caratteri");
+  const norm = normName(value);
+  if (norm === normName(teamName)) return "";
+  for (const [other, profile] of Object.entries(profiles.teams || {})) {
+    if (other === teamName) continue;
+    const otherDisplay = String(profile?.displayName || "").trim();
+    if (otherDisplay && normName(otherDisplay) === norm) throw new Error("Nome fantasquadra già utilizzato");
+    if (normName(other) === norm) throw new Error("Nome fantasquadra già utilizzato");
+  }
+  return value;
+}
+
 async function handleGet(req, res) {
   const id = leagueId(req.query?.league);
   const teamName = String(req.query?.team || "").trim();
@@ -52,18 +76,28 @@ async function handlePost(req, res) {
   const names = await knownTeamNames(id, profiles);
   if (!names.includes(teamName)) throw new Error("Fantasquadra non riconosciuta");
   if (!(await checkCode(id, teamName, body.code))) return res.status(401).json({ error: "Codice stemma errato" });
-  const upload = decodeUpload(body.upload);
-  const sha256 = crypto.createHash("sha256").update(upload.bytes).digest("hex");
+  const displayName = resolveDisplayName(profiles, teamName, body.displayName);
+  const hasUpload = body.upload !== undefined && body.upload !== null;
+  let logoUrl = profiles.teams[teamName]?.logoUrl || "";
+  if (hasUpload) {
+    const upload = decodeUpload(body.upload);
+    const sha256 = crypto.createHash("sha256").update(upload.bytes).digest("hex");
 
-  if (!databaseConfigured()) {
-    throw new Error("DATABASE_URL non configurata: caricamento stemma bloccato");
+    if (!databaseConfigured()) {
+      throw new Error("DATABASE_URL non configurata: caricamento stemma bloccato");
+    }
+    await writeTeamLogo(id, teamName, upload.mimeType, upload.bytes, sha256);
+    logoUrl = teamLogoUrl(id, teamName, sha256);
   }
-  await writeTeamLogo(id, teamName, upload.mimeType, upload.bytes, sha256);
-  const logoUrl = teamLogoUrl(id, teamName, sha256);
 
   profiles.teams[teamName] = { ...(profiles.teams[teamName] || {}), logoUrl };
+  if (displayName !== undefined) profiles.teams[teamName].displayName = displayName;
   await saveTeamProfiles(id, profiles);
-  return res.status(200).json({ message: "Stemma aggiornato.", logoUrl });
+  const savedName = profiles.teams[teamName].displayName || "";
+  const message = hasUpload && displayName !== undefined
+    ? "Stemma e nome aggiornati."
+    : hasUpload ? "Stemma aggiornato." : "Nome fantasquadra aggiornato.";
+  return res.status(200).json({ message, logoUrl, displayName: savedName });
 }
 
 module.exports = async function handler(req, res) {

@@ -3,7 +3,7 @@ export type RuntimeLeagueSettings = {
   listoneCsvUrl: string;
   standingsCsvUrl: string;
   disciplineDocUrl: string;
-  teams: Record<string, { credits?: number | null; logoUrl?: string }>;
+  teams: Record<string, { credits?: number | null; logoUrl?: string; displayName?: string }>;
 };
 
 const cache = new Map<string, Promise<RuntimeLeagueSettings>>();

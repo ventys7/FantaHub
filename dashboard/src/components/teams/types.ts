@@ -6,6 +6,7 @@ export type TeamSquad = {
   managerName: string;
   credits: number | null;
   logoUrl: string;
+  displayName: string;
   players: DashboardAsset[];
   isComplete: boolean;
   roleCounts: Record<RoleKey, number>;

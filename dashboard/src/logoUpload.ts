@@ -86,16 +86,22 @@ export async function prepareLogo(file: File): Promise<PreparedLogo> {
   return { mimeType: "image/png", dataBase64: dataUrl.split(",")[1], previewUrl: dataUrl };
 }
 
-export async function uploadTeamLogo(leagueId: string, teamName: string, code: string, prepared: PreparedLogo): Promise<string> {
+export type TeamIdentityUpdate = { logoUrl: string; displayName: string };
+
+export async function uploadTeamLogo(leagueId: string, teamName: string, code: string, prepared: PreparedLogo | null, displayName?: string): Promise<TeamIdentityUpdate> {
   const response = await fetch("/api/team-logo", {
     method: "POST", cache: "no-store", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ leagueId, teamName, code, upload: { mimeType: prepared.mimeType, dataBase64: prepared.dataBase64 } })
+    body: JSON.stringify({
+      leagueId, teamName, code,
+      ...(prepared ? { upload: { mimeType: prepared.mimeType, dataBase64: prepared.dataBase64 } } : {}),
+      ...(displayName !== undefined ? { displayName } : {})
+    })
   });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(payload.error || `HTTP ${response.status}`);
-  const logoUrl = String(payload.logoUrl || "");
+  const update = { logoUrl: String(payload.logoUrl || ""), displayName: String(payload.displayName ?? "") };
   window.dispatchEvent(new CustomEvent("lineup:team-logo-updated", {
-    detail: { leagueId, teamName, logoUrl }
+    detail: { leagueId, teamName, ...update }
   }));
-  return logoUrl;
+  return update;
 }

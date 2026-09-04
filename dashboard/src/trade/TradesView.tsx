@@ -1,6 +1,7 @@
 import { useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import { AlertCircleIcon, CoinsIcon, UsersIcon } from "../icons";
 import { TeamCard } from "../components/teams/TeamCard";
+import { formatSquadLabel } from "../components/teams/squadLabel";
 import type { TeamSquad } from "../components/teams/types";
 import type { PlayerMediaEntry } from "../media";
 import { buildTradeText, creditsValid, roleBalanceSummary } from "./tradeModel";
@@ -32,6 +33,8 @@ export function TradesView({ managers, squadsByManager, media, leagueId }: Trade
 
   const squadA = squadsByManager[managerA];
   const squadB = squadsByManager[managerB];
+  const labelA = squadA ? formatSquadLabel(managerA, squadA.displayName) : "";
+  const labelB = squadB ? formatSquadLabel(managerB, squadB.displayName) : "";
 
   const toggle = (setter: Dispatch<SetStateAction<Set<string>>>) => (assetCode: string) => {
     setter((current) => {
@@ -78,8 +81,8 @@ export function TradesView({ managers, squadsByManager, media, leagueId }: Trade
   };
 
   const outputText = buildTradeText({
-    managerA,
-    managerB,
+    managerA: labelA || managerA,
+    managerB: labelB || managerB,
     aGives,
     bGives,
     credits: offered
@@ -104,7 +107,7 @@ export function TradesView({ managers, squadsByManager, media, leagueId }: Trade
               <select value={managerA} onChange={(event) => changeManagerA(event.target.value)}>
                 <option value="" disabled>Scegli la rosa…</option>
                 {managers.map((name) => (
-                  <option key={name} value={name}>{name}</option>
+                  <option key={name} value={name}>{formatSquadLabel(name, squadsByManager[name]?.displayName)}</option>
                 ))}
               </select>
             </label>
@@ -113,7 +116,7 @@ export function TradesView({ managers, squadsByManager, media, leagueId }: Trade
               <select value={managerB} onChange={(event) => changeManagerB(event.target.value)}>
                 <option value="" disabled>Scegli la rosa…</option>
                 {managers.filter((name) => name !== managerA).map((name) => (
-                  <option key={name} value={name}>{name}</option>
+                  <option key={name} value={name}>{formatSquadLabel(name, squadsByManager[name]?.displayName)}</option>
                 ))}
               </select>
             </label>
@@ -194,9 +197,9 @@ export function TradesView({ managers, squadsByManager, media, leagueId }: Trade
                       )}
                       <span className="lf-trade-credits__hint">
                         {creditMode === "offer"
-                          ? `${creditAmount} crediti a ${managerB}`
+                          ? `${creditAmount} crediti a ${labelB}`
                           : creditMode === "request"
-                            ? `${creditAmount} crediti da ${managerA}`
+                            ? `${creditAmount} crediti da ${labelA}`
                             : "Senza crediti"}
                       </span>
                     </div>
@@ -237,7 +240,7 @@ export function TradesView({ managers, squadsByManager, media, leagueId }: Trade
 
           <TradeSummaryModal
             open={summaryOpen}
-            summary={{ managerA, managerB, aGives, bGives, credits: offered }}
+            summary={{ managerA: labelA || managerA, managerB: labelB || managerB, aGives, bGives, credits: offered }}
             text={outputText}
             media={media}
             onClose={() => setSummaryOpen(false)}

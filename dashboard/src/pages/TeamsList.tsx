@@ -46,7 +46,7 @@ export function TeamsList({ assets, leagueId, profilesUrl }: TeamsListProps) {
       <section className="lf-dashboard-card tw-mx-auto tw-max-w-7xl">
         {teams.length > 0 ? (
           <div className="lf-teams-grid">
-            {teams.map((team) => <TeamCard key={team.managerName} team={team} leagueId={leagueId} media={media} onLogoUpdated={(logoUrl) => setProfiles((current) => ({ ...current, [team.managerName]: { ...(current[team.managerName] || { credits: team.credits }), logoUrl } }))} />)}
+            {teams.map((team) => <TeamCard key={team.managerName} team={team} leagueId={leagueId} media={media} onLogoUpdated={(update) => setProfiles((current) => ({ ...current, [team.managerName]: { ...(current[team.managerName] || { credits: team.credits, logoUrl: "", displayName: "" }), ...update } }))} />)}
           </div>
         ) : (
           <div className="lf-teams-empty">
