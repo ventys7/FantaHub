@@ -54,7 +54,7 @@ export function TeamCard({ team, leagueId, media, onLogoUpdated, selectable = fa
             </button>
           )}
           <div className="lf-team-card__copy">
-            <span className="lf-team-card__eyebrow">Allenatore</span>
+            {!displayName && <span className="lf-team-card__eyebrow">Allenatore</span>}
             <h2 title={displayName ? `${displayName} · ${team.managerName}` : team.managerName}>{shownName}</h2>
             {displayName && <span className="lf-team-card__manager">{team.managerName}</span>}
           </div>
