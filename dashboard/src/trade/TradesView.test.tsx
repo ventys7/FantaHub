@@ -38,7 +38,7 @@ const assetsVilla = [
 function makeSquad(managerName: string, players: DashboardAsset[], credits: number): TeamSquad {
   const roleCounts: TeamSquad["roleCounts"] = { P: 0, D: 0, C: 0, A: 0 };
   players.forEach((player) => { roleCounts[player.role as keyof typeof roleCounts] += 1; });
-  return { managerName, credits, logoUrl: "", players, isComplete: false, roleCounts, totalPlayers: players.length };
+  return { managerName, credits, logoUrl: "", displayName: "", players, isComplete: false, roleCounts, totalPlayers: players.length };
 }
 
 const squadsByManager = {

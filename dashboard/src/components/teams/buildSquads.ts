@@ -34,6 +34,7 @@ export function buildTeamSquads(assets: DashboardAsset[], profiles: TeamProfiles
       managerName,
       credits: csvCredits ?? profile?.credits ?? null,
       logoUrl: profile?.logoUrl ?? "",
+      displayName: profile?.displayName ?? "",
       players,
       isComplete,
       roleCounts,

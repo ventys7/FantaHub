@@ -88,13 +88,14 @@ export default function StandingsApp() {
 
   useEffect(() => {
     const onLogoUpdated = (event: Event) => {
-      const detail = (event as CustomEvent<{ leagueId: string; teamName: string; logoUrl: string }>).detail;
+      const detail = (event as CustomEvent<{ leagueId: string; teamName: string; logoUrl: string; displayName?: string }>).detail;
       if (!detail || detail.leagueId !== leagueId || !detail.teamName) return;
       setTeamProfiles((current) => ({
         ...current,
         [detail.teamName]: {
-          ...(current[detail.teamName] || { credits: null, logoUrl: "" }),
-          logoUrl: detail.logoUrl
+          ...(current[detail.teamName] || { credits: null, logoUrl: "", displayName: "" }),
+          logoUrl: detail.logoUrl,
+          ...(detail.displayName !== undefined ? { displayName: detail.displayName } : {})
         }
       }));
     };
@@ -136,12 +137,18 @@ export default function StandingsApp() {
     return result;
   }, {}), [teamProfiles]);
 
+  const teamNames = useMemo(() => Object.entries(teamProfiles).reduce<Record<string, string>>((result, [name, profile]) => {
+    const key = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]+/g, " ").trim().toLowerCase();
+    if (profile.displayName) result[key] = profile.displayName;
+    return result;
+  }, {}), [teamProfiles]);
+
   if (status === "loading") return <div className="lf-standings-shell"><section className="lf-dashboard-card lf-standings-state"><div className="lf-spinner"/><p>Caricamento della Classifica…</p></section></div>;
   if (status === "error") return <div className="lf-standings-shell"><section className="lf-dashboard-card lf-standings-state lf-standings-state--error"><strong>Errore nel caricamento</strong><p>{error}</p></section></div>;
 
   return (
     <div>
-      <Standings data={data} leagueName={leagueName} teamLogos={teamLogos} />
+      <Standings data={data} leagueName={leagueName} teamLogos={teamLogos} teamNames={teamNames} />
       <div className="lf-standings-shell lf-standings-shell--discipline">
         <DisciplineBoard data={discipline} loading={disciplineLoading} error={disciplineError} />
       </div>

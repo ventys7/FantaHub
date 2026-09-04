@@ -129,6 +129,7 @@
 
 .lf-team-card__copy { min-width: 0; }
 .lf-team-card__copy h2 { max-width: 100%; margin: 0; overflow: hidden; color: var(--lf-text-strong); font-size: 14px; font-weight: 900; line-height: 1.1; text-overflow: ellipsis; white-space: nowrap; }
+.lf-team-card__manager { display: block; max-width: 100%; overflow: hidden; color: #73817c; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
 .lf-team-card__copy p { margin: 3px 0 0; color: #73817c; font-size: 12px; }
 .lf-team-card__copy strong { color: #35443f; }
 

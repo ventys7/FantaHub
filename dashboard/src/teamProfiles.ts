@@ -1,6 +1,7 @@
 export type TeamProfile = {
   credits: number | null;
   logoUrl: string;
+  displayName: string;
 };
 
 export type TeamProfiles = Record<string, TeamProfile>;
@@ -15,6 +16,7 @@ type RawTeamProfile = {
   credits?: unknown;
   logoUrl?: unknown;
   logo_url?: unknown;
+  displayName?: unknown;
 };
 
 type RawProfilesDocument = {
@@ -48,7 +50,8 @@ function normalizeProfiles(document: unknown): TeamProfiles {
 
     profiles[managerName] = {
       credits: normalizeCredits(profile.credits),
-      logoUrl: typeof rawLogo === "string" ? rawLogo.trim() : ""
+      logoUrl: typeof rawLogo === "string" ? rawLogo.trim() : "",
+      displayName: typeof profile.displayName === "string" ? profile.displayName.trim() : ""
     };
 
     return profiles;

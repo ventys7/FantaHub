@@ -94,13 +94,14 @@ export function Players({ assets }: { assets: DashboardAsset[] }) {
 
   useEffect(() => {
     const onLogoUpdated = (event: Event) => {
-      const detail = (event as CustomEvent<{ leagueId: string; teamName: string; logoUrl: string }>).detail;
+      const detail = (event as CustomEvent<{ leagueId: string; teamName: string; logoUrl: string; displayName?: string }>).detail;
       if (!detail || detail.leagueId !== leagueId || !detail.teamName) return;
       setTeamProfiles((current) => ({
         ...current,
         [detail.teamName]: {
-          ...(current[detail.teamName] || { credits: null, logoUrl: "" }),
-          logoUrl: detail.logoUrl
+          ...(current[detail.teamName] || { credits: null, logoUrl: "", displayName: "" }),
+          logoUrl: detail.logoUrl,
+          ...(detail.displayName !== undefined ? { displayName: detail.displayName } : {})
         }
       }));
     };
