@@ -387,9 +387,18 @@
     return card;
   }
 
+  function quotaLine(payload) {
+    const quota = payload?.quota;
+    if (!quota) return "";
+    const reset = String(quota.resetAt || "").slice(11, 16);
+    const base = `Quota BSD oggi ${quota.callsToday ?? "?"}/${quota.limit ?? "?"}${reset ? ` · reset ${reset} UTC` : ""}`;
+    return quota.exhausted ? `${base} · ESAURITA` : base;
+  }
+
   function renderUnresolved(manifest, { preserveExisting = false } = {}) {
     mediaManifest = manifest;
-    mediaStatus.textContent = mediaSummaryText(manifest);
+    const quota = quotaLine(manifest);
+    mediaStatus.textContent = mediaSummaryText(manifest) + (quota ? ` · ${quota}` : "");
     renderTeamIssues(manifest);
     const entries = Object.values(manifest?.players || {}).filter((entry) => entry.status !== "resolved" || !entry.photoUrl);
     const incomingKeys = new Set(entries.map((entry) => entry.key));
@@ -421,13 +430,20 @@
     mediaRefresh.disabled = disabled;
   }
 
+  function quotaStopMessage(quota) {
+    const reset = String(quota?.resetAt || "").slice(11, 16);
+    return `Quota BSD esaurita per oggi (${quota?.callsToday ?? "?"}/${quota?.limit ?? "?"}). Si resetta alle ${reset || "?"} UTC: i dati restano quelli dell'ultima sincronizzazione riuscita, per tutti i dispositivi.`;
+  }
+
   async function syncMediaLoop() {
     setMediaButtonsDisabled(true);
     message("Ricalcolo i collegamenti BSD e aggiorno la cache Neon…");
     try {
       // Il backend azzera il checkpoint a "refresh" e prosegue a "continue-sync"
       // finche' gli step (serverless-safe) non raggiungono il terminale.
+      // Se un altro dispositivo ha un giro fresco in corso, ci si aggancia.
       let result = await mediaApi({ action: "refresh" });
+      if (result?.quotaExhausted) throw new Error(quotaStopMessage(result.quota));
       let guard = 0;
       while (result?.pending && guard < 60) {
         guard += 1;
@@ -436,6 +452,7 @@
         else if (result.phase === "search") message(`Ricerca per nome… (${progress.searchDone || 0}/${progress.total || "?"})`);
         else message(`Foto fallback… (${result.phase || "?"})`);
         result = await mediaApi({ action: "continue-sync" });
+        if (result?.quotaExhausted) throw new Error(quotaStopMessage(result.quota));
       }
       if (result?.pending) throw new Error("L'aggiornamento non è terminato in tempo massimo.");
       if (!result?.manifest) throw new Error("Terminali senza manifest restituito.");
