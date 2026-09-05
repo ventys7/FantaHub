@@ -7,6 +7,7 @@ const SECTION_LABELS: Record<SectionId, string> = {
   listone: "Listone",
   rose: "Rose",
   scambi: "Scambi",
+  calendario: "Calendario",
   classifica: "Classifica",
   regolamento: "Regolamento",
 };
