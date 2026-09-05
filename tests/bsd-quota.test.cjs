@@ -35,7 +35,9 @@ function csvResponse() {
   return new Response([
     "Tag,Ruolo,Nome,Squadra,Quotazione,Prezzo Acquisto",
     "Club Alfa,A,Giocatore Uno,Club Alfa,30,35",
-    "Club Beta,A,Giocatore Due,Club Beta,18,22"
+    "Club Alfa,A,Fantasiosa Alfa,Club Alfa,18,22",
+    "Club Beta,A,Giocatore Due,Club Beta,18,22",
+    "Club Beta,A,Fantasiosa Beta,Club Beta,18,22"
   ].join("\n"), { status: 200, headers: { "content-type": "text/csv" } });
 }
 
@@ -65,6 +67,9 @@ function bsdOkStub(counters) {
       return jsonResponse({ count: roster.length, results: roster });
     }
     if (url.pathname.startsWith("/api/players/")) return jsonResponse({ transfers: [] });
+    if (url.pathname === "/api/seasons/") {
+      return jsonResponse({ results: [{ id: 1, name: "2025/2026", year: 2025, start_date: "2025-01-01", is_current: true }] });
+    }
     return jsonResponse({});
   };
 }
@@ -264,6 +269,158 @@ test("stale persisted manifest is served without network", async () => {
   } finally {
     if (originalNeon) require.cache[NEON_PATH] = originalNeon;
     else delete require.cache[NEON_PATH];
+    await teardownEnv();
+  }
+});
+
+test("second full refresh reuses transfers/searches/seasons, refetches rosters and directory", async () => {
+  await setupEnv();
+  const NEON_PATH = require.resolve(path.join(originalCwd, "lib", "neon.cjs"));
+  const originalNeon = require.cache[NEON_PATH];
+  const store = {};
+  const counters = { roster: 0, transfer: 0, directory: 0, season: 0, search: 0 };
+  try {
+    require.cache[NEON_PATH] = {
+      id: NEON_PATH,
+      filename: NEON_PATH,
+      loaded: true,
+      exports: {
+        databaseConfigured: () => true,
+        readManifestCache: async () => null,
+        writeManifestCache: async () => {},
+        readPlayerOverrides: async () => ({}),
+        readTeamOverrides: async () => ({}),
+        upsertTeamOverrides: async () => {},
+        readRefreshCheckpoint: async () => null,
+        writeRefreshCheckpoint: async () => {},
+        clearRefreshCheckpoint: async () => {},
+        readRuntimeSetting: async (key) => (store[key] ? { value: store[key] } : null),
+        writeRuntimeSetting: async (key, value) => { store[key] = value; return { value }; }
+      }
+    };
+    const csv4 = [
+      "Tag,Ruolo,Nome,Squadra,Quotazione,Prezzo Acquisto",
+      "Club Alfa,A,Giocatore A1,Club Alfa,30,35",
+      "Club Alfa,A,Giocatore A2,Club Alfa,30,35",
+      "Club Alfa,A,Giocatore A3,Club Alfa,30,35",
+      "Club Alfa,A,Fantasiosa Alfa,Club Alfa,18,22",
+      "Club Beta,A,Giocatore B1,Club Beta,30,35",
+      "Club Beta,A,Giocatore B2,Club Beta,30,35",
+      "Club Beta,A,Giocatore B3,Club Beta,30,35",
+      "Club Beta,A,Fantasiosa Beta,Club Beta,18,22"
+    ].join("\n");
+    const rosters4 = {
+      101: ["Giocatore A1", "Giocatore A2", "Giocatore A3"],
+      102: ["Giocatore B1", "Giocatore B2", "Giocatore B3"]
+    };
+    let playerId = 9000;
+    const rosterByTeam = {};
+    for (const [team, names] of Object.entries(rosters4)) {
+      rosterByTeam[team] = names.map((full_name) => ({ id: (playerId += 1), full_name }));
+    }
+    global.fetch = async (input) => {
+      const url = new URL(String(input));
+      if (url.hostname === "example.test") {
+        return new Response(csv4, { status: 200, headers: { "content-type": "text/csv" } });
+      }
+      if (url.pathname === "/api/teams/") {
+        counters.directory += 1;
+        return jsonResponse({
+          count: 2, next: null, previous: null,
+          results: [
+            { id: 101, name: "Club Alfa", short_name: "Club Alfa", country: "England" },
+            { id: 102, name: "Club Beta", short_name: "Club Beta", country: "England" }
+          ]
+        });
+      }
+      if (url.pathname === "/api/players/") {
+        if (url.searchParams.get("search")) { counters.search += 1; return jsonResponse({ count: 0, results: [] }); }
+        counters.roster += 1;
+        const roster = rosterByTeam[Number(url.searchParams.get("team") || 0)] || [];
+        return jsonResponse({ count: roster.length, results: roster });
+      }
+      if (url.pathname.startsWith("/api/players/")) { counters.transfer += 1; return jsonResponse({ transfers: [] }); }
+      if (url.pathname === "/api/seasons/") {
+        counters.season += 1;
+        return jsonResponse({ results: [{ id: 1, name: "2025/2026", year: 2025, start_date: "2025-01-01", is_current: true }] });
+      }
+      throw new Error(`Unexpected fetch: ${url}`);
+    };
+    const runFullRefresh = async () => {
+      const media = freshMedia();
+      let result = await media.refreshDirectStep("fp", { reset: true });
+      let guard = 0;
+      while (result.pending && guard < 60) {
+        guard += 1;
+        result = await media.refreshDirectStep("fp", {});
+      }
+      assert.equal(result.pending, false);
+      return result;
+    };
+    await runFullRefresh();
+    const afterFirst = { ...counters };
+    assert.ok(afterFirst.transfer > 0, "il primo giro legge i transfer");
+    assert.ok(afterFirst.directory > 0, "il primo giro legge la directory");
+    // Nuova "istanza serverless": i Map in memoria si svuotano, resta solo Neon.
+    clearMediaCache();
+    delete require.cache[NEON_PATH];
+    require.cache[NEON_PATH] = {
+      id: NEON_PATH,
+      filename: NEON_PATH,
+      loaded: true,
+      exports: {
+        databaseConfigured: () => true,
+        readManifestCache: async () => null,
+        writeManifestCache: async () => {},
+        readPlayerOverrides: async () => ({}),
+        readTeamOverrides: async () => ({}),
+        upsertTeamOverrides: async () => {},
+        readRefreshCheckpoint: async () => null,
+        writeRefreshCheckpoint: async () => {},
+        clearRefreshCheckpoint: async () => {},
+        readRuntimeSetting: async (key) => (store[key] ? { value: store[key] } : null),
+        writeRuntimeSetting: async (key, value) => { store[key] = value; return { value }; }
+      }
+    };
+    await runFullRefresh();
+    assert.equal(counters.transfer, afterFirst.transfer, "transfer riusati dalla cache");
+    assert.equal(counters.search, afterFirst.search, "ricerche riusate dalla cache");
+    assert.equal(counters.season, afterFirst.season, "stagione riusata dalla cache");
+    assert.ok(counters.roster > afterFirst.roster, "rose ricaricate (non cachate)");
+    assert.ok(counters.directory > afterFirst.directory, "directory ricaricata (non cachata: il down deve restare visibile)");
+  } finally {
+    if (originalNeon) require.cache[NEON_PATH] = originalNeon;
+    else delete require.cache[NEON_PATH];
+    await teardownEnv();
+  }
+});
+
+test("persisted search hits respect TTL, misses retry sooner", async () => {
+  await setupEnv();
+  try {
+    let fetchCalls = 0;
+    global.fetch = async () => {
+      fetchCalls += 1;
+      return jsonResponse({ count: 1, results: [{ id: 7, full_name: "Giocatore Uno" }] });
+    };
+    const provider = require(path.join(originalCwd, "lib", "media", "bsd-provider.cjs"));
+    const key = (name) => `${provider.normalize(name)}|${provider.normalize("England")}`;
+    provider.restoreBsdCaches({ searches: { [key("Giocatore Uno")]: { value: [{ id: 7 }], storedAt: Date.now() } } });
+    assert.deepEqual(await provider.searchPlayerByName("Giocatore Uno", "England"), [{ id: 7 }]);
+    assert.equal(fetchCalls, 0);
+    provider.clearSearchCache();
+    provider.restoreBsdCaches({ searches: { [key("Giocatore Uno")]: { value: [{ id: 7 }], storedAt: 0 } } });
+    await provider.searchPlayerByName("Giocatore Uno", "England");
+    assert.ok(fetchCalls > 0, "voce scaduta: torna in rete");
+    const afterExpired = fetchCalls;
+    provider.clearSearchCache();
+    provider.restoreBsdCaches({ searches: { [key("Introvabile")]: { value: [], storedAt: Date.now() } } });
+    assert.deepEqual(await provider.searchPlayerByName("Introvabile", "England"), []);
+    assert.equal(fetchCalls, afterExpired, "miss fresca: niente rete");
+    const dump = provider.dumpBsdCaches();
+    assert.ok(dump);
+    JSON.parse(JSON.stringify(dump));
+  } finally {
     await teardownEnv();
   }
 });
