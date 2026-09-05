@@ -288,7 +288,7 @@ test("team-logo POST falls back to profiles when CSV is down and proceeds to cod
       body: { leagueId: "fp", teamName: "Old Team", code: "000000", upload: { mimeType: "image/png", dataBase64: "aGVsbG8=" } }
     }, res);
     assert.equal(res.statusCode, 401);
-    assert.match(res.body?.error || "", /Codice stemma errato/);
+    assert.match(res.body?.error || "", /PIN errato/);
   } finally {
     restoreListone();
   }
@@ -306,7 +306,7 @@ test("team-logo POST accepts team present in current CSV and proceeds to code ch
       body: { leagueId: "fp", teamName: "New Team", code: "999999", upload: { mimeType: "image/png", dataBase64: "aGVsbG8=" } }
     }, res);
     assert.equal(res.statusCode, 401);
-    assert.match(res.body?.error || "", /Codice stemma errato/);
+    assert.match(res.body?.error || "", /PIN errato/);
   } finally {
     restoreListone();
   }

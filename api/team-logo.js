@@ -75,7 +75,7 @@ async function handlePost(req, res) {
   const profiles = await readTeamProfiles(id);
   const names = await knownTeamNames(id, profiles);
   if (!names.includes(teamName)) throw new Error("Fantasquadra non riconosciuta");
-  if (!(await checkCode(id, teamName, body.code))) return res.status(401).json({ error: "Codice stemma errato" });
+  if (!(await checkCode(id, teamName, body.code))) return res.status(401).json({ error: "PIN errato" });
   const displayName = resolveDisplayName(profiles, teamName, body.displayName);
   const hasUpload = body.upload !== undefined && body.upload !== null;
   let logoUrl = profiles.teams[teamName]?.logoUrl || "";

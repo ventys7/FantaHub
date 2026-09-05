@@ -41,7 +41,7 @@ export function LogoEditorDialog({ open, leagueId, teamName, currentLogo, curren
     const nameChanged = nextName !== currentName.trim();
     if (!prepared && !nameChanged) { setStatus("Modifica il nome o scegli un nuovo stemma."); return; }
     if (nextName.length > 24) { setStatus("Nome fantasquadra troppo lungo: massimo 24 caratteri."); return; }
-    if (!/^\d{6}$/.test(code)) { setStatus("Inserisci il codice stemma di 6 cifre."); return; }
+    if (!/^\d{6}$/.test(code)) { setStatus("Inserisci il PIN di 6 cifre."); return; }
     setBusy(true); setStatus("");
     try {
       const update = await uploadTeamLogo(leagueId, teamName, code, prepared, nextName);
@@ -58,10 +58,10 @@ export function LogoEditorDialog({ open, leagueId, teamName, currentLogo, curren
       </div>
       <label className="lf-logo-code">Nome fantasquadra<input value={name} maxLength={24} onChange={(event) => setName(event.target.value.slice(0, 24))} placeholder="Facoltativo — max 24 caratteri" /></label>
       <label className="lf-logo-file">Scegli immagine<input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => selectFile(event.target.files?.[0])} /></label>
-      <label className="lf-logo-code">Codice stemma<input inputMode="numeric" pattern="[0-9]*" maxLength={6} value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="000000" /></label>
+      <label className="lf-logo-code">PIN<input inputMode="numeric" pattern="[0-9]*" maxLength={6} value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="000000" /></label>
       {status && <p className="lf-logo-dialog__status">{status}</p>}
       <button className="lf-logo-dialog__save" type="button" disabled={busy} onClick={save}>{busy ? "Salvataggio…" : "Aggiorna stemma e nome"}</button>
-      <p className="lf-logo-dialog__help">Il codice modifica stemma e nome di questa fantasquadra.</p>
+      <p className="lf-logo-dialog__help">Il PIN modifica stemma e nome di questa fantasquadra.</p>
     </dialog>
   );
 }
