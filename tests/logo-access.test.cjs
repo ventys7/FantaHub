@@ -36,19 +36,39 @@ test("hashCode produces different salts each time", async () => {
 });
 
 test("readAccess returns empty teams when no data exists", async () => {
+  // LOCAL_ROOT in storage.cjs è catturato al require: per isolare il test dai
+  // dati runtime reali (.lineup-runtime creato dall'uso locale) si ricaricano
+  // i moduli dopo il chdir e si ripristina la cache alla fine.
+  const modulePaths = [
+    "../lib/logo-access.cjs",
+    "../lib/storage.cjs",
+    "../lib/neon.cjs",
+    "../lib/settings.cjs"
+  ];
+  const saved = new Map();
+  for (const relative of modulePaths) {
+    const resolved = require.resolve(relative);
+    if (require.cache[resolved]) saved.set(resolved, require.cache[resolved]);
+    delete require.cache[resolved];
+  }
   const originalCwd = process.cwd();
   const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), "lineup-logo-test-"));
   process.chdir(tempRoot);
+  try {
+    const { readAccess } = require("../lib/logo-access.cjs");
+    const result = await readAccess("fp");
 
-  const { readAccess } = require("../lib/logo-access.cjs");
-  const result = await readAccess("fp");
-
-  assert.equal(result.version, 1);
-  assert.equal(result.leagueId, "fp");
-  assert.deepEqual(result.teams, {});
-
-  await fs.rm(tempRoot, { recursive: true, force: true });
-  process.chdir(originalCwd);
+    assert.equal(result.version, 1);
+    assert.equal(result.leagueId, "fp");
+    assert.deepEqual(result.teams, {});
+  } finally {
+    process.chdir(originalCwd);
+    for (const relative of modulePaths) {
+      try { delete require.cache[require.resolve(relative)]; } catch {}
+    }
+    for (const [resolved, entry] of saved) require.cache[resolved] = entry;
+    await fs.rm(tempRoot, { recursive: true, force: true });
+  }
 });
 
 test("readAccess rejects invalid league", async () => {
