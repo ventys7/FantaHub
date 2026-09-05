@@ -152,32 +152,25 @@ export function parseStandingsCsv(csvText: string): StandingsData {
     if (normalizedWholeRow.includes("classifica per fp")) break;
     if (!name) continue;
 
-    const points = parseInteger(row[indexes.points]);
-    const wins = parseInteger(row[indexes.wins]);
-    const draws = parseInteger(row[indexes.draws]);
-    const losses = parseInteger(row[indexes.losses]);
-    const goalsFor = parseInteger(row[indexes.goalsFor]);
-    const goalsAgainst = parseInteger(row[indexes.goalsAgainst]);
-    const goalDifference = parseInteger(row[indexes.goalDifference]);
-    const fantasyPoints = parseNumber(row[indexes.fantasyPoints]);
-
-    if (
-      points === null || wins === null || draws === null || losses === null ||
-      goalsFor === null || goalsAgainst === null || fantasyPoints === null
-    ) {
-      continue;
-    }
+    // Celle vuote = 0: se il CSV è presente la classifica si mostra sempre,
+    // anche a inizio stagione con sole righe squadra. Resta fuori solo chi
+    // non ha nemmeno il nome.
+    const wins = parseInteger(row[indexes.wins]) ?? 0;
+    const draws = parseInteger(row[indexes.draws]) ?? 0;
+    const losses = parseInteger(row[indexes.losses]) ?? 0;
+    const goalsFor = parseInteger(row[indexes.goalsFor]) ?? 0;
+    const goalsAgainst = parseInteger(row[indexes.goalsAgainst]) ?? 0;
 
     primaryRows.push({
       team: name,
-      points,
+      points: parseInteger(row[indexes.points]) ?? 0,
       wins,
       draws,
       losses,
       goalsFor,
       goalsAgainst,
-      goalDifference: goalDifference ?? goalsFor - goalsAgainst,
-      fantasyPoints,
+      goalDifference: parseInteger(row[indexes.goalDifference]) ?? goalsFor - goalsAgainst,
+      fantasyPoints: parseNumber(row[indexes.fantasyPoints]) ?? 0,
       played: wins + draws + losses
     });
   }
