@@ -47,6 +47,10 @@ test("Vercel configuration is deterministic, hardened and exposes no media cron"
 
   assert.equal(ruleHeaders("/api/regolamento")["X-Frame-Options"], undefined);
   assert.equal(ruleHeaders("/api/regolamento-img")["X-Frame-Options"], undefined);
+  assert.equal(ruleHeaders("/api/calendario")["X-Frame-Options"], undefined);
+  assert.equal(ruleHeaders("/api/calendario-img")["X-Frame-Options"], undefined);
+  assert.equal(config.functions?.["api/calendario.js"]?.maxDuration, 60);
+  assert.equal(config.functions?.["api/calendario-img.js"]?.maxDuration, 60);
 
   const hardenedPages = [
     "/", "/index.html",

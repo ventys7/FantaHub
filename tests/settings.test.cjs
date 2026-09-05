@@ -23,6 +23,15 @@ test("regolamento doc URL is normalized per league and defaults to empty", () =>
   assert.equal(settings.leagues.pd.regolamentoDocUrl, "");
 });
 
+test("calendario doc URL is normalized per league and defaults to empty", () => {
+  const settings = normalizeSettings({ leagues: {
+    fp: { calendarioDocUrl: "https://docs.google.com/document/d/e/example/pub" },
+    pd: {}
+  }});
+  assert.equal(settings.leagues.fp.calendarioDocUrl, "https://docs.google.com/document/d/e/example/pub");
+  assert.equal(settings.leagues.pd.calendarioDocUrl, "");
+});
+
 test("Vercel runtime blocks settings writes when Neon is unavailable", async () => {
   const previousVercel = process.env.VERCEL;
   const previousDatabaseUrl = process.env.DATABASE_URL;

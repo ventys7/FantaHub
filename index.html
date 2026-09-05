@@ -190,6 +190,7 @@
       <button class="league-tab" type="button" role="tab" aria-selected="false" aria-controls="listoneView" data-league-tab="listone" tabindex="-1">Listone</button>
       <button class="league-tab" type="button" role="tab" aria-selected="false" aria-controls="roseView" data-league-tab="rose" tabindex="-1">Rose</button>
       <button class="league-tab" type="button" role="tab" aria-selected="false" aria-controls="scambiView" data-league-tab="scambi" tabindex="-1">Scambi</button>
+      <button class="league-tab" type="button" role="tab" aria-selected="false" aria-controls="calendarioView" data-league-tab="calendario" tabindex="-1">Calendario</button>
       <button class="league-tab" type="button" role="tab" aria-selected="false" aria-controls="classificaView" data-league-tab="classifica" tabindex="-1">Classifica</button>
       <button class="league-tab" type="button" role="tab" aria-selected="false" aria-controls="regolamentoView" data-league-tab="regolamento" tabindex="-1">Regolamento</button>
     </div>
@@ -334,6 +335,15 @@
   <div id="league-trades-root" class="league-react-root" aria-live="polite"></div>
 </main>
 
+<main id="calendarioView" class="league-dashboard-view" data-league-view="calendario" role="tabpanel" hidden>
+  <div class="calendario-shell">
+    <div class="calendario-placeholder" id="calendarioPlaceholder" role="status" hidden>
+      <p>Il calendario non è ancora disponibile per questa lega.</p>
+    </div>
+    <iframe id="calendarioFrame" class="calendario-frame" title="Calendario" loading="lazy" allowfullscreen></iframe>
+  </div>
+</main>
+
 <main id="classificaView" class="league-dashboard-view" data-league-view="classifica" role="tabpanel" hidden>
   <div id="league-standings-root" class="league-react-root" aria-live="polite"></div>
 </main>
@@ -457,6 +467,7 @@
 <script src="js/app-events.js"></script>
 <script src="js/league-dashboard.js"></script>
 <script src="js/regolamento.js"></script>
+<script src="js/calendario.js"></script>
 <script type="module" id="lineup-dashboard-module-loader">
   const token = window.__LINEUP_DASHBOARD_RELOAD_TOKEN__
     || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;

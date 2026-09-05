@@ -14,6 +14,7 @@ export const ALL_SECTIONS = [
   "listone",
   "rose",
   "scambi",
+  "calendario",
   "classifica",
   "regolamento",
 ] as const;

@@ -21,6 +21,7 @@ window.LineupRuntimeSettings = (function () {
         standingsCsvUrl: league?.leagueData?.standingsCsvUrl || "",
         disciplineDocUrl: "",
         regolamentoDocUrl: league?.leagueData?.regolamentoDocUrl || "",
+        calendarioDocUrl: league?.leagueData?.calendarioDocUrl || "",
         teams: {}
       };
     });

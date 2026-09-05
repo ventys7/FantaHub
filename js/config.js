@@ -9,7 +9,8 @@ window.LINEUP_LEAGUES = Object.freeze({
       standingsCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSE2UP5Dh4Syl3yW__nqfh6OAG7CpR4ZzBCZxDK3d9SmQeHX6YbdtsYCSsOfYh0F7RzjYV49LQKVFNe/pub?gid=0&single=true&output=csv",
       standingsFallbackUrl: "/data/fp/classifica.csv",
       teamProfilesUrl: "/data/fp/teams.json",
-      regolamentoDocUrl: ""
+      regolamentoDocUrl: "",
+      calendarioDocUrl: ""
     }),
     identity: Object.freeze({
       id: "fp",
@@ -37,7 +38,8 @@ window.LINEUP_LEAGUES = Object.freeze({
       standingsCsvUrl: "",
       standingsFallbackUrl: "/data/pd/classifica.csv",
       teamProfilesUrl: "/data/pd/teams.json",
-      regolamentoDocUrl: ""
+      regolamentoDocUrl: "",
+      calendarioDocUrl: ""
     }),
     identity: Object.freeze({
       id: "pd",
