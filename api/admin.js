@@ -1,4 +1,12 @@
-const { isAuthenticated, passwordHash, setLogin, setLogout, verifyPassword } = require("../lib/admin-auth.cjs");
+const {
+  consumeAuthAttempt,
+  isAuthenticated,
+  passwordHash,
+  resetAuthAttempts,
+  setLogin,
+  setLogout,
+  verifyPassword
+} = require("../lib/admin-auth.cjs");
 const { methodNotAllowed, noStore, readBody } = require("../lib/http.cjs");
 const { loadLeagueAssets, teamNamesFromAssets } = require("../lib/listone.cjs");
 const { resetCode, pruneStaleLogoCodes } = require("../lib/logo-access.cjs");
@@ -41,13 +49,20 @@ module.exports = async function handler(req, res) {
   }
 
   if (req.method !== "POST") return methodNotAllowed(res, ["GET", "POST"]);
-  const body = readBody(req);
-  const action = String(body.action || "");
-  const id = leagueId(body.leagueId);
 
   try {
+    const body = readBody(req);
+    const action = String(body.action || "");
+    const id = leagueId(body.leagueId);
     if (action === "login") {
+      const throttle = { purpose: "admin", league: id, req };
+      const attempt = await consumeAuthAttempt(throttle);
+      if (!attempt.allowed) {
+        res.setHeader("Retry-After", String(attempt.retryAfter));
+        return res.status(429).json({ error: "Troppi tentativi. Riprova più tardi." });
+      }
       if (!(await verifyPassword(body.password, hash))) return res.status(401).json({ error: "Password errata" });
+      await resetAuthAttempts(throttle);
       setLogin(req, res);
       return res.status(200).json({ authenticated: true, ...(await adminState(id)) });
     }
@@ -80,6 +95,7 @@ module.exports = async function handler(req, res) {
 
     return res.status(400).json({ error: "Azione non riconosciuta" });
   } catch (error) {
+    if (error?.statusCode === 503) return res.status(503).json({ error: "Servizio temporaneamente non disponibile" });
     return res.status(400).json({ error: error.message || "Operazione non riuscita" });
   }
 };

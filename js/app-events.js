@@ -5,6 +5,16 @@ document.body.addEventListener("touchmove", function (event) {
 }, { passive: false });
 
 document.getElementById("moduleSelect").addEventListener("change", () => {
+  const module = document.getElementById("moduleSelect").value;
+  const team = currentManager ? db[currentManager]?.players : null;
+  if (team) {
+    slotAssignments = window.FormationModel.reconcileAssignments({
+      team,
+      selectedPlayers,
+      slotAssignments,
+      module
+    }).assignments;
+  }
   renderFormation();
   if (isMobile) renderMobileSlots();
 });

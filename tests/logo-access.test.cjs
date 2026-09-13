@@ -71,6 +71,39 @@ test("readAccess returns empty teams when no data exists", async () => {
   }
 });
 
+test("readAccess fails closed on malformed local runtime JSON", async () => {
+  const modulePaths = ["../lib/logo-access.cjs", "../lib/storage.cjs", "../lib/settings.cjs"];
+  const saved = new Map(modulePaths.map((relative) => {
+    const resolved = require.resolve(relative);
+    return [resolved, require.cache[resolved]];
+  }));
+  const originalCwd = process.cwd();
+  const previousEnv = Object.fromEntries(["DATABASE_URL", "POSTGRES_URL", "VERCEL"].map((name) => [name, process.env[name]]));
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), "lineup-logo-malformed-"));
+  for (const name of Object.keys(previousEnv)) delete process.env[name];
+  process.chdir(tempRoot);
+  for (const resolved of saved.keys()) delete require.cache[resolved];
+  try {
+    const runtimeDir = path.join(tempRoot, ".lineup-runtime", "logo-access");
+    await fs.mkdir(runtimeDir, { recursive: true });
+    await fs.writeFile(path.join(runtimeDir, "fp.json"), "{private-code");
+    const { readAccess } = require("../lib/logo-access.cjs");
+
+    await assert.rejects(readAccess("fp"), (error) => {
+      assert.match(error.message, /JSON runtime non valido/);
+      assert.doesNotMatch(error.message, /private-code/);
+      assert.doesNotMatch(error.message, new RegExp(tempRoot.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+      return true;
+    });
+  } finally {
+    process.chdir(originalCwd);
+    for (const [name, value] of Object.entries(previousEnv)) value === undefined ? delete process.env[name] : process.env[name] = value;
+    for (const resolved of saved.keys()) delete require.cache[resolved];
+    for (const [resolved, cached] of saved) if (cached) require.cache[resolved] = cached;
+    await fs.rm(tempRoot, { recursive: true, force: true });
+  }
+});
+
 test("readAccess rejects invalid league", async () => {
   const { readAccess } = require("../lib/logo-access.cjs");
   await assert.rejects(
@@ -89,4 +122,94 @@ test("resetCode rejects empty team name", async () => {
     () => resetCode("fp", "  "),
     /Fantasquadra non valida/
   );
+});
+
+test("checkCode throttles exact-cased teams independently and resets only the verified bucket", async () => {
+  const neonPath = require.resolve("../lib/neon.cjs");
+  const logoPath = require.resolve("../lib/logo-access.cjs");
+  const authPath = require.resolve("../lib/admin-auth.cjs");
+  const originalNeon = require.cache[neonPath];
+  const encoded = await hashCode("123456");
+  const lowerCaseEncoded = await hashCode("654321");
+  const buckets = new Map();
+  const store = {
+    async consume(key) {
+      const attempts = Math.min((buckets.get(key) || 0) + 1, 6);
+      buckets.set(key, attempts);
+      return { allowed: attempts <= 5, retryAfter: attempts <= 5 ? 0 : 900 };
+    },
+    async reset(key) { buckets.delete(key); }
+  };
+  require.cache[neonPath] = {
+    id: neonPath,
+    filename: neonPath,
+    loaded: true,
+    exports: {
+      databaseConfigured: () => true,
+      ensureSchema: async () => true,
+      sqlClient: () => ({}),
+      createAuthThrottleStore: () => store,
+      readLogoAccessRows: async () => ({
+        teams: {
+          "Team Alfa": { codeHash: encoded },
+          "team alfa": { codeHash: lowerCaseEncoded }
+        },
+        updatedAt: null
+      }),
+      deleteLogoAccess: async () => {},
+      upsertLogoAccess: async () => {}
+    }
+  };
+  delete require.cache[logoPath];
+  delete require.cache[authPath];
+  const originalScrypt = require("node:crypto").scrypt;
+  let scryptCalls = 0;
+  require("node:crypto").scrypt = (...args) => { scryptCalls += 1; return originalScrypt(...args); };
+  try {
+    const { checkCode } = require("../lib/logo-access.cjs");
+    const req = { headers: { "x-forwarded-for": "192.0.2.30" } };
+    for (let index = 0; index < 4; index += 1) assert.equal((await checkCode("fp", "Team Alfa", "000000", req)).verified, false);
+    assert.equal((await checkCode("fp", "Team Alfa", "123456", req)).verified, true);
+    for (let index = 0; index < 5; index += 1) assert.equal((await checkCode("fp", "Team Alfa", "000000", req)).throttled, false);
+    const blocked = await checkCode("fp", "Team Alfa", "123456", req);
+
+    assert.deepEqual(blocked, { verified: false, throttled: true, retryAfter: 900 });
+    assert.equal(scryptCalls, 10);
+    assert.equal((await checkCode("fp", "Unknown", "000000", req)).verified, false);
+    assert.equal(buckets.size, 1);
+
+    const caseReq = { headers: { "x-forwarded-for": "192.0.2.31" } };
+    for (let index = 0; index < 4; index += 1) await checkCode("fp", "Team Alfa", "000000", caseReq);
+    assert.equal((await checkCode("fp", "team alfa", "654321", caseReq)).verified, true);
+    assert.equal((await checkCode("fp", "Team Alfa", "000000", caseReq)).throttled, false);
+    const caseBlocked = await checkCode("fp", "Team Alfa", "123456", caseReq);
+
+    assert.deepEqual(caseBlocked, { verified: false, throttled: true, retryAfter: 900 });
+    assert.equal(scryptCalls, 16);
+  } finally {
+    require("node:crypto").scrypt = originalScrypt;
+    delete require.cache[logoPath];
+    delete require.cache[authPath];
+    if (originalNeon) require.cache[neonPath] = originalNeon;
+    else delete require.cache[neonPath];
+  }
+});
+
+test("checkCode fails closed on Vercel when Neon is unavailable", async () => {
+  const previous = { VERCEL: process.env.VERCEL, DATABASE_URL: process.env.DATABASE_URL, POSTGRES_URL: process.env.POSTGRES_URL };
+  process.env.VERCEL = "1";
+  delete process.env.DATABASE_URL;
+  delete process.env.POSTGRES_URL;
+  const logoPath = require.resolve("../lib/logo-access.cjs");
+  const authPath = require.resolve("../lib/admin-auth.cjs");
+  delete require.cache[logoPath];
+  delete require.cache[authPath];
+  try {
+    const { checkCode } = require("../lib/logo-access.cjs");
+    await assert.rejects(() => checkCode("fp", "Team Alfa", "000000", { headers: {} }), (error) => error.statusCode === 503);
+  } finally {
+    for (const [name, value] of Object.entries(previous)) value === undefined ? delete process.env[name] : process.env[name] = value;
+    delete require.cache[logoPath];
+    delete require.cache[authPath];
+  }
 });

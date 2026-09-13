@@ -16,7 +16,7 @@ test("active runtime stores logos and configuration in Neon without Blob write f
   const migration = source("lib/migrate-neon.cjs");
 
   assert.doesNotMatch(teamLogoApi, /uploadImmutableImage|writeBuffer|writeJson/);
-  assert.match(teamLogoApi, /writeTeamLogo/);
+  assert.match(teamLogoApi, /updateTeamIdentity/);
   assert.match(settings, /scrittura runtime bloccata per evitare fallback Blob/);
   assert.match(logoAccess, /reset codice bloccato per evitare fallback Blob/);
   assert.doesNotMatch(migration, /writeJson|writeBuffer|uploadImmutableImage/);

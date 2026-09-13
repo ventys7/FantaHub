@@ -43,7 +43,8 @@ function makeSquad(managerName: string, players: DashboardAsset[], credits: numb
 
 const squadsByManager = {
   Casa: makeSquad("Casa", assetsCasa, 10),
-  Villa: makeSquad("Villa", assetsVilla, 10)
+  Villa: makeSquad("Villa", assetsVilla, 10),
+  Garage: makeSquad("Garage", assetsVilla, 10)
 };
 
 function renderView(overrides: Partial<TradesViewProps> = {}) {
@@ -143,6 +144,63 @@ describe("TradesView", () => {
     fireEvent.change(amount, { target: { value: "3" } });
     expect(screen.getByText(/Scambio pronto/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Riepilogo" })).toBeEnabled();
+  });
+
+  it("mostra i crediti richiesti da B verso A senza importi negativi", () => {
+    renderView();
+    selectSides();
+    fireEvent.click(screen.getByText("Difensore Casa"));
+    fireEvent.click(screen.getByText("Difensore Villa"));
+    fireEvent.click(screen.getByRole("button", { name: "Richiedi" }));
+    fireEvent.change(screen.getByRole("spinbutton", { name: "Importo crediti" }), {
+      target: { value: "2" }
+    });
+
+    expect(screen.getAllByText("2 crediti da Villa a Casa")).toHaveLength(1);
+    fireEvent.click(screen.getByRole("button", { name: "Riepilogo" }));
+    expect(screen.getAllByText("2 crediti da Villa a Casa")).toHaveLength(2);
+    expect(screen.queryByText(/-2/)).not.toBeInTheDocument();
+  });
+
+  it("limita l'importo crediti tra 0 e 999", () => {
+    renderView({
+      squadsByManager: {
+        Casa: makeSquad("Casa", assetsCasa, 2000),
+        Villa: makeSquad("Villa", assetsVilla, 2000)
+      }
+    });
+    selectSides();
+    fireEvent.click(screen.getByRole("button", { name: "Offri" }));
+    const amount = screen.getByRole("spinbutton", { name: "Importo crediti" });
+
+    fireEvent.change(amount, { target: { value: "-2" } });
+    expect(amount).toHaveValue(null);
+    expect(screen.getByText("0 crediti da Casa a Villa")).toBeInTheDocument();
+
+    fireEvent.change(amount, { target: { value: "1000" } });
+    expect(amount).toHaveValue(999);
+    expect(screen.getByText("999 crediti da Casa a Villa")).toBeInTheDocument();
+  });
+
+  it.each([
+    ["Chi offre", "Villa", "Casa"],
+    ["Chi riceve", "Garage", "Casa"]
+  ])("azzera modo e importo quando cambia %s", (label, changedManager, otherManager) => {
+    renderView({ managers: ["Casa", "Villa", "Garage"] });
+    selectSides();
+    fireEvent.click(screen.getByRole("button", { name: "Offri" }));
+    fireEvent.change(screen.getByRole("spinbutton", { name: "Importo crediti" }), {
+      target: { value: "3" }
+    });
+
+    fireEvent.change(screen.getByLabelText(label), { target: { value: changedManager } });
+    if (label === "Chi offre") {
+      fireEvent.change(screen.getByLabelText("Chi riceve"), { target: { value: otherManager } });
+    }
+    expect(screen.getByText("Senza crediti")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Offri" }));
+    expect(screen.getByRole("spinbutton", { name: "Importo crediti" })).toHaveValue(null);
   });
 
   it("parte con input crediti vuoto e la X lo rimuove dallo scambio", () => {

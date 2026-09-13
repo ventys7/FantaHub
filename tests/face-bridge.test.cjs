@@ -6,7 +6,13 @@
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { lookupFace, flushCache, normalizeName } = require("../lib/media/face-bridge.cjs");
+const {
+  FACE_BRIDGE_RETRY_MS,
+  createFaceBridge,
+  lookupFace,
+  flushCache,
+  normalizeName
+} = require("../lib/media/face-bridge.cjs");
 
 function wikiPayload(pages) {
   const out = { query: { pages: {} } };
@@ -240,6 +246,55 @@ test("la cache condivisa evita richieste duplicate", async () => {
     assert.equal(calls, 1);
   });
   flushCache();
+});
+
+test("a successful face hit stays cached after the miss retry interval", async () => {
+  let now = 1_000;
+  let calls = 0;
+  const bridge = createFaceBridge({
+    now: () => now,
+    pause: async () => {},
+    fetch: async () => {
+      calls += 1;
+      return jsonResponse(200, wikiPayload([{
+        pageid: 8,
+        title: "Bukayo Saka",
+        extract: "Bukayo Saka is an English professional footballer.",
+        thumbnail: "https://upload.example.com/saka.jpg"
+      }]));
+    }
+  });
+
+  const first = await bridge.lookupFace("Bukayo Saka", "Arsenal");
+  now += FACE_BRIDGE_RETRY_MS + 1;
+  const cached = await bridge.lookupFace("Bukayo Saka", "Arsenal");
+
+  assert.deepEqual(cached, first);
+  assert.equal(calls, 1);
+});
+
+test("a cached miss is retried when the retry interval expires", async () => {
+  let now = 1_000;
+  let calls = 0;
+  const bridge = createFaceBridge({
+    now: () => now,
+    pause: async () => {},
+    fetch: async (url) => {
+      calls += 1;
+      return String(url).includes("wikipedia.org")
+        ? jsonResponse(200, wikiPayload([]))
+        : jsonResponse(200, { player: [] });
+    }
+  });
+
+  assert.equal(await bridge.lookupFace("Nobody", "Nowhere"), null);
+  now += FACE_BRIDGE_RETRY_MS - 1;
+  assert.equal(await bridge.lookupFace("Nobody", "Nowhere"), null);
+  assert.equal(calls, 2);
+
+  now += 1;
+  assert.equal(await bridge.lookupFace("Nobody", "Nowhere"), null);
+  assert.equal(calls, 4);
 });
 
 test("missing name restituisce null senza network", async () => {

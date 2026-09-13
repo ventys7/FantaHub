@@ -75,6 +75,12 @@ export function creditsValid(
   return receiverCredits !== null && -offered <= receiverCredits;
 }
 
+export function formatCreditTransfer(credits: number, managerA: string, managerB: string): string {
+  const payer = credits < 0 ? managerB : managerA;
+  const receiver = credits < 0 ? managerA : managerB;
+  return `${Math.abs(credits)} crediti da ${payer} a ${receiver}`;
+}
+
 function roleMarker(role: RoleKey): string {
   return role === "P" ? "🟨 P" : role === "D" ? "🟦 D" : role === "C" ? "🟩 C" : "🟥 A";
 }
@@ -123,7 +129,7 @@ export function buildTradeText(options: TradeTextOptions): string {
   if (credits !== 0) {
     lines.push(TRADE_SEPARATOR);
     lines.push("CREDITI");
-    lines.push(credits > 0 ? `+${credits} per ${managerB}` : `${credits} da ${managerA}`);
+    lines.push(formatCreditTransfer(credits, managerA, managerB));
   }
 
   return lines.join("\n");

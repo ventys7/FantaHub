@@ -15,11 +15,11 @@
   }
 
   function buildFormationDb(assets) {
-    const db = {};
+    const db = Object.create(null);
 
     assets.forEach((asset) => {
       if (!asset.active || asset.isFreeAgent || !asset.ownerTag) return;
-      if (!db[asset.ownerTag]) db[asset.ownerTag] = { players: [] };
+      if (!Object.hasOwn(db, asset.ownerTag)) db[asset.ownerTag] = { players: [] };
 
       const entries = asset.type === "goalkeeper_block"
         ? goalkeeperEntries(asset)

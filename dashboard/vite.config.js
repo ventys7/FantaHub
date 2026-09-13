@@ -12,6 +12,7 @@ export default defineConfig({
     outDir: fileURLToPath(new URL("../assets/dashboard", import.meta.url)),
     emptyOutDir: true,
     minify: "esbuild",
+    sourcemap: false,
     cssCodeSplit: false,
     lib: {
       entry: fileURLToPath(new URL("./src/main.tsx", import.meta.url)),

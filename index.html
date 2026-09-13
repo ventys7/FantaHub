@@ -61,9 +61,6 @@
     });
 
     document.documentElement.dataset.route = league ? "league" : "home";
-    document.documentElement.dataset.reactFormation = "1";
-    window.__REACT_FORMATION_OWNED__ = true;
-
     if (league) {
       const theme = league.theme;
       document.documentElement.dataset.league = league.id;
@@ -214,7 +211,6 @@
 </div>
 
  <main id="formationView" class="container" data-league-view="formation" role="tabpanel">
-  <div id="league-formation-root" class="league-react-root" aria-live="polite"></div>
   <div class="content-wrapper">
     
 

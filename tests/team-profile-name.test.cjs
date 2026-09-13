@@ -211,17 +211,18 @@ test("team-logo POST with upload preserves existing displayName (Neon path)", as
     loaded: true,
     exports: {
       databaseConfigured: () => true,
+      ensureSchema: async () => true,
+      sqlClient: () => ({}),
+      createAuthThrottleStore: () => ({ consume: async () => ({ allowed: true, retryAfter: 0 }), reset: async () => {} }),
       readTeamLogo: async () => null,
-      writeTeamLogo: async () => {},
+      updateTeamIdentity: async (league, teamName, profile, logo) => {
+        saved = { league, teamName, profile, logo };
+      },
       listTeamLogoMetadata: async () => ({}),
       readFantasyTeams: async () => ({
         teams: { "Team Alfa": { displayName: "Aquile", logoUrl: "" } },
         updatedAt: null
       }),
-      writeFantasyTeams: async (league, teams) => {
-        saved = { league, teams };
-        return { teams, updatedAt: null };
-      },
       readLogoAccessRows: async () => ({ teams: { "Team Alfa": { codeHash } }, updatedAt: null }),
       upsertLogoAccess: async () => {},
       deleteLogoAccess: async () => {},
@@ -236,12 +237,21 @@ test("team-logo POST with upload preserves existing displayName (Neon path)", as
     await handler({
       method: "POST",
       headers: {},
-      body: { leagueId: "fp", teamName: "Team Alfa", code: "123456", upload: { mimeType: "image/png", dataBase64: "aGVsbG8=" } }
+      body: {
+        leagueId: "fp",
+        teamName: "Team Alfa",
+        code: "123456",
+        upload: {
+          mimeType: "image/png",
+          dataBase64: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2nAAAAABJRU5ErkJggg=="
+        }
+      }
     }, res);
     assert.equal(res.statusCode, 200);
     assert.equal(res.body.displayName, "Aquile");
-    assert.equal(saved.teams["Team Alfa"].displayName, "Aquile");
-    assert.match(saved.teams["Team Alfa"].logoUrl || "", /^\/api\/team-logo\?/);
+    assert.equal(saved.profile.displayName, "Aquile");
+    assert.match(saved.profile.logoUrl || "", /^\/api\/team-logo\?/);
+    assert.equal(saved.logo.mimeType, "image/png");
   } finally {
     restoreListone();
     if (original) require.cache[NEON_PATH] = original;

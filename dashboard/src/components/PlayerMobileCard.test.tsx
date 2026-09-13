@@ -39,7 +39,7 @@ describe("PlayerMobileCard (stemma proprietario)", () => {
   });
 
   it("resta emoji per gli svincolati (nessun lookup)", () => {
-    render(<PlayerMobileCard player={makeAsset({ ownerTag: null })} ownerLogos={{ "casa": "https://example.com/x.png" }} />);
+    render(<PlayerMobileCard player={makeAsset({ ownerTag: "" })} ownerLogos={{ "casa": "https://example.com/x.png" }} />);
     expect(document.querySelector("img.lf-owner-logo")).not.toBeInTheDocument();
     expect(screen.getByText("👤")).toBeInTheDocument();
     expect(screen.getByText("Svincolato")).toBeInTheDocument();

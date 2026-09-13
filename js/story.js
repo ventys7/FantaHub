@@ -626,6 +626,12 @@ window.LineupStory = (function () {
     });
   }
 
+  function clearPreviewUrl() {
+    if (currentUrl) URL.revokeObjectURL(currentUrl);
+    currentUrl = null;
+    document.getElementById("storyPreviewImage")?.removeAttribute("src");
+  }
+
   async function open() {
     const model = storyModel();
     if (!model || !model.manager) {
@@ -639,7 +645,7 @@ window.LineupStory = (function () {
 
     const preview = document.getElementById("storyPreviewImage");
     const status = document.getElementById("storyStatus");
-    if (preview) preview.removeAttribute("src");
+    clearPreviewUrl();
     if (status) status.textContent = "Creo la tua grafica…";
     updateStoryActions(false);
     setStoryModal(true);
@@ -649,7 +655,6 @@ window.LineupStory = (function () {
       const canvas = await renderCanvas(model);
       const blob = await canvasToBlob(canvas);
 
-      if (currentUrl) URL.revokeObjectURL(currentUrl);
       currentBlob = blob;
       currentUrl = URL.createObjectURL(blob);
       currentFileName = safeFileName(model);
@@ -665,6 +670,7 @@ window.LineupStory = (function () {
   }
 
   function close() {
+    clearPreviewUrl();
     setStoryModal(false);
   }
 
@@ -694,12 +700,14 @@ window.LineupStory = (function () {
 
   function download() {
     if (!currentBlob) return;
+    const temporaryUrl = currentUrl ? null : URL.createObjectURL(currentBlob);
     const link = document.createElement("a");
-    link.href = currentUrl || URL.createObjectURL(currentBlob);
+    link.href = currentUrl || temporaryUrl;
     link.download = currentFileName;
     document.body.appendChild(link);
     link.click();
     link.remove();
+    if (temporaryUrl) URL.revokeObjectURL(temporaryUrl);
     showToast(
       isMobileStoryContext()
         ? "Immagine salvata: la trovi in Galleria (album Download)"

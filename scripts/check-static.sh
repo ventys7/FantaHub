@@ -30,6 +30,14 @@ for path in re.findall(r'(?:src|href)="((?:(?:js|css|assets/dashboard)/)[^"?#]+)
 if missing:
     raise SystemExit("Riferimenti locali mancanti: " + ", ".join(missing))
 
+source_maps = [
+    path
+    for directory in ("assets", "css", "fp", "js", "pd")
+    for path in Path(directory).rglob("*.map")
+]
+if source_maps:
+    raise SystemExit("Source map pubbliche vietate: " + ", ".join(map(str, source_maps)))
+
 for required in (
     "dashboard/package.json",
     "dashboard/src/main.tsx",

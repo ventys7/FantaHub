@@ -9,12 +9,8 @@ import { PlayerDesktopRow } from "../components/PlayerDesktopRow";
 import { PlayerFilters } from "../components/PlayerFilters";
 import { PlayerListHeader } from "../components/PlayerListHeader";
 import { PlayerMobileCard } from "../components/PlayerMobileCard";
-import { loadTeamProfiles, normalizeTeamName, type TeamProfiles } from "../teamProfiles";
+import { loadTeamProfiles, normalizeSearchText, normalizeTeamName, type TeamProfiles } from "../teamProfiles";
 import { useLeagueAssets } from "../hooks";
-
-function normalizeText(value: string) {
-  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/Ø/g, "O").replace(/ø/g, "o").toLowerCase();
-}
 
 function isGoalkeeperBlock(asset: DashboardAsset) {
   return asset.type === "goalkeeper_block" || (asset.role === "P" && /\s+-\s+/.test(asset.displayName));
@@ -115,13 +111,13 @@ export function Players({ assets }: { assets: DashboardAsset[] }) {
   }, {}), [teamProfiles]);
 
   const teams = useMemo(() => [...new Set(assets.map((asset) => asset.realTeam).filter(Boolean))].sort((a, b) => a.localeCompare(b, "it")), [assets]);
-  const owners = useMemo(() => [...new Set(assets.map((asset) => asset.ownerTag).filter(Boolean))].sort((a, b) => a.localeCompare(b, "it")), [assets]);
+  const owners = useMemo(() => [...new Set(assets.map((asset) => asset.ownerTag).filter((owner): owner is string => Boolean(owner)))].sort((a, b) => a.localeCompare(b, "it")), [assets]);
 
   const filteredPlayers = useMemo(() => {
-    const query = normalizeText(searchQuery.trim());
+    const query = normalizeSearchText(searchQuery);
     return assets.filter((asset) => {
       if (query) {
-        const haystack = normalizeText(`${asset.displayName} ${asset.realTeam} ${asset.ownerTag}`);
+        const haystack = normalizeSearchText(`${asset.displayName} ${asset.realTeam} ${asset.ownerTag}`);
         if (!haystack.includes(query)) return false;
       }
       if (showFreeAgentsOnly && !asset.isFreeAgent) return false;
@@ -261,6 +257,7 @@ export function Players({ assets }: { assets: DashboardAsset[] }) {
               <SearchIcon size={20} />
               <input
                 type="search"
+                aria-label="Cerca giocatore"
                 placeholder={`Cerca giocatore tra ${processedList.length}${processedList.length !== assets.length ? ` su ${assets.length}` : ""} risultati...`}
                 value={searchInput}
                 onChange={(event) => setSearchInput(event.target.value)}
@@ -289,12 +286,12 @@ export function Players({ assets }: { assets: DashboardAsset[] }) {
               </div>
             )}
 
-            <button type="button" onClick={() => setShowFreeAgentsOnly((value) => !value)} className={`lf-action-button tw-hidden md:tw-flex ${showFreeAgentsOnly ? "lf-action-button--active" : ""}`} title="Mostra solo giocatori svincolati">
+            <button type="button" onClick={() => setShowFreeAgentsOnly((value) => !value)} aria-pressed={showFreeAgentsOnly} className={`lf-action-button tw-hidden md:tw-flex ${showFreeAgentsOnly ? "lf-action-button--active" : ""}`} title="Mostra solo giocatori svincolati">
               <UserXIcon size={20} /><span className="tw-hidden sm:tw-inline">Svincolati</span>
             </button>
 
             {hasActiveFilters && (
-              <button type="button" onClick={resetFilters} className="lf-reset-button tw-hidden md:tw-flex" title="Azzera filtri"><XIcon size={20} /></button>
+              <button type="button" onClick={resetFilters} className="lf-reset-button tw-hidden md:tw-flex" aria-label="Azzera filtri" title="Azzera filtri"><XIcon size={20} /></button>
             )}
           </div>
         </div>

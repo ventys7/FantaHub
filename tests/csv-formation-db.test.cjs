@@ -59,3 +59,23 @@ test("buildFormationDb: single-name goalkeeper block yields one entry", () => {
   assert.equal(entries[0].n, "Solo GK");
   assert.equal(entries[0].gkPartner, "");
 });
+
+test("buildFormationDb: prototype-like owner tags remain isolated own keys", () => {
+  const ownerTags = ["__proto__", "constructor", "toString"];
+  const db = buildFormationDb(ownerTags.map((ownerTag) => ({
+    displayName: `Player ${ownerTag}`,
+    role: "D",
+    realTeam: "INT",
+    ownerTag,
+    active: true,
+    isFreeAgent: false,
+    type: "standard"
+  })));
+
+  assert.equal(Object.getPrototypeOf(db), null);
+  assert.equal(Object.prototype.players, undefined);
+  for (const ownerTag of ownerTags) {
+    assert.equal(Object.hasOwn(db, ownerTag), true);
+    assert.deepEqual(db[ownerTag].players.map((player) => player.n), [`Player ${ownerTag}`]);
+  }
+});

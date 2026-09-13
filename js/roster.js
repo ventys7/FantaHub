@@ -1,7 +1,6 @@
 /* ROSTER - Roster rendering and player toggle */
 
 function renderRoster() {
-  if (window.__REACT_FORMATION_OWNED__) return;
   const container = document.getElementById("roster");
   container.innerHTML = "";
   if (!currentManager) return;
@@ -145,53 +144,26 @@ function togglePlayer(index) {
     return;
   }
 
-  if (selectedPlayers.length >= MAX_SELECTED) {
-    showToast(`Puoi selezionare massimo ${MAX_SELECTED} giocatori.`, "error");
-    return;
-  }
-
   const module = document.getElementById("moduleSelect").value;
-  const defReq = parseInt(module[0], 10);
-  const cenReq = parseInt(module[1], 10);
-  const attReq = parseInt(module[2], 10);
-  const benchLimits = { P: 2, D: 3, C: 3, A: 3 };
-  const starterCounts = { P: 0, D: 0, C: 0, A: 0 };
-  const benchCounts = { P: 0, D: 0, C: 0, A: 0 };
-
-  selectedPlayers.forEach((playerIndex) => {
-    const selected = db[currentManager].players[playerIndex];
-    const role = selected?.r;
-    if (starterCounts[role] === undefined) return;
-
-    const starterLimit =
-      role === "P" ? 1 : role === "D" ? defReq : role === "C" ? cenReq : attReq;
-
-    if (starterCounts[role] < starterLimit) {
-      starterCounts[role] += 1;
-    } else {
-      benchCounts[role] += 1;
-    }
+  const selection = window.FormationModel.canSelect({
+    team: db[currentManager].players,
+    selectedPlayers,
+    playerIndex: index,
+    module
   });
 
-  const role = player.r;
-  const starterMax =
-    role === "P" ? 1 : role === "D" ? defReq : role === "C" ? cenReq : attReq;
-  const benchMax = benchLimits[role] || 0;
-
-  if (starterCounts[role] >= starterMax && benchCounts[role] >= benchMax) {
-    const roleName =
-      role === "P"
-        ? "portieri"
-        : role === "D"
-          ? "difensori"
-          : role === "C"
-            ? "centrocampisti"
-            : "attaccanti";
-
-    showToast(
-      `Hai già raggiunto il massimo per i ${roleName} (${starterMax} titolari + ${benchMax} panchina)`,
-      "error"
-    );
+  if (!selection.allowed) {
+    if (selection.reason === "max-selected") {
+      showToast(`Puoi selezionare massimo ${MAX_SELECTED} giocatori.`, "error");
+    } else if (selection.reason === "role-capacity") {
+      const definitions = window.FormationModel.getSlotDefinitions(module);
+      const starterMax = definitions.starter.filter(({ role }) => role === player.r).length;
+      const benchMax = definitions.bench.filter(({ role }) => role === player.r).length;
+      const roleName = player.r === "P" ? "portieri" : player.r === "D" ? "difensori" : player.r === "C" ? "centrocampisti" : "attaccanti";
+      showToast(`Hai già raggiunto il massimo per i ${roleName} (${starterMax} titolari + ${benchMax} panchina)`, "error");
+    } else {
+      showToast("Ruolo giocatore sconosciuto.", "error");
+    }
     return;
   }
 

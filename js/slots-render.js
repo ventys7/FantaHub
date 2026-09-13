@@ -175,7 +175,6 @@ function updateDesktopCounters(model) {
 }
 
 function renderFormation() {
-  if (window.__REACT_FORMATION_OWNED__) return;
   const startersContainer = document.getElementById("startersSlots");
   const benchContainer = document.getElementById("benchSlots");
   if (!startersContainer || !benchContainer) return;

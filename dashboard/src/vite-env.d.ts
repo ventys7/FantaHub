@@ -8,7 +8,7 @@ type LeagueAsset = {
   realTeam: string;
   quotation: number;
   purchasePrice?: number;
-  ownerTag: string;
+  ownerTag: string | null;
   managerCredits?: number | null;
   type: string;
   active: boolean;

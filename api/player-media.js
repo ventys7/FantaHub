@@ -23,7 +23,29 @@ function privateNoStore(res) {
   res.setHeader("Cache-Control", "no-store, max-age=0, must-revalidate");
 }
 
+function validQuota(value) {
+  return Number.isInteger(value?.callsToday) && value.callsToday >= 0
+    && Number.isInteger(value?.limit) && value.limit > 0;
+}
+
+function canonicalQuota(value) {
+  const valid = validQuota(value);
+  const resetAt = Date.parse(value?.resetAt || "");
+  const reset = new Date(Number.isFinite(resetAt) ? resetAt : Date.now());
+  if (!Number.isFinite(resetAt)) reset.setUTCHours(24, 0, 0, 0);
+  const rateLimitedUntil = Date.parse(value?.rateLimitedUntil || "");
+  return {
+    callsToday: valid ? value.callsToday : 0,
+    limit: valid ? value.limit : 1,
+    exhausted: true,
+    resetAt: reset.toISOString(),
+    rateLimitedUntil: Number.isFinite(rateLimitedUntil) ? new Date(rateLimitedUntil).toISOString() : null
+  };
+}
+
 module.exports = async function handler(req, res) {
+  let activeLeague = null;
+  let oneShotRefresh = false;
   try {
     if (req.method === "GET") {
       const authenticated = isAuthenticated(req);
@@ -43,6 +65,7 @@ module.exports = async function handler(req, res) {
 
     const body = readBody(req);
     const id = leagueId(body.leagueId);
+    activeLeague = id;
 
     // "refresh" azzera il checkpoint e parte un refresh a step nuovo;
     // "continue-sync" riprende il checkpoint corrente (o lo inizializza se
@@ -55,6 +78,7 @@ module.exports = async function handler(req, res) {
       return res.status(200).json(await refreshDirectStep(id, {}));
     }
     if (["sync-missing", "full-sync", "continue-full-sync"].includes(body.action)) {
+      oneShotRefresh = true;
       return res.status(200).json(publicManifest(await refreshDirectManifest(id)));
     }
     if (body.action === "search") {
@@ -79,6 +103,17 @@ module.exports = async function handler(req, res) {
     }
     return res.status(400).json({ error: "Azione non riconosciuta" });
   } catch (error) {
+    if (oneShotRefresh && error?.quotaExhausted) {
+      let quota = error.quota;
+      try {
+        const statusQuota = (await directMediaStatus(activeLeague))?.quota;
+        if (validQuota(statusQuota)) quota = statusQuota;
+      } catch {}
+      quota = canonicalQuota(quota);
+      const retryAfter = Math.max(1, Math.ceil((Date.parse(quota.resetAt) - Date.now()) / 1000));
+      res.setHeader("Retry-After", retryAfter);
+      return res.status(429).json({ quotaExhausted: true, quota });
+    }
     return res.status(502).json({ error: error.message || "Media non disponibili" });
   }
 };

@@ -21,6 +21,7 @@ export default function StandingsApp() {
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [data, setData] = useState<StandingsData>(EMPTY_DATA);
   const [error, setError] = useState("");
+  const [refreshError, setRefreshError] = useState("");
   const initialDiscipline = getCachedDiscipline(leagueId)?.data ?? null;
   const [discipline, setDiscipline] = useState<DisciplineData>(initialDiscipline ?? EMPTY_DISCIPLINE);
   const [disciplineLoading, setDisciplineLoading] = useState(!initialDiscipline);
@@ -53,13 +54,14 @@ export default function StandingsApp() {
             log.warn("primary source unavailable; using fallback", primaryError);
             csvText = await fetchFreshText(fallbackUrl, controller.signal);
           }
+          const parsed = parseStandingsCsv(csvText);
+          if (parsed.league.length === 0) throw new Error("Classifica vuota");
           if (csvText !== lastCsvText.current) {
-            const parsed = parseStandingsCsv(csvText);
-            if (parsed.league.length === 0 && hasLoadedData.current) throw new Error("Aggiornamento vuoto della Classifica");
             lastCsvText.current = csvText;
             setData(parsed);
           }
           hasLoadedData.current = true;
+          setRefreshError("");
           setStatus("ready");
         }
       } catch (loadError) {
@@ -68,6 +70,8 @@ export default function StandingsApp() {
           if (!hasLoadedData.current) {
             setError("La Classifica non è disponibile. Controlla la fonte configurata e riprova.");
             setStatus("error");
+          } else {
+            setRefreshError("La Classifica non è stata aggiornata. Restano visibili gli ultimi dati validi; riprova tra poco.");
           }
         }
       }
@@ -148,6 +152,7 @@ export default function StandingsApp() {
 
   return (
     <div>
+      {refreshError ? <div className="lf-standings-shell"><p className="lf-dashboard-card lf-standings-state lf-standings-state--error" role="status">{refreshError}</p></div> : null}
       <Standings data={data} leagueName={leagueName} teamLogos={teamLogos} teamNames={teamNames} />
       <div className="lf-standings-shell lf-standings-shell--discipline">
         <DisciplineBoard data={discipline} loading={disciplineLoading} error={disciplineError} />

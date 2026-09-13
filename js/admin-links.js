@@ -17,6 +17,12 @@
   const mediaStatus = document.getElementById("mediaStatus");
   const unresolvedTeams = document.getElementById("unresolvedTeams");
   const unresolvedPlayers = document.getElementById("unresolvedPlayers");
+  const requiredElements = [
+    loginView, adminView, loginForm, password, leagueSettings, logoCodes,
+    feedback, saveButton, logoutButton, mediaRefresh, mediaStatus, unresolvedPlayers
+  ];
+  if (requiredElements.some((element) => !element)) return;
+
   const DEGRADED_MEDIA_MESSAGE = "Sorgente foto (BSD) NON raggiungibile: sono mostrati i dati dell'ultima sincronizzazione riuscita";
   let state = null;
   let mediaManifest = null;

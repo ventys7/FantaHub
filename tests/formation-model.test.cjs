@@ -2,7 +2,8 @@
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { build } = require("../js/formation-model.js");
+const FormationModel = require("../js/formation-model.js");
+const { build } = FormationModel;
 
 // 13-player team: 1 starter GK + 4 D + 3 C + 3 A + 1 second GK (block) + 1 spare D.
 function makeTeam() {
@@ -18,8 +19,99 @@ function makeTeam() {
 
 const ALL = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
+const FULL_TEAM = [
+  { r: "P" }, { r: "P" }, { r: "P" },
+  { r: "D" }, { r: "D" }, { r: "D" }, { r: "D" }, { r: "D" }, { r: "D" }, { r: "D" },
+  { r: "C" }, { r: "C" }, { r: "C" }, { r: "C" }, { r: "C" }, { r: "C" },
+  { r: "A" }, { r: "A" }, { r: "A" }, { r: "A" }, { r: "A" }, { r: "A" },
+  { r: "D" }
+];
+const FULL_SELECTION = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21];
+
 test("build: returns null without a team", () => {
   assert.equal(build({}), null);
+});
+
+test("build: defaults missing and invalid modules to 433 outside the browser", () => {
+  const team = makeTeam();
+  const missing = build({ team, selectedPlayers: ALL });
+  const invalid = build({ team, module: "999", selectedPlayers: ALL });
+
+  assert.deepEqual(
+    [missing, invalid].map((model) => ({ module: model.moduleRaw, starters: model.starters.length })),
+    [{ module: "433", starters: 11 }, { module: "433", starters: 11 }]
+  );
+});
+
+test("unknown candidate roles are denied and labeled explicitly", () => {
+  const team = [{ r: "X", t: "Unknown" }];
+  const selection = FormationModel.canSelect?.({
+    team,
+    selectedPlayers: [],
+    playerIndex: 0,
+    module: "433",
+    replacingIndex: null
+  });
+
+  assert.deepEqual(
+    {
+      allowed: selection?.allowed,
+      roleLabel: FormationModel.getRoleName?.(team[0].r)
+    },
+    { allowed: false, roleLabel: "Ruolo sconosciuto" }
+  );
+});
+
+test("canSelect: denies a 23rd selected player before role capacity", () => {
+  assert.deepEqual(FormationModel.canSelect({
+    team: FULL_TEAM,
+    selectedPlayers: FULL_SELECTION,
+    playerIndex: 22,
+    module: "433",
+    replacingIndex: null
+  }), { allowed: false, reason: "max-selected" });
+});
+
+test("canSelect: denies an eighth defender in 433 below the total limit", () => {
+  const team = [{ r: "D" }, { r: "D" }, { r: "D" }, { r: "D" }, { r: "D" }, { r: "D" }, { r: "D" }, { r: "D" }];
+
+  assert.deepEqual(FormationModel.canSelect({
+    team,
+    selectedPlayers: [0, 1, 2, 3, 4, 5, 6],
+    playerIndex: 7,
+    module: "433",
+    replacingIndex: null
+  }), { allowed: false, reason: "role-capacity" });
+});
+
+test("canSelect: allows replacing a defender at capacity and total 22", () => {
+  assert.deepEqual(FormationModel.canSelect({
+    team: FULL_TEAM,
+    selectedPlayers: FULL_SELECTION,
+    playerIndex: 22,
+    module: "433",
+    replacingIndex: 3
+  }), { allowed: true });
+});
+
+test("canSelect: denies replacing another role when defender capacity would be exceeded", () => {
+  assert.deepEqual(FormationModel.canSelect({
+    team: FULL_TEAM,
+    selectedPlayers: FULL_SELECTION,
+    playerIndex: 22,
+    module: "433",
+    replacingIndex: 10
+  }), { allowed: false, reason: "role-capacity" });
+});
+
+test("canSelect: allows an already-selected valid player at all limits", () => {
+  assert.deepEqual(FormationModel.canSelect({
+    team: FULL_TEAM,
+    selectedPlayers: FULL_SELECTION,
+    playerIndex: 3,
+    module: "433",
+    replacingIndex: null
+  }), { allowed: true });
 });
 
 test("build: 433 fills 11 starters by ROLE_ORDER", () => {
@@ -76,4 +168,41 @@ test("build: manual slot assignment cleaned when role mismatches", () => {
   assert.equal(model.changedAssignments, true);
   // D1 is refilled by the next available defender (index 1).
   assert.equal(model.slots.starter.D1.player.t, "D1");
+});
+
+test("reconcileAssignments: returns a new map containing only first valid assignments", () => {
+  const slotAssignments = {
+    "starter-D1": 2,
+    "bench-D1": 2,
+    "starter-D2": 5,
+    "starter-D3": 12,
+    "starter-D4": 99,
+    "starter-D5": 1,
+    unknown: 1
+  };
+  const original = { ...slotAssignments };
+
+  const result = FormationModel.reconcileAssignments({
+    team: makeTeam(),
+    selectedPlayers: ALL.filter((index) => index !== 12),
+    slotAssignments,
+    module: "433"
+  });
+
+  assert.deepEqual(result, { assignments: { "starter-D1": 2 }, changed: true });
+  assert.notStrictEqual(result.assignments, slotAssignments);
+  assert.deepEqual(slotAssignments, original);
+});
+
+test("reconcileAssignments: reports unchanged valid assignments", () => {
+  const slotAssignments = { "starter-GK1": 0, "starter-D1": 1 };
+  const result = FormationModel.reconcileAssignments({
+    team: makeTeam(),
+    selectedPlayers: [0, 1],
+    slotAssignments,
+    module: "433"
+  });
+
+  assert.deepEqual(result, { assignments: slotAssignments, changed: false });
+  assert.notStrictEqual(result.assignments, slotAssignments);
 });

@@ -4,7 +4,6 @@ import App from "./App";
 import RoseApp from "./RoseApp";
 import StandingsApp from "./StandingsApp";
 import TradeApp from "./trade/TradeApp";
-import FormationApp from "./FormationApp";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { createLogger } from "./debug/logger";
 import { installPressFeedback } from "./utils/pressFeedback";
@@ -16,11 +15,11 @@ import "./styles/trades.css";
 
 const log = createLogger("bootstrap");
 
-function mount(rootId: string, name: string, app: React.ReactNode): void {
+function mount(rootId: string, name: string, app: React.ReactNode): boolean {
   const root = document.getElementById(rootId);
   if (!root) {
     log.debug("root not present", { rootId, name });
-    return;
+    return false;
   }
 
   ReactDOM.createRoot(root).render(
@@ -29,6 +28,7 @@ function mount(rootId: string, name: string, app: React.ReactNode): void {
     </React.StrictMode>
   );
   log.debug("mounted", { rootId, name });
+  return true;
 }
 
 // Rose, Scambi e Classifica vengono montate solo al primo accesso alla
@@ -37,10 +37,11 @@ function mount(rootId: string, name: string, app: React.ReactNode): void {
 const mountedSections = new Set<string>();
 function mountSectionOnce(section: string): void {
   if (mountedSections.has(section)) return;
-  mountedSections.add(section);
-  if (section === "rose") mount("league-rose-root", "Rose", <RoseApp />);
-  else if (section === "scambi") mount("league-trades-root", "Scambi", <TradeApp />);
-  else if (section === "classifica") mount("league-standings-root", "Classifica", <StandingsApp />);
+  let mounted = false;
+  if (section === "rose") mounted = mount("league-rose-root", "Rose", <RoseApp />);
+  else if (section === "scambi") mounted = mount("league-trades-root", "Scambi", <TradeApp />);
+  else if (section === "classifica") mounted = mount("league-standings-root", "Classifica", <StandingsApp />);
+  if (mounted) mountedSections.add(section);
 }
 
 window.addEventListener("lineup:league-section-change", (event) => {
@@ -61,9 +62,6 @@ installPressFeedback();
 
 // Il Listone è sempre montato; Rose, Scambi e Classifica vengono montate al
 // primo accesso alla sezione (evento) oppure subito se la pagina è già aperta su di esse.
-// La Formazione è sempre montata (come il Listone): il tab Formazione nasconde la UI
-// vanilla e deve essere riempito da React non appena i dati CSV sono pronti.
 mount("league-dashboard-root", "Listone", <App />);
-mount("league-formation-root", "Formazione", <FormationApp />);
 const initialSection = document.documentElement.dataset.leagueSection;
 if (initialSection === "rose" || initialSection === "scambi" || initialSection === "classifica") mountSectionOnce(initialSection);

@@ -8,8 +8,10 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs/promises");
 const os = require("node:os");
 const path = require("node:path");
+const { installSafeFetchMock } = require("./helpers/mock-safe-fetch.cjs");
 
 const originalCwd = process.cwd();
+installSafeFetchMock(originalCwd);
 let tempRoot;
 
 const MEDIA_MODULES = [
@@ -106,6 +108,46 @@ function freshMedia() {
   return require(path.join(originalCwd, "lib", "player-media.cjs"));
 }
 
+function quotaNeonStub() {
+  let record = null;
+  const readBsdQuota = async (date) => {
+    if (!record || record.date !== date) record = { date, calls: 0, rateLimitedUntil: null };
+    return { ...record };
+  };
+  return {
+    readBsdQuota,
+    incrementBsdQuota: async (delta, date) => {
+      await readBsdQuota(date);
+      record.calls += Number(delta);
+      return { ...record };
+    },
+    markBsdQuotaRateLimited: async (until, date) => {
+      await readBsdQuota(date);
+      record.rateLimitedUntil = until;
+      return { ...record };
+    }
+  };
+}
+
+function refreshLeaseNeonStub() {
+  let checkpoint = null;
+  let fencingToken = 0;
+  return {
+    acquireRefreshCheckpoint: async (league, owner) => ({
+      checkpoint,
+      owner,
+      fencingToken: ++fencingToken
+    }),
+    renewRefreshCheckpoint: async () => true,
+    writeRefreshCheckpoint: async (league, payload) => { checkpoint = payload; return true; },
+    clearRefreshCheckpoint: async () => { checkpoint = null; return true; },
+    publishManifestAndClearRefreshCheckpoint: async () => { checkpoint = null; return true; },
+    releaseRefreshCheckpoint: async () => true,
+    upsertPlayerOverrideWithRefreshLease: async () => true,
+    upsertTeamOverridesWithRefreshLease: async () => true
+  };
+}
+
 test("bsd circuit opens on 429: no retry, no further network", async () => {
   await setupEnv();
   try {
@@ -151,6 +193,26 @@ test("non-quota errors still retry", async () => {
   }
 });
 
+test("failed quota persistence keeps BSD calls pending for retry", async () => {
+  await setupEnv();
+  try {
+    global.fetch = async () => jsonResponse({ ok: true });
+    const provider = require(path.join(originalCwd, "lib", "media", "bsd-provider.cjs"));
+    await provider.bsdGet("/api/teams/", { country: "England" });
+
+    await assert.rejects(
+      provider.commitBsdCallCount(async () => { throw new Error("Neon unavailable"); }),
+      /Neon unavailable/
+    );
+    let retriedDelta = 0;
+    await provider.commitBsdCallCount(async (delta) => { retriedDelta = delta; });
+
+    assert.equal(retriedDelta, 1);
+  } finally {
+    await teardownEnv();
+  }
+});
+
 test("step aborts on quota and later steps make no BSD calls", async () => {
   await setupEnv();
   try {
@@ -172,6 +234,200 @@ test("step aborts on quota and later steps make no BSD calls", async () => {
     assert.equal(counters.bsd, 1);
     assert.equal(counters.csv, 1);
   } finally {
+    await teardownEnv();
+  }
+});
+
+test("one-shot preflight throws classified quota metadata", async () => {
+  await setupEnv();
+  const neonPath = require.resolve(path.join(originalCwd, "lib", "neon.cjs"));
+  const originalNeon = require.cache[neonPath];
+  try {
+    let quotaReads = 0;
+    require.cache[neonPath] = {
+      id: neonPath,
+      filename: neonPath,
+      loaded: true,
+      exports: {
+        ...refreshLeaseNeonStub(),
+        databaseConfigured: () => true,
+        readBsdQuota: async (date) => {
+          quotaReads += 1;
+          if (quotaReads > 1) throw new Error("quota read failed");
+          return { date, calls: 7500, rateLimitedUntil: null };
+        },
+        incrementBsdQuota: async () => { throw new Error("unexpected increment"); },
+        markBsdQuotaRateLimited: async () => { throw new Error("unexpected rate-limit write"); },
+        readManifestCache: async () => null,
+        readPlayerOverrides: async () => ({}),
+        readTeamOverrides: async () => ({}),
+        readRuntimeSetting: async () => null,
+        writeRuntimeSetting: async () => ({})
+      }
+    };
+    const media = freshMedia();
+
+    await assert.rejects(media.refreshDirectManifest("fp"), (error) => {
+      assert.ok(error instanceof Error);
+      assert.equal(error.quotaExhausted, true);
+      assert.equal(error.status, 429);
+      assert.equal(error.quota.callsToday >= 1, true);
+      assert.equal(error.quota.limit, 7500);
+      assert.equal(error.quota.exhausted, true);
+      assert.equal(Number.isFinite(Date.parse(error.quota.resetAt)), true);
+      assert.equal(error.quota.rateLimitedUntil, null);
+      return true;
+    });
+    assert.equal(quotaReads, 1);
+  } finally {
+    if (originalNeon) require.cache[neonPath] = originalNeon;
+    else delete require.cache[neonPath];
+    await teardownEnv();
+  }
+});
+
+test("one-shot live directory and team quota failures keep canonical metadata", async (t) => {
+  for (const failure of ["directory", "team"]) {
+    await t.test(failure, async () => {
+      await setupEnv();
+      try {
+        global.fetch = async (input) => {
+          const url = new URL(String(input));
+          if (url.hostname === "example.test") return csvResponse();
+          if (url.pathname === "/api/seasons/") {
+            return jsonResponse({ results: [{ id: 1, name: "2025/2026", year: 2025, is_current: true }] });
+          }
+          if (url.pathname === "/api/teams/") {
+            if (failure === "directory") return jsonResponse({ detail: "quota finita" }, 429);
+            return jsonResponse({
+              count: 2,
+              results: [
+                { id: 101, name: "Club Alfa", country: "England" },
+                { id: 102, name: "Club Beta", country: "England" }
+              ]
+            });
+          }
+          if (url.pathname === "/api/players/") return jsonResponse({ detail: "quota finita" }, 429);
+          throw new Error(`Unexpected fetch: ${url}`);
+        };
+        const provider = require(path.join(originalCwd, "lib", "media", "bsd-provider.cjs"));
+        await provider.resolveProviderSeason("fp");
+        const media = freshMedia();
+
+        await assert.rejects(media.refreshDirectManifest("fp"), (error) => {
+          assert.ok(error instanceof Error);
+          assert.equal(error.quotaExhausted, true);
+          assert.equal(error.status, 429);
+          assert.equal(error.quota.exhausted, true);
+          assert.equal(error.quota.limit, 7500);
+          assert.equal(Number.isFinite(Date.parse(error.quota.resetAt)), true);
+          assert.equal(Number.isFinite(error.quota.callsToday), true);
+          assert.ok(Object.hasOwn(error.quota, "rateLimitedUntil"));
+          return true;
+        });
+      } finally {
+        await teardownEnv();
+      }
+    });
+  }
+});
+
+test("one-shot search quota failure is classified and accounted once", async () => {
+  await setupEnv();
+  try {
+    const counters = { bsd: 0, search: 0 };
+    global.fetch = async (input) => {
+      const url = new URL(String(input));
+      if (url.hostname === "example.test") {
+        return new Response([
+          "Tag,Ruolo,Nome,Squadra,Quotazione,Prezzo Acquisto",
+          "Arsenal,A,Known Player,Arsenal,30,35",
+          "Arsenal,A,Missing Player,Arsenal,18,22"
+        ].join("\n"), { status: 200, headers: { "content-type": "text/csv" } });
+      }
+      counters.bsd += 1;
+      if (url.pathname === "/api/teams/") {
+        return jsonResponse({ count: 1, results: [{ id: 18, name: "Arsenal", country: "England" }] });
+      }
+      if (url.pathname === "/api/players/" && url.searchParams.get("search")) {
+        counters.search += 1;
+        return jsonResponse({ detail: "quota finita" }, 429);
+      }
+      if (url.pathname === "/api/players/") {
+        return jsonResponse({ count: 1, results: [{ id: 9001, full_name: "Known Player" }] });
+      }
+      if (url.pathname.startsWith("/api/players/")) return jsonResponse({ transfers: [] });
+      if (url.pathname === "/api/seasons/") {
+        return jsonResponse({ results: [{ id: 1, name: "2025/2026", year: 2025, is_current: true }] });
+      }
+      throw new Error(`Unexpected fetch: ${url}`);
+    };
+    const media = freshMedia();
+
+    await assert.rejects(media.refreshDirectManifest("fp"), (error) => {
+      assert.equal(error.quotaExhausted, true);
+      assert.equal(error.status, 429);
+      assert.equal(error.quota.callsToday, counters.bsd);
+      assert.equal(error.quota.exhausted, true);
+      assert.equal(error.quota.rateLimitedUntil, error.quota.resetAt);
+      return true;
+    });
+    assert.equal(counters.search, 1);
+  } finally {
+    await teardownEnv();
+  }
+});
+
+test("quota accounting failures preserve the marked one-shot error", async () => {
+  await setupEnv();
+  const neonPath = require.resolve(path.join(originalCwd, "lib", "neon.cjs"));
+  const originalNeon = require.cache[neonPath];
+  try {
+    let quotaReads = 0;
+    require.cache[neonPath] = {
+      id: neonPath,
+      filename: neonPath,
+      loaded: true,
+      exports: {
+        ...refreshLeaseNeonStub(),
+        databaseConfigured: () => true,
+        readBsdQuota: async (date) => {
+          quotaReads += 1;
+          if (quotaReads > 1) throw new Error("quota read failed");
+          return { date, calls: 0, rateLimitedUntil: null };
+        },
+        incrementBsdQuota: async () => { throw new Error("quota increment failed"); },
+        markBsdQuotaRateLimited: async () => { throw new Error("quota rate-limit failed"); },
+        readManifestCache: async () => null,
+        readPlayerOverrides: async () => ({}),
+        readTeamOverrides: async () => ({}),
+        readRuntimeSetting: async () => null,
+        writeRuntimeSetting: async () => ({})
+      }
+    };
+    global.fetch = async (input) => {
+      const url = new URL(String(input));
+      if (url.hostname === "example.test") return csvResponse();
+      if (url.pathname === "/api/teams/") return jsonResponse({ detail: "quota finita" }, 429);
+      throw new Error(`Unexpected fetch: ${url}`);
+    };
+    const media = freshMedia();
+
+    await assert.rejects(media.refreshDirectManifest("fp"), (error) => {
+      assert.equal(error.quotaExhausted, true);
+      assert.equal(error.status, 429);
+      assert.equal(Number.isFinite(error.quota.callsToday), true);
+      assert.equal(error.quota.callsToday >= 0, true);
+      assert.equal(Number.isFinite(error.quota.limit), true);
+      assert.equal(error.quota.limit > 0, true);
+      assert.equal(error.quota.exhausted, true);
+      assert.equal(Date.parse(error.quota.resetAt) > Date.now(), true);
+      assert.equal(error.quota.rateLimitedUntil, null);
+      return true;
+    });
+  } finally {
+    if (originalNeon) require.cache[neonPath] = originalNeon;
+    else delete require.cache[neonPath];
     await teardownEnv();
   }
 });
@@ -234,11 +490,13 @@ test("stale persisted manifest is served without network", async () => {
   const bsdCalls = { count: 0 };
   try {
     clearMediaCache();
+    const quota = quotaNeonStub();
     require.cache[NEON_PATH] = {
       id: NEON_PATH,
       filename: NEON_PATH,
       loaded: true,
       exports: {
+        ...quota,
         databaseConfigured: () => true,
         readManifestCache: async () => ({
           state: captured,
@@ -248,8 +506,6 @@ test("stale persisted manifest is served without network", async () => {
         readPlayerOverrides: async () => ({}),
         readTeamOverrides: async () => ({}),
         readRefreshCheckpoint: async () => null,
-        writeRefreshCheckpoint: async () => {},
-        clearRefreshCheckpoint: async () => {},
         readRuntimeSetting: async () => null,
         writeRuntimeSetting: async () => ({})
       }
@@ -278,6 +534,7 @@ test("second full refresh reuses transfers/searches/seasons, refetches rosters a
   const NEON_PATH = require.resolve(path.join(originalCwd, "lib", "neon.cjs"));
   const originalNeon = require.cache[NEON_PATH];
   const store = {};
+  const quota = quotaNeonStub();
   const counters = { roster: 0, transfer: 0, directory: 0, season: 0, search: 0 };
   try {
     require.cache[NEON_PATH] = {
@@ -285,6 +542,8 @@ test("second full refresh reuses transfers/searches/seasons, refetches rosters a
       filename: NEON_PATH,
       loaded: true,
       exports: {
+        ...quota,
+        ...refreshLeaseNeonStub(),
         databaseConfigured: () => true,
         readManifestCache: async () => null,
         writeManifestCache: async () => {},
@@ -292,8 +551,6 @@ test("second full refresh reuses transfers/searches/seasons, refetches rosters a
         readTeamOverrides: async () => ({}),
         upsertTeamOverrides: async () => {},
         readRefreshCheckpoint: async () => null,
-        writeRefreshCheckpoint: async () => {},
-        clearRefreshCheckpoint: async () => {},
         readRuntimeSetting: async (key) => (store[key] ? { value: store[key] } : null),
         writeRuntimeSetting: async (key, value) => { store[key] = value; return { value }; }
       }
@@ -369,6 +626,8 @@ test("second full refresh reuses transfers/searches/seasons, refetches rosters a
       filename: NEON_PATH,
       loaded: true,
       exports: {
+        ...quota,
+        ...refreshLeaseNeonStub(),
         databaseConfigured: () => true,
         readManifestCache: async () => null,
         writeManifestCache: async () => {},
@@ -376,8 +635,6 @@ test("second full refresh reuses transfers/searches/seasons, refetches rosters a
         readTeamOverrides: async () => ({}),
         upsertTeamOverrides: async () => {},
         readRefreshCheckpoint: async () => null,
-        writeRefreshCheckpoint: async () => {},
-        clearRefreshCheckpoint: async () => {},
         readRuntimeSetting: async (key) => (store[key] ? { value: store[key] } : null),
         writeRuntimeSetting: async (key, value) => { store[key] = value; return { value }; }
       }
@@ -445,5 +702,43 @@ test("status payload exposes quota and last sync", async () => {
     assert.ok(status.lastSyncAt);
   } finally {
     await teardownEnv();
+  }
+});
+
+test("BSD_DAILY_QUOTA is finite and bounded", async (t) => {
+  const envName = "BSD_DAILY_QUOTA";
+  const modulePath = require.resolve(path.join(originalCwd, "lib", "media", "manifest-state.cjs"));
+  const originalEnv = process.env[envName];
+  const originalModule = require.cache[modulePath];
+  t.after(() => {
+    if (originalEnv === undefined) delete process.env[envName];
+    else process.env[envName] = originalEnv;
+    if (originalModule) require.cache[modulePath] = originalModule;
+    else delete require.cache[modulePath];
+  });
+
+  delete process.env[envName];
+  delete require.cache[modulePath];
+  const manifestState = require(modulePath);
+  assert.equal(typeof manifestState.quotaLimit, "function", "quotaLimit must be exported");
+
+  const rows = [
+    ["unset", undefined, 7500],
+    ["empty", "", 7500],
+    ["NaN", "NaN", 7500],
+    ["Infinity", "Infinity", 7500],
+    ["negative", "-1", 1],
+    ["zero", "0", 1],
+    ["oversized", "9999999999999", 50000],
+    ["valid interior", "12345", 12345]
+  ];
+  for (const [name, value, expected] of rows) {
+    await t.test(name, () => {
+      if (value === undefined) delete process.env[envName];
+      else process.env[envName] = value;
+      const result = manifestState.quotaLimit();
+      assert.equal(Number.isFinite(result), true);
+      assert.equal(result, expected);
+    });
   }
 });

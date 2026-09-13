@@ -7,9 +7,24 @@ function handleDrop(event, targetType, targetSlot) {
   });
 
   const playerIndex = draggedPlayerIndex;
-  const playerRole = draggedPlayerRole;
-  if (playerIndex === null || playerRole === null) return;
+  if (playerIndex === null || draggedPlayerRole === null) return;
 
+  const team = db[currentManager].players;
+  const player = team[playerIndex];
+  const slotKey = targetType + "-" + targetSlot;
+  const selection = window.FormationModel.canSelect({
+    team,
+    selectedPlayers,
+    playerIndex,
+    module: document.getElementById("moduleSelect").value
+  });
+
+  if (!selection.allowed) {
+    showToast("Impossibile selezionare questo giocatore.", "error");
+    return;
+  }
+
+  const playerRole = player.r;
   const targetRole = targetSlot.startsWith("GK") ? "P" : targetSlot[0];
 
   if (playerRole === "P" && targetRole !== "P") {
@@ -26,10 +41,6 @@ function handleDrop(event, targetType, targetSlot) {
     showToast(`Questo slot è per ${getRoleName(targetRole)}`, "error");
     return;
   }
-
-  const team = db[currentManager].players;
-  const player = team[playerIndex];
-  const slotKey = targetType + "-" + targetSlot;
 
   if (playerRole === "P" && player?.isGkBlock) {
     if (!window.GkBlocks?.select(playerIndex, { slotKey })) return;

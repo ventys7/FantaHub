@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useId } from "react";
 import { ChevronDownIcon, ShieldIcon } from "../icons";
 import type { PlayerMediaEntry } from "../media";
 import { normalizeTeamName } from "../teamProfiles";
@@ -19,12 +19,13 @@ type Props = {
 
 export const GoalkeeperBlock = memo(function GoalkeeperBlock({ asset, expanded, onToggle, crestUrl, media, ownerLogos }: Props) {
   const players = splitGoalkeepers(asset.displayName);
+  const panelId = useId();
   // Stemma della fantasquadra del proprietario (solo nel blocco mobile); emoji come fallback.
   const ownerLogo = asset.ownerTag ? ownerLogos?.[normalizeTeamName(asset.ownerTag)] : undefined;
 
   return (
     <div className="lf-list-row">
-      <button type="button" onClick={onToggle} className="tw-hidden tw-w-full tw-grid-cols-12 tw-gap-4 tw-px-6 tw-py-4 tw-text-left tw-transition hover:tw-bg-slate-50 md:tw-grid">
+      <button type="button" onClick={onToggle} aria-expanded={expanded} aria-controls={panelId} className="tw-hidden tw-w-full tw-grid-cols-12 tw-gap-4 tw-px-6 tw-py-4 tw-text-left tw-transition hover:tw-bg-slate-50 md:tw-grid">
         <div className="tw-col-span-4 tw-flex tw-min-w-0 tw-items-center tw-gap-3">
           <div className={`lf-player-avatar ${crestUrl ? "has-photo lf-player-avatar--crest" : ""}`}>{crestUrl ? <img src={crestUrl} alt="" loading="lazy" decoding="async" /> : <ShieldIcon size={22} />}</div>
           <div className="tw-min-w-0">
@@ -41,7 +42,7 @@ export const GoalkeeperBlock = memo(function GoalkeeperBlock({ asset, expanded, 
         <div className={`tw-col-span-2 tw-flex tw-items-center tw-truncate tw-text-sm ${asset.ownerTag ? "tw-text-slate-600" : "tw-italic tw-text-slate-400"}`}>{asset.ownerTag || "Svincolato"}</div>
       </button>
 
-      <button type="button" onClick={onToggle} className="tw-flex tw-w-full tw-items-start tw-gap-3 tw-p-3 tw-text-left tw-transition hover:tw-bg-slate-50 md:tw-hidden">
+      <button type="button" onClick={onToggle} aria-expanded={expanded} aria-controls={panelId} className="tw-flex tw-w-full tw-items-start tw-gap-3 tw-p-3 tw-text-left tw-transition hover:tw-bg-slate-50 md:tw-hidden">
         <div className={`lf-player-avatar lf-player-avatar--mobile ${crestUrl ? "has-photo lf-player-avatar--crest" : ""}`}>{crestUrl ? <img src={crestUrl} alt="" loading="lazy" decoding="async" /> : <ShieldIcon size={22} />}</div>
         <div className="tw-min-w-0 tw-flex-1">
           <div className="tw-mb-1 tw-flex tw-items-center tw-justify-between tw-gap-2">
@@ -61,7 +62,7 @@ export const GoalkeeperBlock = memo(function GoalkeeperBlock({ asset, expanded, 
       </button>
 
       {expanded && (
-        <div className="lf-block-expanded">
+        <div id={panelId} className="lf-block-expanded">
           {players.map((player) => {
             const photo = media.player(player, asset.realTeam)?.photoUrl;
             return (

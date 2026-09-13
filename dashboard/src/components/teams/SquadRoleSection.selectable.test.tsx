@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
-import type { DashboardAsset } from "../types";
+import type { DashboardAsset } from "../../types";
 import { SquadRoleSection } from "./SquadRoleSection";
 
 function makeAsset(overrides: Partial<DashboardAsset>): DashboardAsset {
