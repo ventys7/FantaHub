@@ -30,5 +30,5 @@ if (window.LINEUP_FANTA?.route === "league") {
     renderFormation();
     if (isMobile && typeof renderMobileSlots === "function") renderMobileSlots();
   });
-  loadCSV();
+  void loadCSV().catch(() => {});
 }

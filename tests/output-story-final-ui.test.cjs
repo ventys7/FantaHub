@@ -2,11 +2,96 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
+const vm = require("node:vm");
 
 const root = path.join(__dirname, "..");
 
 function read(file) {
   return fs.readFileSync(path.join(root, file), "utf8");
+}
+
+function loadStory() {
+  const elements = new Map();
+  const element = (id) => {
+    if (!elements.has(id)) elements.set(id, {
+      addEventListener() {},
+      classList: { remove() {}, toggle() {} },
+      disabled: false,
+      hidden: false,
+      removeAttribute(name) { if (name === "src") this.src = ""; },
+      setAttribute() {},
+      src: "",
+      textContent: ""
+    });
+    return elements.get(id);
+  };
+  const gradient = { addColorStop() {} };
+  const canvasContext = new Proxy({
+    createLinearGradient: () => gradient,
+    measureText: (text) => ({ width: String(text).length * 10 })
+  }, {
+    get(target, property) { return property in target ? target[property] : () => {}; }
+  });
+  const canvas = {
+    getContext: () => canvasContext,
+    toBlob: (callback) => callback({ type: "image/png" })
+  };
+  const created = [];
+  const revoked = [];
+  const URL = {
+    createObjectURL() {
+      const url = `blob:${created.length + 1}`;
+      created.push(url);
+      return url;
+    },
+    revokeObjectURL: (url) => revoked.push(url)
+  };
+  const model = {
+    bench: [],
+    definitions: { bench: [], starter: [] },
+    manager: "Paolo",
+    module: "4-3-3",
+    slots: { bench: {}, starter: {} },
+    starters: [],
+    team: []
+  };
+  const window = {
+    FormationModel: { build: () => model },
+    LINEUP_FANTA: { league: { id: "fp", name: "FP", theme: {} } },
+    addEventListener() {},
+    clearTimeout,
+    matchMedia: () => ({ matches: false }),
+    setTimeout
+  };
+  const context = {
+    Date,
+    File: class {},
+    Image: class {},
+    Intl,
+    Map,
+    Math,
+    Promise,
+    Set,
+    URL,
+    console,
+    document: {
+      body: { appendChild() {} },
+      createElement: (tag) => tag === "canvas" ? canvas : element(tag),
+      getElementById: element
+    },
+    navigator: { maxTouchPoints: 0, platform: "", userAgent: "" },
+    requestAnimationFrame: (callback) => callback(),
+    setModalOpen() {},
+    showToast() {},
+    window
+  };
+  vm.createContext(context);
+  const source = read("js/story.js").replace(
+    "return Object.freeze({ open, close });",
+    "return Object.freeze({ open, close, currentUrl: () => currentUrl });"
+  );
+  vm.runInContext(source, context, { filename: "story.js" });
+  return { created, elements, revoked, story: window.LineupStory };
 }
 
 test("Visualizza/Copia renders one direct output without format previews", () => {
@@ -56,4 +141,31 @@ test("standings keep inline penalties and remove the duplicate strip below the t
   assert.match(standings, /className="lf-standings-penalty"/);
   assert.doesNotMatch(standings, /lf-standings-penalty-note|penalizedTeams/);
   assert.doesNotMatch(css, /\.lf-standings-penalty-note/);
+});
+
+test("story preview revokes only its active object URL", async () => {
+  const { created, elements, revoked, story } = loadStory();
+
+  await story.open();
+  const preview = elements.get("storyPreviewImage");
+  assert.equal(preview.src, "blob:1");
+  assert.equal(story.currentUrl(), "blob:1");
+
+  story.close();
+  assert.deepEqual(revoked, ["blob:1"]);
+  assert.equal(preview.src, "");
+  assert.equal(story.currentUrl(), null);
+
+  story.close();
+  assert.deepEqual(revoked, ["blob:1"]);
+
+  await story.open();
+  assert.deepEqual(created, ["blob:1", "blob:2"]);
+  assert.deepEqual(revoked, ["blob:1"]);
+  assert.equal(preview.src, "blob:2");
+
+  story.close();
+  assert.deepEqual(revoked, ["blob:1", "blob:2"]);
+  assert.doesNotMatch(read("js/story.js"), /currentUrl \|\| URL\.createObjectURL/);
+  assert.match(read("js/story.js"), /if \(temporaryUrl\) URL\.revokeObjectURL\(temporaryUrl\)/);
 });

@@ -111,8 +111,16 @@ const gkBlocksApi = (function () {
       return false;
     }
 
-    if (!selected && selectedPlayers.length >= MAX_SELECTED) {
-      showToast(`Puoi selezionare massimo ${MAX_SELECTED} giocatori.`, "error");
+    const selection = window.FormationModel.canSelect({
+      team,
+      selectedPlayers,
+      playerIndex: index,
+      module: document.getElementById("moduleSelect").value,
+      replacingIndex: getSelectedIndex()
+    });
+
+    if (!selection.allowed) {
+      showToast(selection.reason === "max-selected" ? `Puoi selezionare massimo ${MAX_SELECTED} giocatori.` : "Impossibile selezionare questo portiere.", "error");
       return false;
     }
 

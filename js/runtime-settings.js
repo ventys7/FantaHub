@@ -14,6 +14,7 @@ window.LineupRuntimeSettings = (function () {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return response.json();
     }).catch(() => {
+      cache.delete(id);
       const league = window.LINEUP_LEAGUES?.[id];
       return {
         leagueId: id,

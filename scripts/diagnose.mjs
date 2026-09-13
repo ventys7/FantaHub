@@ -8,6 +8,24 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const errors = [];
 const warnings = [];
 
+export const REQUIRED_LEAGUE_SECTIONS = [
+  "formation",
+  "listone",
+  "rose",
+  "scambi",
+  "calendario",
+  "classifica",
+  "regolamento"
+];
+
+export function inspectLeaguePage(html) {
+  return {
+    missingSections: REQUIRED_LEAGUE_SECTIONS.filter(
+      (section) => !html.includes(`data-league-tab="${section}"`)
+    )
+  };
+}
+
 function ok(message) { console.log(`✓ ${message}`); }
 function fail(message) { errors.push(message); console.error(`✗ ${message}`); }
 function warn(message) { warnings.push(message); console.warn(`! ${message}`); }
@@ -65,12 +83,9 @@ async function checkLeaguePages() {
       continue;
     }
     const html = await read(page);
-    for (const section of ["formation", "listone", "rose", "classifica"]) {
-      if (!html.includes(`data-league-tab="${section}"`)) fail(`${page}: sezione ${section} mancante`);
-    }
-    if (html.includes('data-league-tab="calendario"') || html.includes("league-calendar-root")) {
-      fail(`${page}: il Calendario non è stato rimosso completamente`);
-    } else ok(`${page}: sezioni essenziali presenti`);
+    const { missingSections } = inspectLeaguePage(html);
+    for (const section of missingSections) fail(`${page}: sezione ${section} mancante`);
+    if (!missingSections.length) ok(`${page}: sezioni essenziali presenti`);
   }
 }
 
@@ -127,4 +142,6 @@ async function main() {
   if (errors.length) process.exitCode = 1;
 }
 
-main().catch((error) => { console.error(error); process.exitCode = 1; });
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch((error) => { console.error(error); process.exitCode = 1; });
+}

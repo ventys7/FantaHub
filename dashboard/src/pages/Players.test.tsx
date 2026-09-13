@@ -31,7 +31,7 @@ const assets: DashboardAsset[] = [
 ];
 
 function searchInput(): HTMLInputElement {
-  return screen.getByPlaceholderText(/Cerca giocatore tra/) as HTMLInputElement;
+  return screen.getByRole("searchbox", { name: "Cerca giocatore" }) as HTMLInputElement;
 }
 
 function rowNames(container: HTMLElement): string[] {
@@ -98,11 +98,38 @@ describe("Players (listone)", () => {
     expect(screen.queryByText("Leo Messi")).not.toBeInTheDocument();
   });
 
-  it("il toggle Svincolati (desktop) filtra i soli svincolati", () => {
+  it("normalizza lettere estese, apostrofi, trattini e spazi nella ricerca", async () => {
+    const normalizedAsset = makeAsset({
+      assetCode: "special",
+      displayName: "Álvaro Ødegaard Ægir Œzil Łukasz Guðmundur Þór ßahin Işık Đoković",
+      docsName: "Speciale",
+      realTeam: "D’Angelo—United"
+    });
+    render(<Players assets={[normalizedAsset, makeAsset({ assetCode: "other", displayName: "Altro giocatore" })]} />);
+
+    fireEvent.change(searchInput(), {
+      target: { value: "  alvaro odegaard aegir oezil lukasz gudmundur thor ssahin isik dokovic   dangelo - united  " }
+    });
+
+    await waitFor(() => expect(searchInput().placeholder).toBe("Cerca giocatore tra 1 su 2 risultati..."));
+    expect(screen.getByText(normalizedAsset.displayName)).toBeInTheDocument();
+  });
+
+  it("i toggle Svincolati espongono lo stesso stato e reset accessibile", () => {
     const { container } = render(<Players assets={assets} />);
-    fireEvent.click(screen.getByTitle("Mostra solo giocatori svincolati"));
+    const toggles = screen.getAllByRole("button", { name: "Svincolati" });
+    toggles.forEach((toggle) => expect(toggle).toHaveAttribute("aria-pressed", "false"));
+
+    fireEvent.click(toggles[0]);
+
+    screen.getAllByRole("button", { name: "Svincolati" }).forEach((toggle) => expect(toggle).toHaveAttribute("aria-pressed", "true"));
     expect(searchInput().placeholder).toBe("Cerca giocatore tra 1 su 4 risultati...");
     expect(container.querySelectorAll(".lf-list-row")).toHaveLength(1);
     expect(screen.getByText("Cristiano Ronaldo")).toBeInTheDocument();
+
+    const resetButtons = screen.getAllByRole("button", { name: "Azzera filtri" });
+    expect(resetButtons).toHaveLength(2);
+    fireEvent.click(resetButtons[0]);
+    screen.getAllByRole("button", { name: "Svincolati" }).forEach((toggle) => expect(toggle).toHaveAttribute("aria-pressed", "false"));
   });
 });

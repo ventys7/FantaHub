@@ -50,12 +50,24 @@ describe("TradeSummaryModal", () => {
 
   it("mostra la riga crediti quando prevista", () => {
     render(<TradeSummaryModal open summary={{ ...SUMMARY, credits: 5 }} text={TEXT} media={media} onClose={() => {}} />);
-    expect(screen.getByText(/\+5 crediti da Casa a Villa/)).toBeInTheDocument();
+    expect(screen.getByText("5 crediti da Casa a Villa")).toBeInTheDocument();
+  });
+
+  it("mostra i crediti richiesti da B verso A senza importi negativi", () => {
+    render(<TradeSummaryModal open summary={{ ...SUMMARY, credits: -2 }} text={TEXT} media={media} onClose={() => {}} />);
+    expect(screen.getByText("2 crediti da Villa a Casa")).toBeInTheDocument();
+    expect(screen.queryByText(/-2/)).not.toBeInTheDocument();
   });
 
   it("mostra la foto del giocatore quando disponibile", () => {
     const mediaWithPhoto = {
-      player: () => ({ photoUrl: "/foto/attaccante.jpg", flagUrl: "" }),
+      player: () => ({
+        key: "attaccante|squadra",
+        listoneName: "Attaccante",
+        realTeam: "Squadra",
+        status: "resolved" as const,
+        photoUrl: "/foto/attaccante.jpg"
+      }),
       crest: () => ""
     };
     render(<TradeSummaryModal open summary={SUMMARY} text={TEXT} media={mediaWithPhoto} onClose={() => {}} />);
@@ -94,6 +106,59 @@ describe("TradeSummaryModal", () => {
     render(<TradeSummaryModal open summary={SUMMARY} text={TEXT} media={media} onClose={onClose} />);
     fireEvent.click(screen.getByRole("button", { name: "Chiudi" }));
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it("sposta il focus su Chiudi, nomina il dialogo e ripristina il chiamante con Escape", () => {
+    const view = render(
+      <>
+        <button type="button">Apri riepilogo</button>
+        <TradeSummaryModal open={false} summary={SUMMARY} text={TEXT} media={media} onClose={() => {}} />
+      </>
+    );
+    const opener = screen.getByRole("button", { name: "Apri riepilogo" });
+    opener.focus();
+    const close = () => view.rerender(
+      <>
+        <button type="button">Apri riepilogo</button>
+        <TradeSummaryModal open={false} summary={SUMMARY} text={TEXT} media={media} onClose={close} />
+      </>
+    );
+
+    view.rerender(
+      <>
+        <button type="button">Apri riepilogo</button>
+        <TradeSummaryModal open summary={SUMMARY} text={TEXT} media={media} onClose={close} />
+      </>
+    );
+
+    const closeButton = screen.getByRole("button", { name: "Chiudi" });
+    const heading = screen.getByRole("heading", { name: "Riepilogo scambio" });
+    expect(closeButton).toHaveFocus();
+    expect(screen.getByRole("dialog")).toHaveAttribute("aria-labelledby", heading.id);
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(opener).toHaveFocus();
+  });
+
+  it("ripristina il focus quando il dialogo viene smontato", () => {
+    const view = render(
+      <>
+        <button type="button">Apri riepilogo</button>
+        <TradeSummaryModal open={false} summary={SUMMARY} text={TEXT} media={media} onClose={() => {}} />
+      </>
+    );
+    const opener = screen.getByRole("button", { name: "Apri riepilogo" });
+    opener.focus();
+    view.rerender(
+      <>
+        <button type="button">Apri riepilogo</button>
+        <TradeSummaryModal open summary={SUMMARY} text={TEXT} media={media} onClose={() => {}} />
+      </>
+    );
+    expect(screen.getByRole("button", { name: "Chiudi" })).toHaveFocus();
+
+    view.rerender(<button type="button">Apri riepilogo</button>);
+
+    expect(opener).toHaveFocus();
   });
 
   it("chiude al click sul backdrop", () => {

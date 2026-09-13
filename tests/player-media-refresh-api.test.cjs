@@ -6,10 +6,30 @@ const crypto = require("node:crypto");
 const fs = require("node:fs/promises");
 const os = require("node:os");
 const path = require("node:path");
+const { installSafeFetchMock } = require("./helpers/mock-safe-fetch.cjs");
 
 const ROOT = path.join(__dirname, "..");
 const originalCwd = process.cwd();
+installSafeFetchMock(originalCwd);
 let tempRoot;
+
+const API_PATH = require.resolve(path.join(ROOT, "api", "player-media.js"));
+const MEDIA_PATH = require.resolve(path.join(ROOT, "lib", "player-media.cjs"));
+const ISOLATED_MODULES = [
+  API_PATH,
+  MEDIA_PATH,
+  require.resolve(path.join(ROOT, "lib", "settings.cjs")),
+  require.resolve(path.join(ROOT, "lib", "admin-auth.cjs")),
+  require.resolve(path.join(ROOT, "lib", "storage.cjs"))
+];
+const FIXED_NOW = Date.parse("2026-09-10T23:59:00.000Z");
+const QUOTA = {
+  callsToday: 7500,
+  limit: 7500,
+  exhausted: true,
+  resetAt: "2026-09-11T00:00:00.000Z",
+  rateLimitedUntil: null
+};
 
 function scryptAsync(password, salt, length) {
   return new Promise((resolve, reject) => crypto.scrypt(password, salt, length, (error, key) => error ? reject(error) : resolve(key)));
@@ -91,6 +111,204 @@ async function teardown() {
   delete global.fetch;
   if (tempRoot) await fs.rm(tempRoot, { recursive: true, force: true });
 }
+
+function loadHandlerWithRefreshError(t, error, directMediaStatus = async () => ({ quota: QUOTA })) {
+  const originalHash = process.env.ADMIN_LINKS_PASSWORD_HASH;
+  const originalNow = Date.now;
+  const originalModules = new Map(ISOLATED_MODULES.map((modulePath) => [modulePath, require.cache[modulePath]]));
+  const hash = "test-admin-hash";
+
+  process.env.ADMIN_LINKS_PASSWORD_HASH = hash;
+  Date.now = () => FIXED_NOW;
+  require.cache[MEDIA_PATH] = {
+    id: MEDIA_PATH,
+    filename: MEDIA_PATH,
+    loaded: true,
+    exports: {
+      directMediaStatus,
+      publicManifest: (manifest) => manifest,
+      refreshDirectManifest: async () => { throw error; }
+    }
+  };
+  delete require.cache[API_PATH];
+
+  t.after(() => {
+    Date.now = originalNow;
+    if (originalHash === undefined) delete process.env.ADMIN_LINKS_PASSWORD_HASH;
+    else process.env.ADMIN_LINKS_PASSWORD_HASH = originalHash;
+    for (const [modulePath, cached] of originalModules) {
+      if (cached) require.cache[modulePath] = cached;
+      else delete require.cache[modulePath];
+    }
+  });
+
+  return { handler: require(API_PATH), hash };
+}
+
+test("one-shot player-media refresh actions map quota exhaustion to 429", async (t) => {
+  const error = new Error("Quota BSD esaurita");
+  error.quotaExhausted = true;
+  error.status = 429;
+  const { handler, hash } = loadHandlerWithRefreshError(t, error);
+
+  for (const action of ["sync-missing", "full-sync", "continue-full-sync"]) {
+    await t.test(action, async () => {
+      const res = mockRes();
+      await handler({
+        method: "POST",
+        headers: { cookie: cookie(hash) },
+        body: { leagueId: "fp", action }
+      }, res);
+
+      assert.equal(res.statusCode, 429);
+      assert.equal(res.body?.quotaExhausted, true);
+      assert.deepEqual(res.body?.quota, QUOTA);
+      const retryAfter = Number(res.headers["retry-after"]);
+      assert.equal(retryAfter, 60);
+      assert.ok(Number.isInteger(retryAfter) && retryAfter > 0);
+    });
+  }
+});
+
+test("one-shot player-media refresh keeps ordinary provider failures as 502", async (t) => {
+  const { handler, hash } = loadHandlerWithRefreshError(t, new Error("Provider unavailable"));
+  const res = mockRes();
+  await handler({
+    method: "POST",
+    headers: { cookie: cookie(hash) },
+    body: { leagueId: "fp", action: "full-sync" }
+  }, res);
+
+  assert.equal(res.statusCode, 502);
+  assert.equal(res.headers["retry-after"], undefined);
+});
+
+test("one-shot quota response falls back to error quota when status lookup fails", async (t) => {
+  const error = Object.assign(new Error("Quota BSD esaurita"), {
+    quotaExhausted: true,
+    status: 429,
+    quota: QUOTA,
+    internal: "do not expose"
+  });
+  const { handler, hash } = loadHandlerWithRefreshError(t, error, async () => {
+    throw new Error("Status unavailable");
+  });
+  const res = mockRes();
+
+  await handler({
+    method: "POST",
+    headers: { cookie: cookie(hash) },
+    body: { leagueId: "fp", action: "full-sync" }
+  }, res);
+
+  assert.equal(res.statusCode, 429);
+  assert.deepEqual(res.body, { quotaExhausted: true, quota: QUOTA });
+  assert.equal(res.headers["retry-after"], "60");
+});
+
+test("one-shot quota response replaces invalid resetAt with next UTC midnight", async (t) => {
+  const error = Object.assign(new Error("Quota BSD esaurita"), {
+    quotaExhausted: true,
+    status: 429,
+    quota: QUOTA
+  });
+  const statusQuota = { ...QUOTA, resetAt: "invalid", internal: "do not expose" };
+  const { handler, hash } = loadHandlerWithRefreshError(t, error, async () => ({ quota: statusQuota }));
+  const res = mockRes();
+
+  await handler({
+    method: "POST",
+    headers: { cookie: cookie(hash) },
+    body: { leagueId: "fp", action: "full-sync" }
+  }, res);
+
+  assert.equal(res.statusCode, 429);
+  assert.deepEqual(res.body, { quotaExhausted: true, quota: QUOTA });
+  assert.equal(res.headers["retry-after"], "60");
+});
+
+test("quota accounting failure still returns a sanitized 429", async (t) => {
+  await setup();
+  const originalHash = process.env.ADMIN_LINKS_PASSWORD_HASH;
+  const hash = "test-admin-hash";
+  process.env.ADMIN_LINKS_PASSWORD_HASH = hash;
+  const modulePaths = [
+    API_PATH,
+    MEDIA_PATH,
+    require.resolve(path.join(ROOT, "lib", "media", "manifest-state.cjs")),
+    require.resolve(path.join(ROOT, "lib", "media", "bsd-provider.cjs")),
+    require.resolve(path.join(ROOT, "lib", "neon.cjs"))
+  ];
+  const originalModules = new Map(modulePaths.map((modulePath) => [modulePath, require.cache[modulePath]]));
+  const neonPath = modulePaths.at(-1);
+  let quotaReads = 0;
+
+  delete require.cache[modulePaths[2]];
+  delete require.cache[modulePaths[3]];
+  delete require.cache[MEDIA_PATH];
+  delete require.cache[API_PATH];
+  require.cache[neonPath] = {
+    id: neonPath,
+    filename: neonPath,
+    loaded: true,
+    exports: {
+      databaseConfigured: () => true,
+      readBsdQuota: async (date) => {
+        quotaReads += 1;
+        if (quotaReads > 1) throw new Error("quota read failed");
+        return { date, calls: 0, rateLimitedUntil: null };
+      },
+      incrementBsdQuota: async () => { throw new Error("quota increment failed"); },
+      markBsdQuotaRateLimited: async () => { throw new Error("quota rate-limit failed"); },
+      acquireRefreshCheckpoint: async (league, owner) => ({ checkpoint: null, owner, fencingToken: 1 }),
+      renewRefreshCheckpoint: async () => true,
+      releaseRefreshCheckpoint: async () => true,
+      publishManifestAndClearRefreshCheckpoint: async () => true,
+      upsertPlayerOverrideWithRefreshLease: async () => true,
+      upsertTeamOverridesWithRefreshLease: async () => true,
+      readManifestCache: async () => null,
+      readPlayerOverrides: async () => ({}),
+      readTeamOverrides: async () => ({}),
+      readRuntimeSetting: async () => null,
+      writeRuntimeSetting: async () => ({})
+    }
+  };
+  const csvFetch = global.fetch;
+  global.fetch = async (input) => {
+    const url = new URL(String(input));
+    if (url.hostname === "example.test") return csvFetch(input);
+    if (url.pathname === "/api/teams/") return jsonResponse({ detail: "quota finita" }, 429);
+    throw new Error(`Unexpected fetch: ${url}`);
+  };
+  t.after(async () => {
+    if (originalHash === undefined) delete process.env.ADMIN_LINKS_PASSWORD_HASH;
+    else process.env.ADMIN_LINKS_PASSWORD_HASH = originalHash;
+    for (const [modulePath, cached] of originalModules) {
+      if (cached) require.cache[modulePath] = cached;
+      else delete require.cache[modulePath];
+    }
+    await teardown();
+  });
+
+  const res = mockRes();
+  await require(API_PATH)({
+    method: "POST",
+    headers: { cookie: cookie(hash) },
+    body: { leagueId: "fp", action: "full-sync" }
+  }, res);
+
+  assert.equal(res.statusCode, 429);
+  assert.deepEqual(Object.keys(res.body).sort(), ["quota", "quotaExhausted"]);
+  assert.equal(res.body.quotaExhausted, true);
+  assert.equal(Number.isFinite(res.body.quota.callsToday), true);
+  assert.equal(res.body.quota.callsToday >= 0, true);
+  assert.equal(Number.isFinite(res.body.quota.limit), true);
+  assert.equal(res.body.quota.limit > 0, true);
+  assert.equal(res.body.quota.exhausted, true);
+  assert.equal(Date.parse(res.body.quota.resetAt) > Date.now(), true);
+  assert.equal(res.body.quota.rateLimitedUntil, null);
+  assert.ok(Number(res.headers["retry-after"]) > 0);
+});
 
 test("POST player-media refresh/continue-sync segue gli step fino al terminale", async (t) => {
   // Admin session.

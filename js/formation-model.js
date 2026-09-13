@@ -4,14 +4,39 @@ const formationModelApi = (function () {
   const ROLE_ORDER = Object.freeze({ P: 0, D: 1, C: 2, A: 3 });
   const BENCH_CAPACITY = Object.freeze({ P: 2, D: 3, C: 3, A: 3 });
   const STANDARD_MODULES = Object.freeze(["343", "352", "433", "442", "451", "532", "541"]);
+  const MAX_SELECTED = 22;
+
+  function normalizeModule(module) {
+    return STANDARD_MODULES.includes(module) ? module : "433";
+  }
 
   function getModuleValue() {
-    const module = document.getElementById("moduleSelect")?.value || "433";
-    return ALLOWED_MODULES?.includes(module) ? module : "433";
+    const module = typeof document === "undefined"
+      ? "433"
+      : document.getElementById("moduleSelect")?.value || "433";
+    return normalizeModule(module);
   }
 
   function getRoleName(role) {
-    return role === "P" ? "Portiere" : role === "D" ? "Difensore" : role === "C" ? "Centrocampista" : "Attaccante";
+    return role === "P" ? "Portiere" : role === "D" ? "Difensore" : role === "C" ? "Centrocampista" : role === "A" ? "Attaccante" : "Ruolo sconosciuto";
+  }
+
+  function canSelect({ team, selectedPlayers = [], playerIndex, module, replacingIndex } = {}) {
+    const player = team?.[playerIndex];
+    if (!player || ROLE_ORDER[player.r] === undefined) return { allowed: false, reason: "unknown-role" };
+
+    const selected = new Set(selectedPlayers.filter((index) => Number.isInteger(index) && team[index]));
+    if (selected.has(playerIndex)) return { allowed: true };
+    selected.delete(replacingIndex);
+
+    if (selected.size >= MAX_SELECTED) return { allowed: false, reason: "max-selected" };
+
+    const normalizedModule = normalizeModule(module);
+    const roleCapacity = getSlotDefinitions(normalizedModule).starter.filter(({ role }) => role === player.r).length + BENCH_CAPACITY[player.r];
+    const selectedInRole = [...selected].filter((index) => team[index].r === player.r).length;
+    if (selectedInRole >= roleCapacity) return { allowed: false, reason: "role-capacity" };
+
+    return { allowed: true };
   }
 
   function getSlotDefinitions(module = getModuleValue()) {
@@ -58,6 +83,29 @@ const formationModelApi = (function () {
     return Boolean(entry?.player) && entry.player.r === definition.role;
   }
 
+  function reconcileAssignments({ team = [], selectedPlayers = [], slotAssignments = {}, module } = {}) {
+    const selectedSet = new Set(
+      selectedPlayers.filter((index) => Number.isInteger(index) && team[index])
+    );
+    const assignments = {};
+    const usedIndices = new Set();
+    const definitions = getSlotDefinitions(normalizeModule(module));
+
+    [...definitions.starter, ...definitions.bench].forEach((definition) => {
+      const playerIndex = slotAssignments[definition.key];
+      const entry = entryForIndex(playerIndex, team);
+      if (!selectedSet.has(playerIndex) || !roleMatches(definition, entry) || usedIndices.has(playerIndex)) return;
+
+      assignments[definition.key] = playerIndex;
+      usedIndices.add(playerIndex);
+    });
+
+    return {
+      assignments,
+      changed: Object.keys(assignments).length !== Object.keys(slotAssignments).length
+    };
+  }
+
   function getGoalkeeperBenchLabels(team, starters, selectedSet) {
     const starterGoalkeeper = starters.find((entry) => entry.player.r === "P");
     if (!starterGoalkeeper) return [];
@@ -84,14 +132,21 @@ const formationModelApi = (function () {
     const team = teamArg || (typeof currentManager !== "undefined" && currentManager && db[currentManager]?.players) || null;
     if (!team) return null;
 
-    const moduleRaw = moduleArg || getModuleValue();
+    const moduleRaw = normalizeModule(moduleArg || getModuleValue());
     const definitions = getSlotDefinitions(moduleRaw);
     const selectedList = selectedArg != null
       ? selectedArg
       : (typeof selectedPlayers !== "undefined" ? selectedPlayers : []);
-    const assignments = assignmentsArg != null
+    const inputAssignments = assignmentsArg != null
       ? assignmentsArg
       : (typeof slotAssignments !== "undefined" ? slotAssignments : {});
+    const reconciledAssignments = reconcileAssignments({
+      team,
+      selectedPlayers: selectedList,
+      slotAssignments: inputAssignments,
+      module: moduleRaw
+    });
+    const assignments = reconciledAssignments.assignments;
 
     const selectedSet = new Set(
       selectedList.filter((index) => Number.isInteger(index) && team[index])
@@ -100,20 +155,13 @@ const formationModelApi = (function () {
     const allDefinitions = [...definitions.starter, ...definitions.bench];
     const slots = { starter: {}, bench: {} };
     const usedIndices = new Set();
-    let didCleanAssignments = false;
 
     // Honour manual positions first. A duplicate only survives in the first valid slot.
     allDefinitions.forEach((definition) => {
       const playerIndex = assignments[definition.key];
-      const entry = entryForIndex(playerIndex, team);
+      if (!Number.isInteger(playerIndex)) return;
 
-      if (!selectedSet.has(playerIndex) || !roleMatches(definition, entry) || usedIndices.has(playerIndex)) {
-        if (assignments[definition.key] !== undefined) {
-          delete assignments[definition.key];
-          didCleanAssignments = true;
-        }
-        return;
-      }
+      const entry = entryForIndex(playerIndex, team);
 
       const side = definition.key.startsWith("starter-") ? "starter" : "bench";
       slots[side][definition.id] = entry;
@@ -172,7 +220,7 @@ const formationModelApi = (function () {
         starters: starters.length,
         bench: benchVisualCount
       },
-      changedAssignments: didCleanAssignments
+      changedAssignments: reconciledAssignments.changed
     };
 
     return model;
@@ -212,6 +260,9 @@ const formationModelApi = (function () {
 
   return Object.freeze({
     build,
+    canSelect,
+    getRoleName,
+    reconcileAssignments,
     getSlotDefinitions,
     getSlotEntry,
     getBenchDisplayEntry,

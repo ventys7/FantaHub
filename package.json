@@ -2,14 +2,18 @@
   "name": "fantahub",
   "private": true,
   "version": "0.1.0",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "npm run build && node scripts/dev-server.mjs",
     "build": "npm --prefix dashboard run build",
     "typecheck": "npm --prefix dashboard run typecheck",
+    "test:types": "npm --prefix dashboard run test:types",
     "test": "node --test tests/*.test.cjs",
     "test:ui": "npm --prefix dashboard run test:ui",
     "diagnose": "node scripts/diagnose.mjs",
-    "verify": "node scripts/generate-route-pages.mjs && npm run test && npm run test:ui && npm run build && npm run diagnose && ./scripts/check-static.sh",
+    "verify": "node scripts/generate-route-pages.mjs && npm run typecheck && npm run test:types && npm run build && npm run test && npm run test:ui && npm run diagnose && ./scripts/check-static.sh",
     "dev:test": "ADMIN_LINKS_PASSWORD_HASH=\"$(node scripts/hash-admin-password.mjs 'prova123')\" ADMIN_LINKS_SESSION_SECRET='lineup-local-admin' npm run dev"
   },
   "dependencies": {

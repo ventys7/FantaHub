@@ -4,7 +4,7 @@ import { TeamCard } from "../components/teams/TeamCard";
 import { formatSquadLabel } from "../components/teams/squadLabel";
 import type { TeamSquad } from "../components/teams/types";
 import type { PlayerMediaEntry } from "../media";
-import { buildTradeText, creditsValid, roleBalanceSummary } from "./tradeModel";
+import { buildTradeText, creditsValid, formatCreditTransfer, roleBalanceSummary } from "./tradeModel";
 import { TradeSummaryModal } from "./TradeSummaryModal";
 
 export type PlayerMedia = {
@@ -68,6 +68,7 @@ export function TradesView({ managers, squadsByManager, media, leagueId }: Trade
     setManagerA(name);
     setSelectedA(new Set());
     setCreditMode("off");
+    setCreditAmount(0);
     // evita che entrambi i lati mostrino lo stesso proprietario
     if (name === managerB) {
       setManagerB("");
@@ -78,6 +79,7 @@ export function TradesView({ managers, squadsByManager, media, leagueId }: Trade
     setManagerB(name);
     setSelectedB(new Set());
     setCreditMode("off");
+    setCreditAmount(0);
   };
 
   const outputText = buildTradeText({
@@ -181,7 +183,7 @@ export function TradesView({ managers, squadsByManager, media, leagueId }: Trade
                             max={999}
                             value={creditAmount === 0 ? "" : creditAmount}
                             placeholder="0"
-                            onChange={(event) => setCreditAmount(Math.max(0, Number(event.target.value) || 0))}
+                            onChange={(event) => setCreditAmount(Math.min(999, Math.max(0, Number(event.target.value) || 0)))}
                             aria-label="Importo crediti"
                           />
                           <button
@@ -196,11 +198,9 @@ export function TradesView({ managers, squadsByManager, media, leagueId }: Trade
                         </span>
                       )}
                       <span className="lf-trade-credits__hint">
-                        {creditMode === "offer"
-                          ? `${creditAmount} crediti a ${labelB}`
-                          : creditMode === "request"
-                            ? `${creditAmount} crediti da ${labelA}`
-                            : "Senza crediti"}
+                        {creditMode === "off"
+                          ? "Senza crediti"
+                          : formatCreditTransfer(offered, labelA, labelB)}
                       </span>
                     </div>
                   </div>

@@ -2,6 +2,9 @@ export type PreparedLogo = { mimeType: string; dataBase64: string; previewUrl: s
 
 type Bounds = { x: number; y: number; width: number; height: number };
 
+const MAX_DIMENSION = 8192;
+const MAX_PIXELS = 20_000_000;
+
 function findVisibleBounds(context: CanvasRenderingContext2D, width: number, height: number): Bounds {
   const { data } = context.getImageData(0, 0, width, height);
   const corner = [data[0], data[1], data[2], data[3]];
@@ -50,40 +53,51 @@ export async function prepareLogo(file: File): Promise<PreparedLogo> {
   if (file.size > 8 * 1024 * 1024) throw new Error("L'immagine originale è troppo pesante.");
 
   const bitmap = await createImageBitmap(file);
-  const source = document.createElement("canvas");
-  source.width = bitmap.width;
-  source.height = bitmap.height;
-  const sourceContext = source.getContext("2d", { willReadFrequently: true });
-  if (!sourceContext) throw new Error("Impossibile elaborare l'immagine.");
-  sourceContext.drawImage(bitmap, 0, 0);
-  bitmap.close();
+  try {
+    if (
+      bitmap.width <= 0 || bitmap.height <= 0 ||
+      bitmap.width > MAX_DIMENSION || bitmap.height > MAX_DIMENSION ||
+      bitmap.width * bitmap.height > MAX_PIXELS
+    ) {
+      throw new Error("L'immagine ha dimensioni non supportate.");
+    }
 
-  const bounds = findVisibleBounds(sourceContext, source.width, source.height);
-  const size = 256;
-  const canvas = document.createElement("canvas");
-  canvas.width = size;
-  canvas.height = size;
-  const context = canvas.getContext("2d");
-  if (!context) throw new Error("Impossibile elaborare l'immagine.");
-  context.clearRect(0, 0, size, size);
+    const source = document.createElement("canvas");
+    source.width = bitmap.width;
+    source.height = bitmap.height;
+    const sourceContext = source.getContext("2d", { willReadFrequently: true });
+    if (!sourceContext) throw new Error("Impossibile elaborare l'immagine.");
+    sourceContext.drawImage(bitmap, 0, 0);
 
-  const scale = Math.max(size / bounds.width, size / bounds.height);
-  const width = bounds.width * scale;
-  const height = bounds.height * scale;
-  context.drawImage(
-    source,
-    bounds.x,
-    bounds.y,
-    bounds.width,
-    bounds.height,
-    (size - width) / 2,
-    (size - height) / 2,
-    width,
-    height
-  );
+    const bounds = findVisibleBounds(sourceContext, source.width, source.height);
+    const size = 256;
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Impossibile elaborare l'immagine.");
+    context.clearRect(0, 0, size, size);
 
-  const dataUrl = canvas.toDataURL("image/png", 0.92);
-  return { mimeType: "image/png", dataBase64: dataUrl.split(",")[1], previewUrl: dataUrl };
+    const scale = Math.max(size / bounds.width, size / bounds.height);
+    const width = bounds.width * scale;
+    const height = bounds.height * scale;
+    context.drawImage(
+      source,
+      bounds.x,
+      bounds.y,
+      bounds.width,
+      bounds.height,
+      (size - width) / 2,
+      (size - height) / 2,
+      width,
+      height
+    );
+
+    const dataUrl = canvas.toDataURL("image/png", 0.92);
+    return { mimeType: "image/png", dataBase64: dataUrl.split(",")[1], previewUrl: dataUrl };
+  } finally {
+    bitmap.close();
+  }
 }
 
 export type TeamIdentityUpdate = { logoUrl: string; displayName: string };

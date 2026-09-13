@@ -46,7 +46,7 @@ describe("GoalkeeperBlock (stemma proprietario, blocco mobile)", () => {
   });
 
   it("resta emoji per gli svincolati (nessun lookup)", () => {
-    renderBlock(makeAsset({ ownerTag: null }), { "casa": "https://example.com/x.png" });
+    renderBlock(makeAsset({ ownerTag: "" }), { "casa": "https://example.com/x.png" });
     expect(document.querySelector("img.lf-owner-logo")).not.toBeInTheDocument();
     expect(screen.getByText("👤")).toBeInTheDocument();
     expect(screen.getAllByText("Svincolato").length).toBeGreaterThan(0);
@@ -59,5 +59,26 @@ describe("GoalkeeperBlock (stemma proprietario, blocco mobile)", () => {
     rerender(<GoalkeeperBlock asset={makeAsset({ ownerTag: "Casa" })} expanded={true} onToggle={() => {}} media={noMedia} ownerLogos={{ "casa": "https://example.com/stemma.png" }} />);
     expect(document.querySelector("img.lf-owner-logo")).toHaveAttribute("src", "https://example.com/stemma.png");
     expect(screen.getByText("Gigi Buffon")).toBeInTheDocument();
+  });
+
+  it("sincronizza lo stato disclosure dei pulsanti con il pannello", () => {
+    const asset = makeAsset({ ownerTag: "Casa" });
+    const { rerender } = renderBlock(asset);
+    const collapsedButtons = screen.getAllByRole("button", { name: /Blocco Juventus/ });
+    const panelId = collapsedButtons[0].getAttribute("aria-controls");
+
+    expect(panelId).toBeTruthy();
+    collapsedButtons.forEach((button) => {
+      expect(button).toHaveAttribute("aria-expanded", "false");
+      expect(button).toHaveAttribute("aria-controls", panelId);
+    });
+
+    rerender(<GoalkeeperBlock asset={asset} expanded onToggle={() => {}} media={noMedia} />);
+
+    screen.getAllByRole("button", { name: /Blocco Juventus/ }).forEach((button) => {
+      expect(button).toHaveAttribute("aria-expanded", "true");
+      expect(button).toHaveAttribute("aria-controls", panelId);
+    });
+    expect(document.getElementById(panelId!)).toHaveClass("lf-block-expanded");
   });
 });

@@ -129,14 +129,27 @@ function selectFromPicker(playerIndex) {
   const { slotId, isStarter, currentPlayer } = currentPickerSlot;
   const team = db[currentManager].players;
   const slotKey = (isStarter ? "starter-" : "bench-") + slotId;
+  const assignedIndex = slotAssignments[slotKey];
+  const currentIndex = Number.isInteger(assignedIndex)
+    ? assignedIndex
+    : currentPlayer?.n
+      ? team.findIndex((player) => player.n === currentPlayer.n && player.r === currentPlayer.r)
+      : -1;
+  const selection = window.FormationModel.canSelect({
+    team,
+    selectedPlayers,
+    playerIndex,
+    module: document.getElementById("moduleSelect").value,
+    replacingIndex: currentIndex
+  });
 
-  if (currentPlayer?.n) {
-    const currentIndex = team.findIndex(
-      (player) => player.n === currentPlayer.n && player.r === currentPlayer.r
-    );
-    if (currentIndex > -1 && selectedPlayers.includes(currentIndex)) {
-      selectedPlayers = selectedPlayers.filter((index) => index !== currentIndex);
-    }
+  if (!selection.allowed) {
+    showToast("Impossibile selezionare questo giocatore.", "error");
+    return;
+  }
+
+  if (currentIndex > -1 && selectedPlayers.includes(currentIndex)) {
+    selectedPlayers = selectedPlayers.filter((index) => index !== currentIndex);
   }
 
   if (selectedPlayers.includes(playerIndex)) {

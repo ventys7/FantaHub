@@ -89,7 +89,7 @@ describe("isRoleBalanced / roleBalanceSummary", () => {
 
   it("sbilanciato sui blocchi portieri", () => {
     const a = [makeAsset({ role: "P", displayName: "Due - Tre" })];
-    const b = [];
+    const b: DashboardAsset[] = [];
     expect(isRoleBalanced(a, b)).toBe(false);
     expect(roleBalanceSummary(a, b)).toEqual(["P (1 ↔ 0)"]);
   });
@@ -155,10 +155,10 @@ describe("buildTradeText", () => {
       credits: 3
     });
     expect(text).toContain("CREDITI");
-    expect(text).toContain("+3 per Villa");
+    expect(text).toContain("3 crediti da Casa a Villa");
   });
 
-  it("include i crediti richiesti dal proponente", () => {
+  it("include i crediti richiesti da B verso A senza importi negativi", () => {
     const text = buildTradeText({
       managerA: "Casa",
       managerB: "Villa",
@@ -166,7 +166,8 @@ describe("buildTradeText", () => {
       bGives: [makeAsset({ role: "D", displayName: "Terzino" })],
       credits: -2
     });
-    expect(text).toContain("-2 da Casa");
+    expect(text).toContain("2 crediti da Villa a Casa");
+    expect(text).not.toContain("-2");
   });
 
   it("omette la sezione crediti se zero", () => {

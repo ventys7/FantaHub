@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { ShieldIcon, XIcon } from "../icons";
 import type { PlayerMediaEntry } from "../media";
 import type { DashboardAsset } from "../types";
-import { isGoalkeeperBlock } from "./tradeModel";
+import { formatCreditTransfer, isGoalkeeperBlock } from "./tradeModel";
 
 /**
  * Copia il testo negli appunti con fallback textarea (stesso approccio di
@@ -83,22 +83,29 @@ function SummaryRow({ asset, media }: { asset: DashboardAsset; media: Props["med
 
 export function TradeSummaryModal({ open, summary, text, media, onClose }: Props) {
   const [copied, setCopied] = useState(false);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const onCloseRef = useRef(onClose);
+  const titleId = useId();
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     if (!open) return;
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     setCopied(false);
     // blocca lo scroll della pagina sotto la card (mobile incluso)
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") onCloseRef.current();
     };
     document.addEventListener("keydown", onKeyDown);
+    closeButtonRef.current?.focus();
     return () => {
       document.body.style.overflow = previousOverflow;
       document.removeEventListener("keydown", onKeyDown);
+      if (previousFocus?.isConnected) previousFocus.focus();
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 
@@ -112,11 +119,11 @@ export function TradeSummaryModal({ open, summary, text, media, onClose }: Props
   };
 
   return (
-    <div className="lf-trade-summary" role="dialog" aria-modal="true" aria-label="Riepilogo scambio" onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+    <div className="lf-trade-summary" role="dialog" aria-modal="true" aria-labelledby={titleId} onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <div className="lf-trade-summary__box">
         <header className="lf-trade-summary__heading">
-          <h2>Riepilogo scambio</h2>
-          <button type="button" className="lf-trade-summary__close" onClick={onClose} aria-label="Chiudi">
+          <h2 id={titleId}>Riepilogo scambio</h2>
+          <button ref={closeButtonRef} type="button" className="lf-trade-summary__close" onClick={onClose} aria-label="Chiudi">
             <XIcon size={18} />
           </button>
         </header>
@@ -138,9 +145,7 @@ export function TradeSummaryModal({ open, summary, text, media, onClose }: Props
 
           {summary.credits !== 0 && (
             <div className="lf-trade-summary__credits">
-              {summary.credits > 0
-                ? <>+{summary.credits} crediti da {summary.managerA} a {summary.managerB}</>
-                : <>{summary.credits} crediti da {summary.managerB} a {summary.managerA}</>}
+              {formatCreditTransfer(summary.credits, summary.managerA, summary.managerB)}
             </div>
           )}
         </div>

@@ -181,7 +181,7 @@
   padding: 2px 4px;
   border: 1px solid;
   border-radius: 999px;
-  font-size: 6.8px;
+  font-size: 10px;
   font-weight: 900;
   line-height: 1;
   text-align: center;
@@ -407,7 +407,7 @@
     min-height: 17px;
     gap: 2px;
     padding: 2px 3px;
-    font-size: 6px;
+    font-size: 10px;
     letter-spacing: -.01em;
   }
 
@@ -508,7 +508,7 @@
   .lf-team-status {
     min-height: 17px;
     padding: 2px 3px;
-    font-size: 6.2px;
+    font-size: 10px;
   }
 
   .lf-team-role-filters {

@@ -1,20 +1,28 @@
 #!/usr/bin/env node
-import http from "node:http";
 import fs from "node:fs/promises";
-import path from "node:path";
+import http from "node:http";
 import { createRequire } from "node:module";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const require = createRequire(import.meta.url);
-const root = path.resolve(process.argv[2] || process.cwd());
-const port = Number(process.env.PORT || 4173);
-const host = process.env.HOST || "0.0.0.0";
 
-const apiHandlers = new Map();
-for (const route of ["settings", "admin", "team-logo", "discipline", "player-media", "regolamento", "regolamento-img", "calendario", "calendario-img", "crest"]) {
-  const pathname = `/api/${route}`;
-  try { apiHandlers.set(pathname, require(path.join(root, "api", `${route}.js`))); }
-  catch (error) { console.warn(`API locale non caricata (${pathname}):`, error.message); }
-}
+export const DEFAULT_HOST = "127.0.0.1";
+export const API_ROUTES = Object.freeze([
+  "settings",
+  "admin",
+  "team-logo",
+  "discipline",
+  "player-media",
+  "player-photo",
+  "regolamento",
+  "regolamento-img",
+  "calendario",
+  "calendario-img",
+  "crest"
+]);
+
+const PUBLIC_DIRECTORIES = new Set(["assets", "css", "fp", "js", "pd"]);
 
 const mimeTypes = new Map([
   [".html", "text/html; charset=utf-8"], [".js", "text/javascript; charset=utf-8"], [".mjs", "text/javascript; charset=utf-8"],
@@ -46,62 +54,106 @@ async function readBody(req) {
   return text;
 }
 
-async function handleApi(req, res, url) {
+async function handleApi(req, res, url, apiHandlers, logger) {
   const handler = apiHandlers.get(url.pathname);
   if (!handler) return false;
   req.query = Object.fromEntries(url.searchParams.entries());
   req.body = req.method !== "GET" ? await readBody(req) : undefined;
   try { await handler(req, createApiResponse(res)); }
   catch (error) {
-    console.error(`Errore API locale ${url.pathname}:`, error);
+    logger.error(`Errore API locale ${url.pathname}:`, error);
     if (!res.writableEnded) { res.statusCode = 500; res.setHeader("Content-Type", "application/json; charset=utf-8"); res.end(JSON.stringify({ error: "Errore interno API locale" })); }
   }
   return true;
 }
 
-function safeFilePath(pathname) {
-  const decoded = decodeURIComponent(pathname);
-  if (decoded.startsWith("/.lineup-runtime/")) {
-    const relative = decoded.slice("/.lineup-runtime/".length);
-    const absolute = path.resolve(root, ".lineup-runtime", relative);
-    const runtimeRoot = path.resolve(root, ".lineup-runtime");
-    return absolute.startsWith(runtimeRoot + path.sep) ? absolute : null;
-  }
-  const normalized = path.normalize(decoded).replace(/^([.][.][/\\])+/, "");
-  const relative = normalized.replace(/^[/\\]+/, "");
-  const absolute = path.resolve(root, relative);
-  return absolute.startsWith(root + path.sep) || absolute === root ? absolute : null;
+function isInside(root, candidate) {
+  const relative = path.relative(root, candidate);
+  return relative !== "" && relative !== ".." && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
 }
 
-async function resolveStaticPath(pathname) {
-  const requested = safeFilePath(pathname);
+export function safeFilePath(pathname, serverRoot = process.cwd()) {
+  let decoded;
+  try { decoded = decodeURIComponent(String(pathname || "")); }
+  catch { return null; }
+  if (!decoded.startsWith("/") || decoded.includes("\0")) return null;
+
+  const segments = decoded.replaceAll("\\", "/").split("/").filter(Boolean);
+  const isPlayerImage = segments[0] === ".lineup-runtime" && segments[1] === "player-images" && segments.length > 2;
+  const checkedSegments = isPlayerImage ? segments.slice(2) : segments;
+  if (checkedSegments.some((segment) => segment === "." || segment === ".." || segment.startsWith("."))) return null;
+
+  const relative = decoded === "/" ? "index.html" : segments.join("/");
+  const isPublic = relative === "index.html"
+    || PUBLIC_DIRECTORIES.has(segments[0])
+    || (segments[0] === "data" && ["fp", "pd"].includes(segments[1]));
+  if (!isPlayerImage && !isPublic) return null;
+
+  const root = path.resolve(serverRoot);
+  const absolute = path.resolve(root, relative);
+  return isInside(root, absolute) ? absolute : null;
+}
+
+export async function resolveStaticPath(pathname, serverRoot = process.cwd()) {
+  const root = path.resolve(serverRoot);
+  const requested = safeFilePath(pathname, root);
   if (!requested) return null;
-  const candidates = pathname.endsWith("/") ? [path.join(requested, "index.html")] : [requested, path.join(requested, "index.html")];
+  const candidates = pathname === "/"
+    ? [requested]
+    : pathname.endsWith("/")
+      ? [path.join(requested, "index.html")]
+      : [requested, path.join(requested, "index.html")];
+  let realRoot;
+  try { realRoot = await fs.realpath(root); }
+  catch { return null; }
   for (const candidate of candidates) {
-    try { if ((await fs.stat(candidate)).isFile()) return candidate; } catch {}
+    try {
+      const realCandidate = await fs.realpath(candidate);
+      if (isInside(realRoot, realCandidate) && (await fs.stat(realCandidate)).isFile()) return realCandidate;
+    } catch {}
   }
   return null;
 }
 
-const server = http.createServer(async (req, res) => {
-  const url = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
-  if (await handleApi(req, res, url)) return;
-  const filePath = await resolveStaticPath(url.pathname);
-  if (!filePath) { noStore(res); res.statusCode = 404; res.setHeader("Content-Type", "text/plain; charset=utf-8"); res.end("404 - File non trovato"); return; }
-  try {
-    const body = await fs.readFile(filePath);
-    if (url.pathname.startsWith("/.lineup-runtime/player-images/")) {
-      res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
-    } else noStore(res);
-    res.statusCode = 200;
-    res.setHeader("Content-Type", mimeTypes.get(path.extname(filePath).toLowerCase()) || "application/octet-stream"); res.end(body);
-  } catch (error) { console.error("Errore file statico:", error); res.statusCode = 500; res.end("Errore interno"); }
-});
+function loadApiHandlers(root, logger) {
+  const handlers = new Map();
+  for (const route of API_ROUTES) {
+    const pathname = `/api/${route}`;
+    try { handlers.set(pathname, require(path.join(root, "api", `${route}.js`))); }
+    catch (error) { logger.warn(`API locale non caricata (${pathname}):`, error.message); }
+  }
+  return handlers;
+}
 
-server.listen(port, host, () => {
-  console.log(`✓ FantaHub live: http://localhost:${port}`);
-  console.log(`✓ Admin FP: http://localhost:${port}/fp/admin-links/`);
-  console.log(`✓ Admin PD: http://localhost:${port}/pd/admin-links/`);
-  if (process.env.ADMIN_LINKS_PASSWORD_HASH) console.log("✓ API admin, loghi, disciplina e media attive");
-  console.log("✓ Cache disabilitata durante lo sviluppo");
-});
+export function createDevServer({ root: rootOption = process.cwd(), logger = console } = {}) {
+  const root = path.resolve(rootOption);
+  const apiHandlers = loadApiHandlers(root, logger);
+  return http.createServer(async (req, res) => {
+    const url = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
+    if (await handleApi(req, res, url, apiHandlers, logger)) return;
+    const filePath = await resolveStaticPath(url.pathname, root);
+    if (!filePath) { noStore(res); res.statusCode = 404; res.setHeader("Content-Type", "text/plain; charset=utf-8"); res.end("404 - File non trovato"); return; }
+    try {
+      const body = await fs.readFile(filePath);
+      if (url.pathname.startsWith("/.lineup-runtime/player-images/")) {
+        res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+      } else noStore(res);
+      res.statusCode = 200;
+      res.setHeader("Content-Type", mimeTypes.get(path.extname(filePath).toLowerCase()) || "application/octet-stream"); res.end(body);
+    } catch (error) { logger.error("Errore file statico:", error); res.statusCode = 500; res.end("Errore interno"); }
+  });
+}
+
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const root = path.resolve(process.argv[2] || process.cwd());
+  const port = Number(process.env.PORT || 4173);
+  const host = process.env.HOST || DEFAULT_HOST;
+  const server = createDevServer({ root });
+  server.listen(port, host, () => {
+    console.log(`✓ FantaHub live: http://${host}:${port}`);
+    console.log(`✓ Admin FP: http://${host}:${port}/fp/admin-links/`);
+    console.log(`✓ Admin PD: http://${host}:${port}/pd/admin-links/`);
+    if (process.env.ADMIN_LINKS_PASSWORD_HASH) console.log("✓ API admin, loghi, disciplina e media attive");
+    console.log("✓ Cache disabilitata durante lo sviluppo");
+  });
+}

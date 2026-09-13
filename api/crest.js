@@ -36,12 +36,12 @@ module.exports = async function handler(req, res) {
 
   try {
     const response = await fetch(`${SOURCE}/api/crest/${id}`, {
-      headers: { Accept: "image/png,image/svg+xml,image/webp,image/jpeg,*/*;q=0.5" },
+      headers: { Accept: "image/avif,image/webp,image/png,image/jpeg,*/*;q=0.5" },
       signal: AbortSignal.timeout(12000)
     });
     if (!response.ok) return res.status(response.status === 404 ? 404 : 502).end();
     const mimeType = String(response.headers.get("content-type") || "").split(";")[0].trim();
-    if (!["image/png", "image/jpeg", "image/webp", "image/avif", "image/svg+xml"].includes(mimeType)) {
+    if (!["image/png", "image/jpeg", "image/webp", "image/avif"].includes(mimeType)) {
       return res.status(502).json({ error: "kick-off ha restituito un formato immagine non valido" });
     }
     const bytes = await readLimitedBody(response);

@@ -1,0 +1,12 @@
+.env*
+.lineup-backup-*
+.lineup-runtime/
+.serena/
+.swarm/
+.tmp/
+.claude-flow/
+docs/
+tests/
+scripts/_exp*.cjs
+ruvector.db
+**/*.map

@@ -6,11 +6,28 @@ export type TeamProfile = {
 
 export type TeamProfiles = Record<string, TeamProfile>;
 
-/** Normalizza il nome di una fantasquadra/mister per il lookup dei loghi
- *  (stessa chiave usata dalla classifica): accent-free, solo alfanumerici, minuscolo. */
-export function normalizeTeamName(name: string): string {
-  return name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]+/g, " ").trim().toLowerCase();
+export function normalizeSearchText(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/ø/g, "o")
+    .replace(/æ/g, "ae")
+    .replace(/œ/g, "oe")
+    .replace(/ł/g, "l")
+    .replace(/ð/g, "d")
+    .replace(/þ/g, "th")
+    .replace(/ß/g, "ss")
+    .replace(/ı/g, "i")
+    .replace(/đ/g, "d")
+    .replace(/[’']/g, "")
+    .replace(/[‐‑‒–—-]/g, " ")
+    .replace(/[^a-z0-9 ]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
+
+export const normalizeTeamName = normalizeSearchText;
 
 type RawTeamProfile = {
   credits?: unknown;

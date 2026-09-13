@@ -44,7 +44,9 @@ describe("leagueTheme", () => {
 
 describe("readRoute", () => {
   it("reads league and section from the shell bridge", () => {
-    window.LINEUP_FANTA = { league: { id: "pd" } };
+    window.LINEUP_FANTA = {
+      league: { id: "pd", name: "LaLigaCUP", label: "PD", csvUrl: "pd.csv" }
+    };
     document.documentElement.dataset.leagueSection = "rose";
     expect(readRoute()).toEqual({ leagueId: "pd", section: "rose" });
   });

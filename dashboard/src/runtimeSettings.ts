@@ -21,13 +21,16 @@ export function loadRuntimeLeagueSettings(leagueId: string): Promise<RuntimeLeag
   }).then(async (response) => {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     return response.json() as Promise<RuntimeLeagueSettings>;
-  }).catch(() => ({
-    leagueId: id,
-    listoneCsvUrl: league?.csvUrl ?? "",
-    standingsCsvUrl: league?.leagueData?.standingsCsvUrl ?? "",
-    disciplineDocUrl: "",
-    teams: {}
-  }));
+  }).catch(() => {
+    cache.delete(id);
+    return {
+      leagueId: id,
+      listoneCsvUrl: league?.csvUrl ?? "",
+      standingsCsvUrl: league?.leagueData?.standingsCsvUrl ?? "",
+      disciplineDocUrl: "",
+      teams: {}
+    };
+  });
 
   cache.set(id, request);
   return request;

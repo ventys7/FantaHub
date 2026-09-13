@@ -23,3 +23,19 @@
   font-weight: 800;
   cursor: pointer;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .league-react-root *,
+  .league-react-root *::before,
+  .league-react-root *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .league-react-root .lf-action-button,
+  .league-react-root .lf-reset-button,
+  .league-react-root .lf-team-card,
+  .league-react-root .lf-trade-fab {
+    transform: none !important;
+  }
+}
