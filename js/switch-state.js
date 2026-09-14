@@ -38,8 +38,7 @@ const switchStateApi = (function () {
     });
   }
 
-  function getCandidates() {
-    const lineup = getLineup();
+  function getCandidates(lineup = getLineup()) {
     const withoutGoalkeepers = (entries) => uniqueEntries(entries).filter(({ player }) => player?.r !== "P");
 
     return {
@@ -58,7 +57,7 @@ const switchStateApi = (function () {
 
   function messageForInvalidPair(plus) {
     return plus
-      ? "Nello Switch Plus devi usare due ruoli diversi. I portieri non sono ammessi."
+      ? "Nello Switch Plus devi usare due ruoli diversi e ottenere un modulo consentito. I portieri non sono ammessi."
       : "Nello Switch Base devi usare due giocatori dello stesso ruolo. I portieri non sono ammessi.";
   }
 
@@ -80,7 +79,23 @@ const switchStateApi = (function () {
       return false;
     }
 
-    if (plus) return starter.r !== bench.r;
+    if (plus) {
+      if (starter.r === bench.r) return false;
+
+      const rolePositions = { D: 0, C: 1, A: 2 };
+      const starterRolePosition = rolePositions[starter.r];
+      const benchRolePosition = rolePositions[bench.r];
+      const moduleRaw = lineup.moduleRaw;
+      const allowedModules = lineup.allowedModules;
+
+      if (!Number.isInteger(starterRolePosition) || !Number.isInteger(benchRolePosition)) return false;
+      if (!Array.isArray(allowedModules) || !allowedModules.includes(moduleRaw)) return false;
+
+      const derivedModule = [...moduleRaw].map(Number);
+      derivedModule[starterRolePosition] -= 1;
+      derivedModule[benchRolePosition] += 1;
+      return allowedModules.includes(derivedModule.join(""));
+    }
     return starter.r === bench.r;
   }
 
@@ -187,8 +202,9 @@ const switchStateApi = (function () {
   }
 
   function reconcile() {
-    const candidates = getCandidates();
-    const team = getTeam();
+    const lineup = getLineup();
+    const candidates = getCandidates(lineup);
+    const team = lineup.team || getTeam();
     let changed = false;
 
     if (
@@ -221,6 +237,7 @@ const switchStateApi = (function () {
       switchStarterIndex !== null &&
       switchBenchIndex !== null &&
       !isPairValid(switchStarterIndex, switchBenchIndex, switchPlus, {
+        ...lineup,
         team,
         starters: candidates.starters,
         bench: candidates.bench

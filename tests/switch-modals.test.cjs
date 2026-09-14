@@ -163,3 +163,45 @@ test("renderSwitchPicker: ruolo sconosciuto usa il fallback rosso", () => {
   assert.equal(badge.style.background, "#dc3545");
   assert.equal(badge.textContent, "ZZ");
 });
+
+test("openSwitchBenchModal: Plus hides candidates with a disallowed derived module", () => {
+  loadSwitchModals();
+
+  const team = [
+    { n: "Titolare", r: "D", t: "Inter" },
+    { n: "Valido", r: "C", t: "Milan" },
+    { n: "Non valido", r: "A", t: "Roma" },
+  ];
+  const listEl = makeEl("div");
+  const titleEl = makeEl("h3");
+  const modal = {
+    querySelector: () => titleEl,
+    classList: { add() {} },
+    setAttribute() {},
+  };
+
+  global.currentManager = "manager";
+  global.db = { manager: { players: team } };
+  global.document.getElementById = (id) => {
+    if (id === "switchBenchModal") return modal;
+    if (id === "switchBenchList") return listEl;
+    return null;
+  };
+  global.window.LineupSwitch = {
+    getState: () => ({ starterIndex: 0, benchIndex: null, plus: true }),
+    getCandidates: () => ({
+      bench: [
+        { index: 1, player: team[1] },
+        { index: 2, player: team[2] },
+      ],
+    }),
+    isPairValid: (_starterIndex, benchIndex) => benchIndex === 1,
+  };
+
+  openSwitchBenchModal();
+
+  const rows = rowsOf(listEl);
+  assert.equal(rows.length, 1);
+  const info = rows[0].children.find((child) => child.className === "player-info");
+  assert.equal(info.children[0].textContent, "Valido");
+});

@@ -4,11 +4,7 @@ function buildLineupModel() {
   const model = window.FormationModel?.build();
   if (!model) return null;
 
-  model.switchPair = window.LineupSwitch?.getPairForModel?.({
-    team: model.team,
-    starters: model.starters,
-    bench: model.bench
-  }) || null;
+  model.switchPair = window.LineupSwitch?.getPairForModel?.(model) || null;
 
   return model;
 }
