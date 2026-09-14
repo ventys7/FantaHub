@@ -80,4 +80,36 @@ describe("buildTeamSquads", () => {
 
     expect(squads[0].credits).toBe(20);
   });
+
+  it("keeps Extra assets out of normal totals and resolves fixed D/C/A slots", () => {
+    const normal = [
+      ...Array.from({ length: 2 }, (_, index) => makeAsset({ assetCode: `p-${index}`, role: "P" })),
+      ...Array.from({ length: 8 }, (_, index) => makeAsset({ assetCode: `d-${index}`, role: "D" })),
+      ...Array.from({ length: 8 }, (_, index) => makeAsset({ assetCode: `c-${index}`, role: "C" })),
+      ...Array.from({ length: 6 }, (_, index) => makeAsset({ assetCode: `a-${index}`, role: "A" }))
+    ];
+    const extraD = makeAsset({ assetCode: "extra-d", displayName: "Extra D", role: "D", isExtra: true });
+    const extraC = makeAsset({ assetCode: "extra-c", displayName: "Extra C", role: "C", isExtra: true });
+    const extraA = makeAsset({ assetCode: "extra-a", displayName: "Extra A", role: "A", isExtra: true });
+
+    const [squad] = buildTeamSquads([...normal, extraD, extraC, extraA], {});
+
+    expect(squad.players).toEqual(normal);
+    expect(squad.roleCounts).toEqual({ P: 2, D: 8, C: 8, A: 6 });
+    expect(squad.totalPlayers).toBe(24);
+    expect(squad.isComplete).toBe(true);
+    expect(squad.extraSlots).toEqual({ D: extraD, C: extraC, A: extraA });
+  });
+
+  it("leaves zero and duplicate Extra candidates unresolved", () => {
+    const extraD1 = makeAsset({ assetCode: "extra-d-1", role: "D", isExtra: true });
+    const extraD2 = makeAsset({ assetCode: "extra-d-2", role: "D", isExtra: true });
+    const extraC = makeAsset({ assetCode: "extra-c", role: "C", isExtra: true });
+
+    const [squad] = buildTeamSquads([extraD1, extraD2, extraC], {});
+
+    expect(squad.players).toEqual([]);
+    expect(squad.totalPlayers).toBe(0);
+    expect(squad.extraSlots).toEqual({ D: null, C: extraC, A: null });
+  });
 });

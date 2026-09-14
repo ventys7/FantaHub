@@ -13,6 +13,7 @@ export type DashboardAsset = {
   type: string;
   active: boolean;
   isFreeAgent: boolean;
+  isExtra?: boolean;
 };
 
 export type SortKey = "position" | "quotation" | "purchasePrice";

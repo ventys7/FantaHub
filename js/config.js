@@ -5,6 +5,7 @@ window.LINEUP_LEAGUES = Object.freeze({
     label: "Fanta Premier",
     flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
     csvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR1qCSKkMUZ6W_-_OG8qjTYEQTwF4aPqgtg3XjOGqphRHRDlnFynozJsC0t6WeFjY8XCXjr-R1ZVaww/pub?gid=556989324&single=true&output=csv",
+    extraSlots: true,
     leagueData: Object.freeze({
       standingsCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSE2UP5Dh4Syl3yW__nqfh6OAG7CpR4ZzBCZxDK3d9SmQeHX6YbdtsYCSsOfYh0F7RzjYV49LQKVFNe/pub?gid=0&single=true&output=csv",
       standingsFallbackUrl: "/data/fp/classifica.csv",

@@ -18,7 +18,7 @@
     const db = Object.create(null);
 
     assets.forEach((asset) => {
-      if (!asset.active || asset.isFreeAgent || !asset.ownerTag) return;
+      if (!asset.active || asset.isFreeAgent || asset.isExtra || !asset.ownerTag) return;
       if (!Object.hasOwn(db, asset.ownerTag)) db[asset.ownerTag] = { players: [] };
 
       const entries = asset.type === "goalkeeper_block"

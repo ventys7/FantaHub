@@ -66,7 +66,9 @@ async function loadCSV(options = {}) {
     try {
       if (!(silent && leagueCsvState.status === "ready")) updateLeagueCsvState("loading");
 
-      const { assets } = parseLeagueCsv(await requestCsv());
+      const { assets } = parseLeagueCsv(await requestCsv(), {
+        extraSlots: Boolean(window.LINEUP_FANTA?.league?.extraSlots)
+      });
       leagueAssets = assets;
       db = buildFormationDb(assets);
       updateLeagueCsvState("ready");

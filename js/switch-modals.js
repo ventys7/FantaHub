@@ -101,7 +101,9 @@ function openSwitchStarterModal() {
     }
     if (state?.plus) {
       if (player.r === "P") return false;
-      if (Number.isInteger(state.benchIndex)) return player.r !== team[state.benchIndex]?.r;
+      if (Number.isInteger(state.benchIndex)) {
+        return window.LineupSwitch?.isPairValid(index, state.benchIndex, true) === true;
+      }
     }
     return true;
   });
@@ -153,7 +155,9 @@ function openSwitchBenchModal() {
     }
     if (state?.plus) {
       if (player.r === "P") return false;
-      if (Number.isInteger(state.starterIndex)) return player.r !== team[state.starterIndex]?.r;
+      if (Number.isInteger(state.starterIndex)) {
+        return window.LineupSwitch?.isPairValid(state.starterIndex, index, true) === true;
+      }
     }
     return true;
   });

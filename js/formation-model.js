@@ -208,6 +208,7 @@ const formationModelApi = (function () {
       manager: (typeof currentManager !== "undefined" ? currentManager : null),
       moduleRaw,
       module: [...moduleRaw].join("-"),
+      allowedModules: STANDARD_MODULES,
       team,
       selectedIndices,
       definitions,
@@ -254,8 +255,20 @@ const formationModelApi = (function () {
   function getSwitchLineup() {
     const model = build();
     return model
-      ? { team: model.team, starters: model.starters, bench: model.bench }
-      : { team: [], starters: [], bench: [] };
+      ? {
+          moduleRaw: model.moduleRaw,
+          allowedModules: model.allowedModules,
+          team: model.team,
+          starters: model.starters,
+          bench: model.bench
+        }
+      : {
+          moduleRaw: getModuleValue(),
+          allowedModules: STANDARD_MODULES,
+          team: [],
+          starters: [],
+          bench: []
+        };
   }
 
   return Object.freeze({

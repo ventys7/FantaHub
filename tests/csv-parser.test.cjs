@@ -48,3 +48,33 @@ test("CSV parser accepts semicolon-delimited exports", () => {
   assert.equal(result.assets[0].role, "D");
   assert.equal(result.assets[0].displayName, "Mukiele");
 });
+
+test("CSV parser applies tolerant Extra prefixes only when enabled", () => {
+  const parser = loadParser();
+  const csv = [
+    "Tag,Ruolo,Nome,Squadra,Quotazione,Prezzo Acquisto",
+    "  [e]   Paolo,D,Extra D,Inter,7,9",
+    "[ e ] Luca,C,Extra C,Milan,8,10",
+    "[ E ]   Anna,A,Extra A,Roma,9,11",
+    "[E] Mario,P,Portiere,Napoli,6,8",
+    "Paolo [E],D,Suffix D,Atalanta,5,7"
+  ].join("\n");
+
+  const disabled = parser.parseLeagueCsv(csv);
+  assert.equal(disabled.assets[0].ownerTag, "[e]   Paolo");
+  assert.equal(disabled.assets[0].isExtra, false);
+  assert.equal(disabled.assets[4].ownerTag, "Paolo [E]");
+  assert.equal(disabled.assets[4].isExtra, false);
+
+  const enabled = parser.parseLeagueCsv(csv, { extraSlots: true });
+  assert.equal(enabled.assets[0].ownerTag, "Paolo");
+  assert.equal(enabled.assets[0].isExtra, true);
+  assert.equal(enabled.assets[1].ownerTag, "Luca");
+  assert.equal(enabled.assets[1].isExtra, true);
+  assert.equal(enabled.assets[2].ownerTag, "Anna");
+  assert.equal(enabled.assets[2].isExtra, true);
+  assert.equal(enabled.assets[3].ownerTag, "Mario");
+  assert.equal(enabled.assets[3].isExtra, false);
+  assert.equal(enabled.assets[4].ownerTag, "Paolo [E]");
+  assert.equal(enabled.assets[4].isExtra, false);
+});

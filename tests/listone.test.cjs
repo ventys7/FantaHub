@@ -49,6 +49,58 @@ test("loadLeagueAssets requires valid league ID", async () => {
   );
 });
 
+test("loadLeagueAssets applies Extra Slot parsing only to FP", async (t) => {
+  const settingsPath = require.resolve("../lib/settings.cjs");
+  const safePath = require.resolve("../lib/safe-fetch.cjs");
+  const listonePath = require.resolve("../lib/listone.cjs");
+  const previousSettings = require.cache[settingsPath];
+  const previousSafe = require.cache[safePath];
+  const { leagueId } = require("../lib/settings.cjs");
+  const csv = "Tag,Ruolo,Nome,Squadra,Quotazione,Prezzo Acquisto\n[E] Paolo,D,Extra D,Inter,7,9";
+
+  require.cache[settingsPath] = {
+    id: settingsPath,
+    filename: settingsPath,
+    loaded: true,
+    exports: {
+      leagueId,
+      readSettings: async () => ({
+        leagues: {
+          fp: { listoneCsvUrl: "https://example.com/fp.csv" },
+          pd: { listoneCsvUrl: "https://example.com/pd.csv" }
+        }
+      })
+    }
+  };
+  require.cache[safePath] = {
+    id: safePath,
+    filename: safePath,
+    loaded: true,
+    exports: { safeFetch: async () => ({ body: Buffer.from(csv) }) }
+  };
+  delete require.cache[listonePath];
+  t.after(() => {
+    delete require.cache[listonePath];
+    if (previousSettings) require.cache[settingsPath] = previousSettings;
+    else delete require.cache[settingsPath];
+    if (previousSafe) require.cache[safePath] = previousSafe;
+    else delete require.cache[safePath];
+  });
+
+  const { loadLeagueAssets } = require("../lib/listone.cjs");
+  const fp = await loadLeagueAssets(" FP ");
+  const pd = await loadLeagueAssets("pd");
+
+  assert.deepEqual(
+    { ownerTag: fp.assets[0].ownerTag, isExtra: fp.assets[0].isExtra },
+    { ownerTag: "Paolo", isExtra: true }
+  );
+  assert.deepEqual(
+    { ownerTag: pd.assets[0].ownerTag, isExtra: pd.assets[0].isExtra },
+    { ownerTag: "[E] Paolo", isExtra: false }
+  );
+});
+
 test("fetchText rejects non-HTTPS and credentialed sources", async () => {
   const { fetchText } = require("../lib/listone.cjs");
   for (const url of ["http://example.com/list.csv", "https://user@example.com/list.csv", "bad-url"]) {

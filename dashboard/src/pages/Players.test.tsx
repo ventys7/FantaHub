@@ -1,5 +1,7 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { PlayerDesktopRow } from "../components/PlayerDesktopRow";
+import { PlayerMobileCard } from "../components/PlayerMobileCard";
 import type { DashboardAsset } from "../types";
 import { Players } from "./Players";
 
@@ -131,5 +133,32 @@ describe("Players (listone)", () => {
     expect(resetButtons).toHaveLength(2);
     fireEvent.click(resetButtons[0]);
     screen.getAllByRole("button", { name: "Svincolati" }).forEach((toggle) => expect(toggle).toHaveAttribute("aria-pressed", "false"));
+  });
+
+  it("mostra il badge Extra accanto al proprietario, non al nome giocatore", () => {
+    const extra = makeAsset({ assetCode: "extra", displayName: "Mario Rossi", ownerTag: "Paolo", isExtra: true });
+    const normal = makeAsset({ assetCode: "normal", displayName: "Luigi Verdi", ownerTag: "Luca", isExtra: false });
+
+    const desktopExtra = render(<PlayerDesktopRow player={extra} />);
+    const desktopBadge = within(desktopExtra.container).getByText("Extra");
+    expect(desktopBadge.parentElement?.textContent).toContain("Paolo");
+    expect(within(desktopExtra.container).getByText("Mario Rossi").parentElement?.textContent).not.toContain("Extra");
+    desktopExtra.unmount();
+
+    const desktopNormal = render(<PlayerDesktopRow player={normal} />);
+    expect(within(desktopNormal.container).queryByText("Extra")).not.toBeInTheDocument();
+    expect(desktopNormal.container.textContent).toContain("Luigi Verdi");
+    desktopNormal.unmount();
+
+    const mobileExtra = render(<PlayerMobileCard player={extra} />);
+    const mobileBadge = within(mobileExtra.container).getByText("Extra");
+    expect(mobileBadge.parentElement?.textContent).toContain("Paolo");
+    expect(within(mobileExtra.container).getByText("Mario Rossi").parentElement?.textContent).not.toContain("Extra");
+    mobileExtra.unmount();
+
+    const mobileNormal = render(<PlayerMobileCard player={normal} />);
+    expect(within(mobileNormal.container).queryByText("Extra")).not.toBeInTheDocument();
+    expect(mobileNormal.container.textContent).toContain("Luigi Verdi");
+    mobileNormal.unmount();
   });
 });

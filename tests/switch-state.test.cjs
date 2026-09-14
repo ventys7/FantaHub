@@ -2,11 +2,14 @@
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { isPairValid } = require("../js/switch-state.js");
+const LineupSwitch = require("../js/switch-state.js");
+const { isPairValid } = LineupSwitch;
 
 // Shared lineup used by every case: indices map into `team`; starters/bench
 // declare which slots are eligible for Switch (portieri never eligible).
 const lineup = {
+  moduleRaw: "433",
+  allowedModules: ["343", "352", "433", "442", "451", "532", "541"],
   team: [
     { r: "D" }, // 0
     { r: "D" }, // 1
@@ -60,4 +63,37 @@ test("isPairValid: Plus requires different role", () => {
   assert.equal(isPairValid(0, 2, true, lineup), true);   // D != C
   assert.equal(isPairValid(0, 1, true, lineup), false);  // D == D
   assert.equal(isPairValid(4, 5, true, lineup), false);  // A == A
+});
+
+test("isPairValid: Plus rejects a derived module outside the allowed modules", () => {
+  assert.equal(isPairValid(0, 5, true, lineup), false); // 433, D → A = 334
+});
+
+test("reconcile keeps a valid Plus pair for an allowed derived module", (t) => {
+  global.currentManager = "manager";
+  global.db = { manager: { players: lineup.team } };
+  global.getSwitchLineup = () => lineup;
+  global.showToast = () => {};
+  global.updateSwitchUI = () => {};
+  global.window = { LineupPersistence: { queueDraftSave() {} } };
+
+  t.after(() => {
+    LineupSwitch.clear("all", { resetMode: true });
+    delete global.currentManager;
+    delete global.db;
+    delete global.getSwitchLineup;
+    delete global.showToast;
+    delete global.updateSwitchUI;
+    delete global.window;
+  });
+
+  assert.equal(LineupSwitch.setPlus(true), true);
+  assert.equal(LineupSwitch.setStarter(0), true);
+  assert.equal(LineupSwitch.setBench(2), true); // 433, D → C = 343
+  assert.equal(LineupSwitch.reconcile(), false);
+  assert.deepEqual(LineupSwitch.getState(), {
+    starterIndex: 0,
+    benchIndex: 2,
+    plus: true
+  });
 });

@@ -8,6 +8,7 @@ export type TeamSquad = {
   logoUrl: string;
   displayName: string;
   players: DashboardAsset[];
+  extraSlots: { D: DashboardAsset | null; C: DashboardAsset | null; A: DashboardAsset | null };
   isComplete: boolean;
   roleCounts: Record<RoleKey, number>;
   totalPlayers: number;

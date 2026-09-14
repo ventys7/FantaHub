@@ -47,10 +47,12 @@ function loadStory() {
     revokeObjectURL: (url) => revoked.push(url)
   };
   const model = {
+    allowedModules: ["343", "352", "433", "442", "451", "532", "541"],
     bench: [],
     definitions: { bench: [], starter: [] },
     manager: "Paolo",
     module: "4-3-3",
+    moduleRaw: "433",
     slots: { bench: {}, starter: {} },
     starters: [],
     team: []
@@ -91,7 +93,7 @@ function loadStory() {
     "return Object.freeze({ open, close, currentUrl: () => currentUrl });"
   );
   vm.runInContext(source, context, { filename: "story.js" });
-  return { created, elements, revoked, story: window.LineupStory };
+  return { created, elements, revoked, story: window.LineupStory, window };
 }
 
 test("Visualizza/Copia renders one direct output without format previews", () => {
@@ -168,4 +170,46 @@ test("story preview revokes only its active object URL", async () => {
   assert.deepEqual(revoked, ["blob:1", "blob:2"]);
   assert.doesNotMatch(read("js/story.js"), /currentUrl \|\| URL\.createObjectURL/);
   assert.match(read("js/story.js"), /if \(temporaryUrl\) URL\.revokeObjectURL\(temporaryUrl\)/);
+});
+
+test("output and story validate Switch Plus against the complete formation model", async () => {
+  const model = {
+    allowedModules: ["343", "352", "433", "442", "451", "532", "541"],
+    bench: [],
+    moduleRaw: "433",
+    starters: [],
+    team: []
+  };
+  let outputSwitchInput = null;
+  const outputContext = {
+    window: {
+      FormationModel: { build: () => model },
+      LineupSwitch: {
+        getPairForModel(input) {
+          outputSwitchInput = input;
+          return null;
+        }
+      }
+    }
+  };
+  vm.createContext(outputContext);
+  const outputSource = read("js/output.js");
+  vm.runInContext(outputSource.slice(0, outputSource.indexOf("function getGoalkeeperBenchLabels")), outputContext);
+  vm.runInContext("buildLineupModel()", outputContext);
+
+  assert.equal(outputSwitchInput.moduleRaw, "433");
+  assert.deepEqual(outputSwitchInput.allowedModules, model.allowedModules);
+
+  const loaded = loadStory();
+  let storySwitchInput = null;
+  loaded.window.LineupSwitch = {
+    getPairForModel(input) {
+      storySwitchInput = input;
+      return null;
+    }
+  };
+  await loaded.story.open();
+
+  assert.equal(storySwitchInput.moduleRaw, "433");
+  assert.deepEqual(storySwitchInput.allowedModules, model.allowedModules);
 });

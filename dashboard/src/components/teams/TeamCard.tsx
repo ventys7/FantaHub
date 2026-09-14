@@ -8,10 +8,52 @@ import type { PlayerMediaEntry } from "../../media";
 const ROLE_TARGETS: Record<RoleKey, number> = { P: 2, D: 8, C: 8, A: 6 };
 const numberFormatter = new Intl.NumberFormat("it-IT", { maximumFractionDigits: 2 });
 
+type TeamMedia = {
+  player: (name: string, team: string) => PlayerMediaEntry | null;
+  crest: (team: string) => string;
+};
+
+const EXTRA_ROLES = ["D", "C", "A"] as const;
+
+function ExtraSlotsSection({ slots, media }: { slots: TeamSquad["extraSlots"]; media: TeamMedia }) {
+  return (
+    <section className="lf-squad-section" aria-label="Extra Slot">
+      <div className="lf-squad-section__title">Extra Slot</div>
+      <div className="lf-squad-list">
+        {EXTRA_ROLES.map((role) => {
+          const player = slots[role];
+          const photo = player ? media.player(player.displayName, player.realTeam)?.photoUrl : "";
+          const crest = player ? media.crest(player.realTeam) : "";
+          return (
+            <div key={role} className="lf-squad-item" aria-label={`Extra Slot ${role}`}>
+              <div className="lf-squad-item__left">
+                <div className={`lf-squad-avatar lf-squad-avatar--${role.toLowerCase()} ${photo ? "has-photo" : ""}`} aria-hidden="true">
+                  {photo ? <img src={photo} alt="" loading="lazy" decoding="async" /> : "E"}
+                </div>
+                <div className="lf-squad-item__copy">
+                  <div className="lf-squad-item__name">Extra - {player?.displayName ?? "Libero"}</div>
+                  <div className="lf-squad-item__team">
+                    {crest && <img className="lf-squad-club-crest" src={crest} alt="" loading="lazy" decoding="async" />}
+                    <span>{player?.realTeam || "Slot non assegnato"}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="lf-squad-values">
+                <span><small>Q</small><strong>{player?.quotation || "—"}</strong></span>
+                <span><small>P</small><strong className="lf-squad-price">{player?.purchasePrice || "—"}</strong></span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 export function TeamCard({ team, leagueId, media, onLogoUpdated, selectable = false, selectedCodes, onToggleSelect, hideLogoEdit = false, hideStatusFlag = false }: {
   team: TeamSquad;
   leagueId: string;
-  media: { player: (name: string, team: string) => PlayerMediaEntry | null; crest: (team: string) => string };
+  media: TeamMedia;
   onLogoUpdated?: (update: TeamIdentityUpdate) => void;
   /** Modalità selezionabile (Scambi): le righe diventano bottone con check. */
   selectable?: boolean;
@@ -95,6 +137,7 @@ export function TeamCard({ team, leagueId, media, onLogoUpdated, selectable = fa
           {(activeFilter === "ALL" || activeFilter === "D") && <SquadRoleSection players={team.players} role="D" label="Difensori" media={media} selectable={selectable} selectedCodes={selectedCodes} onToggleSelect={onToggleSelect} />}
           {(activeFilter === "ALL" || activeFilter === "C") && <SquadRoleSection players={team.players} role="C" label="Centrocampisti" media={media} selectable={selectable} selectedCodes={selectedCodes} onToggleSelect={onToggleSelect} />}
           {(activeFilter === "ALL" || activeFilter === "A") && <SquadRoleSection players={team.players} role="A" label="Attaccanti" media={media} selectable={selectable} selectedCodes={selectedCodes} onToggleSelect={onToggleSelect} />}
+          {!selectable && <ExtraSlotsSection slots={team.extraSlots} media={media} />}
         </div>
       </div>
       {!hideLogoEdit && (

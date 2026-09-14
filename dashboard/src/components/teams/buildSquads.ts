@@ -25,14 +25,20 @@ export function buildTeamSquads(assets: DashboardAsset[], profiles: TeamProfiles
     grouped.set(ownerKey, current);
   });
 
-  const result = [...grouped.entries()].map(([ownerKey, { managerName, players }]) => {
+  const result = [...grouped.entries()].map(([ownerKey, { managerName, players: assignedPlayers }]) => {
+    const players = assignedPlayers.filter((player) => !player.isExtra);
+    const extraSlots: TeamSquad["extraSlots"] = { D: null, C: null, A: null };
+    for (const role of ["D", "C", "A"] as const) {
+      const candidates = assignedPlayers.filter((player) => player.isExtra && player.role === role);
+      extraSlots[role] = candidates.length === 1 ? candidates[0] : null;
+    }
     const roleCounts: Record<RoleKey, number> = { P: 0, D: 0, C: 0, A: 0 };
     players.forEach((player) => {
       if (player.role in roleCounts) roleCounts[player.role as RoleKey] += 1;
     });
     const isComplete = (Object.keys(TEAM_ROLE_TARGETS) as RoleKey[]).every((role) => roleCounts[role] === TEAM_ROLE_TARGETS[role]);
     const profile = profilesByKey.get(ownerKey);
-    const csvCredits = [...new Set(players
+    const csvCredits = [...new Set(assignedPlayers
       .map((player) => player.managerCredits)
       .filter((credits): credits is number => typeof credits === "number" && Number.isFinite(credits)))];
     const credits = csvCredits.length > 1
@@ -45,6 +51,7 @@ export function buildTeamSquads(assets: DashboardAsset[], profiles: TeamProfiles
       logoUrl: profile?.logoUrl ?? "",
       displayName: profile?.displayName ?? "",
       players,
+      extraSlots,
       isComplete,
       roleCounts,
       totalPlayers: players.length
