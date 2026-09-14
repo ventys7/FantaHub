@@ -135,28 +135,30 @@ describe("Players (listone)", () => {
     screen.getAllByRole("button", { name: "Svincolati" }).forEach((toggle) => expect(toggle).toHaveAttribute("aria-pressed", "false"));
   });
 
-  it("mostra il badge Extra nelle righe desktop e mobile, ma non sui giocatori normali", () => {
-    const extra = makeAsset({ assetCode: "extra", displayName: "Extra Player", isExtra: true });
-    const normal = makeAsset({ assetCode: "normal", displayName: "Normal Player", isExtra: false });
+  it("mostra il badge Extra accanto al proprietario, non al nome giocatore", () => {
+    const extra = makeAsset({ assetCode: "extra", displayName: "Mario Rossi", ownerTag: "Paolo", isExtra: true });
+    const normal = makeAsset({ assetCode: "normal", displayName: "Luigi Verdi", ownerTag: "Luca", isExtra: false });
 
     const desktopExtra = render(<PlayerDesktopRow player={extra} />);
-    expect(within(desktopExtra.container).getByText("Extra")).toBeInTheDocument();
-    expect(desktopExtra.container.textContent).toContain("Extra Player");
+    const desktopBadge = within(desktopExtra.container).getByText("Extra");
+    expect(desktopBadge.parentElement?.textContent).toContain("Paolo");
+    expect(within(desktopExtra.container).getByText("Mario Rossi").parentElement?.textContent).not.toContain("Extra");
     desktopExtra.unmount();
 
     const desktopNormal = render(<PlayerDesktopRow player={normal} />);
     expect(within(desktopNormal.container).queryByText("Extra")).not.toBeInTheDocument();
-    expect(desktopNormal.container.textContent).toContain("Normal Player");
+    expect(desktopNormal.container.textContent).toContain("Luigi Verdi");
     desktopNormal.unmount();
 
     const mobileExtra = render(<PlayerMobileCard player={extra} />);
-    expect(within(mobileExtra.container).getByText("Extra")).toBeInTheDocument();
-    expect(mobileExtra.container.textContent).toContain("Extra Player");
+    const mobileBadge = within(mobileExtra.container).getByText("Extra");
+    expect(mobileBadge.parentElement?.textContent).toContain("Paolo");
+    expect(within(mobileExtra.container).getByText("Mario Rossi").parentElement?.textContent).not.toContain("Extra");
     mobileExtra.unmount();
 
     const mobileNormal = render(<PlayerMobileCard player={normal} />);
     expect(within(mobileNormal.container).queryByText("Extra")).not.toBeInTheDocument();
-    expect(mobileNormal.container.textContent).toContain("Normal Player");
+    expect(mobileNormal.container.textContent).toContain("Luigi Verdi");
     mobileNormal.unmount();
   });
 });
