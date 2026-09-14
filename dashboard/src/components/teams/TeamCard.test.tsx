@@ -42,11 +42,11 @@ function makeAsset(overrides: Partial<DashboardAsset> = {}): DashboardAsset {
     const section = screen.getByRole("region", { name: "Extra Slot" });
     expect(within(section).getByText("Extra Slot")).toBeInTheDocument();
     const defender = within(section).getByLabelText("Extra Slot D");
-    expect(within(defender).getByText("Extra - Extra D")).toBeInTheDocument();
+    expect(within(defender).getByText("Extra D")).toBeInTheDocument();
     expect(within(defender).getByText("Inter")).toBeInTheDocument();
     expect(within(defender).getByText("7")).toBeInTheDocument();
     expect(within(defender).getByText("9")).toBeInTheDocument();
-    expect(within(within(section).getByLabelText("Extra Slot C")).getByText("Extra - Libero")).toBeInTheDocument();
+    expect(within(within(section).getByLabelText("Extra Slot C")).getByText("Libero")).toBeInTheDocument();
     expect(within(within(section).getByLabelText("Extra Slot A")).getByText("Slot non assegnato")).toBeInTheDocument();
     expect(screen.queryByLabelText("Extra Slot P")).not.toBeInTheDocument();
 

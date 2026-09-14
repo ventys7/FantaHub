@@ -31,7 +31,7 @@ function ExtraSlotsSection({ slots, media }: { slots: TeamSquad["extraSlots"]; m
                   {photo ? <img src={photo} alt="" loading="lazy" decoding="async" /> : "E"}
                 </div>
                 <div className="lf-squad-item__copy">
-                  <div className="lf-squad-item__name">Extra - {player?.displayName ?? "Libero"}</div>
+                  <div className="lf-squad-item__name">{player?.displayName ?? "Libero"}</div>
                   <div className="lf-squad-item__team">
                     {crest && <img className="lf-squad-club-crest" src={crest} alt="" loading="lazy" decoding="async" />}
                     <span>{player?.realTeam || "Slot non assegnato"}</span>
