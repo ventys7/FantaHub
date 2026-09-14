@@ -129,11 +129,18 @@ test("formation role badges are slightly smaller and the unified text output is 
   const output = read("js/output.js");
 
   assert.match(css, /\.formation-shirt__role \{[\s\S]*?width: 21px;[\s\S]*?height: 18px;[\s\S]*?font-size: \.56rem;/);
-  assert.match(output, /⚽ FORMAZIONE · \${model\.manager}/);
+  assert.match(output, /`Modulo \${model\.module}`/);
   assert.match(output, /XI TITOLARE/);
+  assert.match(output, /- TOTALE:/);
   assert.match(output, /PANCHINA/);
   assert.match(output, /🟨 P|🟦 D|🟩 C|🟥 A/);
-  assert.match(output, /━━━━━━━━━━━━━━━━━━━━/);
+  assert.doesNotMatch(output, /⚽ FORMAZIONE/);
+  assert.doesNotMatch(output, /━/);
+
+  const xi = output.indexOf("XI TITOLARE");
+  const totale = output.indexOf("- TOTALE:");
+  const panchina = output.indexOf("PANCHINA");
+  assert.ok(xi >= 0 && totale > xi && panchina > totale);
 });
 
 test("standings keep inline penalties and remove the duplicate strip below the table", () => {
@@ -170,6 +177,57 @@ test("story preview revokes only its active object URL", async () => {
   assert.deepEqual(revoked, ["blob:1", "blob:2"]);
   assert.doesNotMatch(read("js/story.js"), /currentUrl \|\| URL\.createObjectURL/);
   assert.match(read("js/story.js"), /if \(temporaryUrl\) URL\.revokeObjectURL\(temporaryUrl\)/);
+});
+
+test("formation text output has no header or bars and totals between XI and bench", () => {
+  const stubElement = () => ({
+    addEventListener() {},
+    cloneNode() { return stubElement(); },
+    replaceWith() {}
+  });
+  const model = {
+    manager: "Paolo",
+    module: "3-4-3",
+    goalkeeperBenchLabels: ["Crystal Palace"],
+    starters: [
+      { index: 0, player: { r: "P", n: "Henderson" } },
+      { index: 1, player: { r: "D", n: "Gvardiol" } },
+      { index: 2, player: { r: "A", n: "Rayan" } }
+    ],
+    bench: [
+      { index: 3, player: { r: "D", n: "Mukiele" } },
+      { index: 4, player: { r: "P", n: "Qualcuno" } }
+    ]
+  };
+  const outputContext = {
+    window: { FormationModel: { build: () => ({ ...model }) } },
+    document: {
+      body: { appendChild() {}, removeChild() {} },
+      createElement: () => stubElement(),
+      getElementById: () => stubElement()
+    },
+    navigator: {},
+    console,
+    showToast() {},
+    setModalOpen() {},
+    currentManager: "Paolo"
+  };
+  vm.createContext(outputContext);
+  vm.runInContext(read("js/output.js"), outputContext, { filename: "output.js" });
+  const text = vm.runInContext("buildOutputText()", outputContext);
+
+  assert.equal(text, [
+    "Modulo 3-4-3",
+    "XI TITOLARE",
+    "🟨 P  Henderson",
+    "🟦 D  Gvardiol",
+    "🟥 A  Rayan",
+    "",
+    "- TOTALE:",
+    "PANCHINA",
+    "🟨 P  Crystal Palace",
+    "🟦 D  Mukiele"
+  ].join("\n"));
 });
 
 test("output and story validate Switch Plus against the complete formation model", async () => {
