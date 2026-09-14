@@ -224,6 +224,7 @@ test("formation text output has no header or bars and totals between XI and benc
     "🟥 A  Rayan",
     "",
     "- TOTALE:",
+    "",
     "PANCHINA",
     "🟨 P  Crystal Palace",
     "🟦 D  Mukiele"
