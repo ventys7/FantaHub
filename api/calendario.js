@@ -17,9 +17,21 @@ const INJECTED = `<meta name="viewport" content="width=device-width, initial-sca
 }
 </style>`;
 
+const MOBILE_VIEWER = /android|iphone|ipad|ipod|mobile|tablet|phone/i;
+
+function isMobileViewer(req) {
+  return MOBILE_VIEWER.test(String(req.headers?.["user-agent"] || ""));
+}
+
 module.exports = async function handler(req, res) {
+  // Desktop: i link navigano dentro il frame (sandbox piena).
+  // Mobile: i tap escono in una tab vera del browser (app Google Docs se
+  // installata). Senza allow-popups la nuova tab resterebbe bloccata, e senza
+  // escape erediterebbe la sandbox rompendo Docs: servono entrambi, più
+  // <base target="_blank"> per tutte le ancore senza target.
+  const mobile = isMobileViewer(req);
   noStore(res);
-  res.setHeader("Content-Security-Policy", "sandbox");
+  res.setHeader("Content-Security-Policy", mobile ? "sandbox allow-popups allow-popups-to-escape-sandbox" : "sandbox");
   if (req.method !== "GET") return methodNotAllowed(res, ["GET"]);
   try {
     const id = leagueId(req.query?.league);
@@ -35,9 +47,14 @@ module.exports = async function handler(req, res) {
     const injected = rewritten.includes("</head>")
       ? rewritten.replace("</head>", `${INJECTED}</head>`)
       : `${INJECTED}${rewritten}`;
+    const targeted = mobile
+      ? (injected.includes("<head>")
+        ? injected.replace("<head>", '<head><base target="_blank">')
+        : `<base target="_blank">${injected}`)
+      : injected;
 
     res.setHeader("Content-Type", "text/html; charset=utf-8");
-    return res.status(200).send(injected);
+    return res.status(200).send(targeted);
   } catch {
     return res.status(502).send("Calendario non disponibile");
   }

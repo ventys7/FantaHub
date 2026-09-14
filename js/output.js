@@ -38,9 +38,7 @@ function buildOutputText() {
     if (!model) return "";
 
     const lines = [
-      `⚽ FORMAZIONE · ${model.manager}`,
       `Modulo ${model.module}`,
-      "━━━━━━━━━━━━━━━━━━━━",
       "XI TITOLARE"
     ];
 
@@ -52,7 +50,7 @@ function buildOutputText() {
       ));
     });
 
-    lines.push("", "PANCHINA");
+    lines.push("", "TOTALE:", "", "PANCHINA");
     getGoalkeeperBenchLabels(model).forEach((label) => {
       lines.push(outputPlayerLine("P", label));
     });
@@ -67,7 +65,6 @@ function buildOutputText() {
         ));
       });
 
-    lines.push("━━━━━━━━━━━━━━━━━━━━");
     return lines.join("\n");
   } catch (error) {
     console.error("buildOutputText error:", error);

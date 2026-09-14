@@ -142,7 +142,10 @@ function mockResponse() {
   };
 }
 
-async function runHtmlHandler(apiPath) {
+const MOBILE_UA = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1";
+const DESKTOP_UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
+
+async function runHtmlHandler(apiPath, headers) {
   const settingsPath = require.resolve("../lib/settings.cjs");
   const sessionPath = require.resolve("../lib/google-docs-session.cjs");
   const resolvedApi = require.resolve(apiPath);
@@ -166,7 +169,7 @@ async function runHtmlHandler(apiPath) {
   delete require.cache[resolvedApi];
   const res = mockResponse();
   try {
-    await require(apiPath)({ method: "GET", query: { league: "fp" } }, res);
+    await require(apiPath)({ method: "GET", query: { league: "fp" }, headers: headers || {} }, res);
     return res;
   } finally {
     delete require.cache[resolvedApi];
@@ -185,4 +188,25 @@ test("both HTML proxies apply a restrictive CSP sandbox and no-store", async () 
     assert.doesNotMatch(res.headers["Content-Security-Policy"], /allow-(scripts|forms|popups|top-navigation)/);
     assert.match(res.headers["Cache-Control"], /no-store/);
   }
+});
+
+test("calendario on desktop keeps links navigating inside the frame", async () => {
+  const res = await runHtmlHandler("../api/calendario.js", { "user-agent": DESKTOP_UA });
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.headers["Content-Security-Policy"], "sandbox");
+  assert.ok(!res.body.includes('<base target="_blank">'));
+});
+
+test("calendario on mobile opens links outside in a real browser tab", async () => {
+  const res = await runHtmlHandler("../api/calendario.js", { "user-agent": MOBILE_UA });
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.headers["Content-Security-Policy"], "sandbox allow-popups allow-popups-to-escape-sandbox");
+  assert.ok(res.body.includes('<head><base target="_blank">'));
+});
+
+test("regolamento ignores the viewer UA and keeps the frame behavior", async () => {
+  const res = await runHtmlHandler("../api/regolamento.js", { "user-agent": MOBILE_UA });
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.headers["Content-Security-Policy"], "sandbox");
+  assert.ok(!res.body.includes('<base target="_blank">'));
 });
