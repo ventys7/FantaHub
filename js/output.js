@@ -50,7 +50,7 @@ function buildOutputText() {
       ));
     });
 
-    lines.push("", "- TOTALE:", "", "PANCHINA");
+    lines.push("", "TOTALE:", "", "PANCHINA");
     getGoalkeeperBenchLabels(model).forEach((label) => {
       lines.push(outputPlayerLine("P", label));
     });

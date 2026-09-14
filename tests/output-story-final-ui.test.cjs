@@ -131,14 +131,15 @@ test("formation role badges are slightly smaller and the unified text output is 
   assert.match(css, /\.formation-shirt__role \{[\s\S]*?width: 21px;[\s\S]*?height: 18px;[\s\S]*?font-size: \.56rem;/);
   assert.match(output, /`Modulo \${model\.module}`/);
   assert.match(output, /XI TITOLARE/);
-  assert.match(output, /- TOTALE:/);
+  assert.match(output, /"TOTALE:"/);
+  assert.doesNotMatch(output, /- TOTALE:/);
   assert.match(output, /PANCHINA/);
   assert.match(output, /🟨 P|🟦 D|🟩 C|🟥 A/);
   assert.doesNotMatch(output, /⚽ FORMAZIONE/);
   assert.doesNotMatch(output, /━/);
 
   const xi = output.indexOf("XI TITOLARE");
-  const totale = output.indexOf("- TOTALE:");
+  const totale = output.indexOf('"TOTALE:"');
   const panchina = output.indexOf("PANCHINA");
   assert.ok(xi >= 0 && totale > xi && panchina > totale);
 });
@@ -223,7 +224,7 @@ test("formation text output has no header or bars and totals between XI and benc
     "🟦 D  Gvardiol",
     "🟥 A  Rayan",
     "",
-    "- TOTALE:",
+    "TOTALE:",
     "",
     "PANCHINA",
     "🟨 P  Crystal Palace",
