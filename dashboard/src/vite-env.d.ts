@@ -13,6 +13,7 @@ type LeagueAsset = {
   type: string;
   active: boolean;
   isFreeAgent: boolean;
+  isExtra?: boolean;
 };
 
 type LeagueDataState = {
@@ -25,6 +26,7 @@ type LineupLeague = {
   name: string;
   label: string;
   csvUrl: string;
+  extraSlots?: boolean;
   identity?: {
     logo?: string;
     flag?: string;

@@ -13,7 +13,12 @@ export const PlayerDesktopRow = memo(function PlayerDesktopRow({ player, media, 
           {media?.photoUrl ? <img src={media.photoUrl} alt="" loading="lazy" decoding="async" /> : initials(player.displayName)}
         </div>
         <div className="tw-min-w-0">
-          <div className={`tw-truncate tw-font-semibold tw-transition group-hover:tw-text-[var(--primary)] ${player.active ? "tw-text-slate-900" : "tw-italic tw-text-slate-400"}`}>{player.displayName}{!player.active && " *"}</div>
+          <div className="tw-flex tw-items-center tw-gap-2">
+            <span className={`tw-truncate tw-font-semibold tw-transition group-hover:tw-text-[var(--primary)] ${player.active ? "tw-text-slate-900" : "tw-italic tw-text-slate-400"}`}>{player.displayName}{!player.active && " *"}</span>
+            {player.isExtra && (
+              <span className="tw-inline-flex tw-shrink-0 tw-items-center tw-rounded-full tw-border tw-border-[var(--primary-border)] tw-bg-[var(--primary-bg)] tw-px-2 tw-py-0.5 tw-text-[10px] tw-font-black tw-uppercase tw-tracking-wide tw-text-[var(--primary)]">Extra</span>
+            )}
+          </div>
           <div className="lf-player-club-line">{crestUrl && <img src={crestUrl} alt="" loading="lazy" decoding="async" />}<span>{player.realTeam || "—"}</span></div>
         </div>
       </div>

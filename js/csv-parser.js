@@ -30,6 +30,7 @@
     "", "svincolato", "svincolati", "libero", "liberi", "free", "free_agent", "freeagent"
   ]);
   const IGNORED_OWNER_LABELS = new Set(["tag", "ricordi"]);
+  const EXTRA_PREFIX = /^\s*\[\s*e\s*\]\s*/i;
 
   function normalizeToken(value) {
     return String(value ?? "")
@@ -141,12 +142,21 @@
     return `${role || "U"}-${slug}-${sourceIndex}`.toUpperCase();
   }
 
-  function normalizeAsset(columns, headerMap, sourceIndex) {
+  function normalizeOwner(ownerRaw, role, extraSlots) {
+    const hasExtraPrefix = Boolean(extraSlots && EXTRA_PREFIX.test(ownerRaw));
+    const ownerTag = hasExtraPrefix
+      ? ownerRaw.replace(EXTRA_PREFIX, "").trim()
+      : ownerRaw;
+    return { ownerTag, isExtra: hasExtraPrefix && ["D", "C", "A"].includes(role) };
+  }
+
+  function normalizeAsset(columns, headerMap, sourceIndex, extraSlots) {
     const ownerRaw = readColumn(columns, headerMap, "ownerTag", 0);
-    const ownerKey = normalizeToken(ownerRaw);
+    const role = normalizeRole(readColumn(columns, headerMap, "role", 1));
+    const { ownerTag, isExtra } = normalizeOwner(ownerRaw, role, extraSlots);
+    const ownerKey = normalizeToken(ownerTag);
     if (IGNORED_OWNER_LABELS.has(ownerKey)) return null;
 
-    const role = normalizeRole(readColumn(columns, headerMap, "role", 1));
     const displayName = readColumn(columns, headerMap, "displayName", 2);
     const realTeam = readColumn(columns, headerMap, "realTeam", 3);
     if (!displayName) return null;
@@ -162,10 +172,11 @@
       realTeam,
       quotation: parseNumber(readColumn(columns, headerMap, "quotation", 4), 0),
       purchasePrice: parseNumber(readColumn(columns, headerMap, "purchasePrice", 5), 0),
-      ownerTag: isFreeAgent ? "" : ownerRaw,
+      ownerTag: isFreeAgent ? "" : ownerTag,
       managerCredits: null,
       type: normalizeAssetType(readColumn(columns, headerMap, "type"), role, displayName),
       active: parseActive(readColumn(columns, headerMap, "active")),
+      isExtra,
       isFreeAgent,
       sourceIndex
     });
@@ -195,7 +206,7 @@
     return credits;
   }
 
-  function parseLeagueCsv(csvText) {
+  function parseLeagueCsv(csvText, options = {}) {
     const lines = String(csvText ?? "").split(/\r?\n/);
     if (!lines.some((line) => line.trim())) throw new Error("CSV vuoto");
 
@@ -206,9 +217,10 @@
     const startIndex = header ? header.index + 1 : firstMeaningful;
     const sourceOffset = startIndex + 1;
     const creditsByManager = parseManagerCredits(lines, delimiter);
+    const extraSlots = Boolean(options.extraSlots);
 
     const assets = lines.slice(startIndex)
-      .map((line, index) => normalizeAsset(splitLine(line, delimiter), headerMap, index + sourceOffset))
+      .map((line, index) => normalizeAsset(splitLine(line, delimiter), headerMap, index + sourceOffset, extraSlots))
       .filter(Boolean)
       .map((asset) => Object.freeze({
         ...asset,

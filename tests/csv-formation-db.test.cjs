@@ -79,3 +79,12 @@ test("buildFormationDb: prototype-like owner tags remain isolated own keys", () 
     assert.deepEqual(db[ownerTag].players.map((player) => player.n), [`Player ${ownerTag}`]);
   }
 });
+
+test("buildFormationDb: excludes Extra assets from selectable players", () => {
+  const db = buildFormationDb([
+    { displayName: "Normal", role: "D", realTeam: "INT", ownerTag: "Paolo", active: true, isFreeAgent: false, isExtra: false, type: "standard" },
+    { displayName: "Extra", role: "D", realTeam: "MIL", ownerTag: "Paolo", active: true, isFreeAgent: false, isExtra: true, type: "standard" }
+  ]);
+
+  assert.deepEqual(db.Paolo.players.map((player) => player.n), ["Normal"]);
+});

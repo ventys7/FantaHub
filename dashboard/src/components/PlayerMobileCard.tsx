@@ -19,6 +19,9 @@ export const PlayerMobileCard = memo(function PlayerMobileCard({ player, media, 
         <div className="tw-min-w-0 tw-flex-1">
           <div className="tw-mb-1 tw-flex tw-items-center tw-justify-between tw-gap-2">
             <span className={`tw-min-w-0 tw-truncate tw-font-semibold ${player.active ? "tw-text-slate-900" : "tw-italic tw-text-slate-400"}`}>{player.displayName}{!player.active && " *"}</span>
+            {player.isExtra && (
+              <span className="tw-inline-flex tw-shrink-0 tw-items-center tw-rounded-full tw-border tw-border-[var(--primary-border)] tw-bg-[var(--primary-bg)] tw-px-2 tw-py-0.5 tw-text-[10px] tw-font-black tw-uppercase tw-tracking-wide tw-text-[var(--primary)]">Extra</span>
+            )}
             <span className={`${ROLE_BADGE_CLASSES[player.role] ?? ROLE_BADGE_CLASSES.U} tw-shrink-0`}>{ROLE_LABELS[player.role] ?? player.role ?? "?"}</span>
           </div>
           <div className="lf-player-club-line lf-player-club-line--mobile">

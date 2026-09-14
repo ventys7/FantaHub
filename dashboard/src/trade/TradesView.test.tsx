@@ -35,10 +35,10 @@ const assetsVilla = [
   makeAsset({ assetCode: "v-a1", role: "A", displayName: "Attacco Villa", realTeam: "Napoli" })
 ];
 
-function makeSquad(managerName: string, players: DashboardAsset[], credits: number): TeamSquad {
+function makeSquad(managerName: string, players: DashboardAsset[], credits: number, extraSlots: TeamSquad["extraSlots"] = { D: null, C: null, A: null }): TeamSquad {
   const roleCounts: TeamSquad["roleCounts"] = { P: 0, D: 0, C: 0, A: 0 };
   players.forEach((player) => { roleCounts[player.role as keyof typeof roleCounts] += 1; });
-  return { managerName, credits, logoUrl: "", displayName: "", players, isComplete: false, roleCounts, totalPlayers: players.length };
+  return { managerName, credits, logoUrl: "", displayName: "", players, extraSlots, isComplete: false, roleCounts, totalPlayers: players.length };
 }
 
 const squadsByManager = {
@@ -246,5 +246,22 @@ describe("TradesView", () => {
     expect(fabActive).toBeEnabled();
     fireEvent.click(fabActive);
     expect(screen.getByRole("dialog", { name: "Riepilogo scambio" })).toBeInTheDocument();
+  });
+
+  it("nasconde gli Extra Slot e i relativi giocatori dalle rose selezionabili", () => {
+    const extraCasa = makeAsset({ assetCode: "extra-casa", displayName: "Extra Casa", role: "D", isExtra: true });
+    const extraVilla = makeAsset({ assetCode: "extra-villa", displayName: "Extra Villa", role: "D", ownerTag: "Villa", isExtra: true });
+    renderView({
+      squadsByManager: {
+        Casa: makeSquad("Casa", assetsCasa, 10, { D: extraCasa, C: null, A: null }),
+        Villa: makeSquad("Villa", assetsVilla, 10, { D: extraVilla, C: null, A: null })
+      }
+    });
+
+    selectSides();
+    expect(screen.queryByText("Extra Casa")).not.toBeInTheDocument();
+    expect(screen.queryByText("Extra Villa")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Extra Slot/)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Riepilogo (0)" })).toBeDisabled();
   });
 });

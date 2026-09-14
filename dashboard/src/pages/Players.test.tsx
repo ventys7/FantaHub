@@ -1,5 +1,7 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { PlayerDesktopRow } from "../components/PlayerDesktopRow";
+import { PlayerMobileCard } from "../components/PlayerMobileCard";
 import type { DashboardAsset } from "../types";
 import { Players } from "./Players";
 
@@ -131,5 +133,30 @@ describe("Players (listone)", () => {
     expect(resetButtons).toHaveLength(2);
     fireEvent.click(resetButtons[0]);
     screen.getAllByRole("button", { name: "Svincolati" }).forEach((toggle) => expect(toggle).toHaveAttribute("aria-pressed", "false"));
+  });
+
+  it("mostra il badge Extra nelle righe desktop e mobile, ma non sui giocatori normali", () => {
+    const extra = makeAsset({ assetCode: "extra", displayName: "Extra Player", isExtra: true });
+    const normal = makeAsset({ assetCode: "normal", displayName: "Normal Player", isExtra: false });
+
+    const desktopExtra = render(<PlayerDesktopRow player={extra} />);
+    expect(within(desktopExtra.container).getByText("Extra")).toBeInTheDocument();
+    expect(desktopExtra.container.textContent).toContain("Extra Player");
+    desktopExtra.unmount();
+
+    const desktopNormal = render(<PlayerDesktopRow player={normal} />);
+    expect(within(desktopNormal.container).queryByText("Extra")).not.toBeInTheDocument();
+    expect(desktopNormal.container.textContent).toContain("Normal Player");
+    desktopNormal.unmount();
+
+    const mobileExtra = render(<PlayerMobileCard player={extra} />);
+    expect(within(mobileExtra.container).getByText("Extra")).toBeInTheDocument();
+    expect(mobileExtra.container.textContent).toContain("Extra Player");
+    mobileExtra.unmount();
+
+    const mobileNormal = render(<PlayerMobileCard player={normal} />);
+    expect(within(mobileNormal.container).queryByText("Extra")).not.toBeInTheDocument();
+    expect(mobileNormal.container.textContent).toContain("Normal Player");
+    mobileNormal.unmount();
   });
 });
