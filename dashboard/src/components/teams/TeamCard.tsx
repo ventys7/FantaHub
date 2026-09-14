@@ -137,7 +137,7 @@ export function TeamCard({ team, leagueId, media, onLogoUpdated, selectable = fa
           {(activeFilter === "ALL" || activeFilter === "D") && <SquadRoleSection players={team.players} role="D" label="Difensori" media={media} selectable={selectable} selectedCodes={selectedCodes} onToggleSelect={onToggleSelect} />}
           {(activeFilter === "ALL" || activeFilter === "C") && <SquadRoleSection players={team.players} role="C" label="Centrocampisti" media={media} selectable={selectable} selectedCodes={selectedCodes} onToggleSelect={onToggleSelect} />}
           {(activeFilter === "ALL" || activeFilter === "A") && <SquadRoleSection players={team.players} role="A" label="Attaccanti" media={media} selectable={selectable} selectedCodes={selectedCodes} onToggleSelect={onToggleSelect} />}
-          {!selectable && <ExtraSlotsSection slots={team.extraSlots} media={media} />}
+          {!selectable && leagueId === "fp" && <ExtraSlotsSection slots={team.extraSlots} media={media} />}
         </div>
       </div>
       {!hideLogoEdit && (

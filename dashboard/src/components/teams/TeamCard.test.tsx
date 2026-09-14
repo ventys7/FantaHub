@@ -53,4 +53,13 @@ function makeAsset(overrides: Partial<DashboardAsset> = {}): DashboardAsset {
     fireEvent.click(screen.getByRole("button", { name: "P: 0/2" }));
     expect(within(screen.getByRole("region", { name: "Extra Slot" })).getAllByLabelText(/Extra Slot [DCA]/)).toHaveLength(3);
   });
+
+  it("nasconde gli Extra Slot su PD anche con slot pieni", () => {
+    const team = { ...makeSquad(0), extraSlots: { D: makeAsset(), C: null, A: null } };
+    render(<TeamCard team={team} leagueId="pd" media={media} />);
+
+    expect(screen.queryByRole("region", { name: "Extra Slot" })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Extra Slot/)).not.toBeInTheDocument();
+    expect(screen.queryByText("Extra D")).not.toBeInTheDocument();
+  });
 });
